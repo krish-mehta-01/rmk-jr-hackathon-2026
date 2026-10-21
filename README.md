@@ -55,7 +55,7 @@ Render free web service (Singapore), built from the `main` branch of the private
   - from 6 AM to 9 PM IST the server pings its own `/api/health` every 10 minutes (`backend/server.js`; change the window with the `KEEP_AWAKE_HOURS_IST` env var, e.g. `5-23`, or turn it off with `KEEP_AWAKE=off`);
   - the GitHub Action `.github/workflows/wake-render.yml` wakes it at about 6:10 AM IST each day (run it by hand from the repo's Actions tab if needed).
   - The window keeps usage inside Render's 750 free instance-hours per month, which are shared with any other free Render services on the account.
-- Pushes to `main` deploy automatically; if a push ever doesn't show up, use **Manual Deploy → Deploy latest commit** in the Render dashboard.
+- Pushes to `main` sometimes deploy automatically and sometimes don't: after pushing, check the Render dashboard and use **Manual Deploy → Deploy latest commit** if no new deploy started.
 
 Phone cameras only work on **https://** pages, so always share the onrender.com link, not `http://<laptop-ip>:3000`.
 
