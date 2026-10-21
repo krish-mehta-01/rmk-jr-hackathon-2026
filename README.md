@@ -5,7 +5,7 @@ Team leaders log in on their phones and scan the venue QR code to mark their tea
 ## Structure
 
 ```
-backend/    Express API + TiDB Cloud (server.js, db.js, import-excel.js, schema.sql, .env)
+backend/    Express API + TiDB Cloud (server.js, db.js, import-excel.js, .env)
 frontend/   Static site served by the backend (index.html, app.js, style.css, assets/)
 ```
 

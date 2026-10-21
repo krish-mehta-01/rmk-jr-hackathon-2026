@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "import": "node import-excel.js",
-    "test-db": "node test-tidb.js"
+    "import": "node import-excel.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
