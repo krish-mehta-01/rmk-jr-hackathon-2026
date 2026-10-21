@@ -52,8 +52,8 @@ Render free web service (Singapore), built from the `main` branch of the private
 - Service settings: root `backend`, build `npm ci`, start `node server.js`, health check `/api/health`.
 - Secrets are set as Render environment variables (same keys as `backend/.env`, plus `NODE_VERSION=22`). `.env` is never committed.
 - Free instances sleep after 15 minutes without visitors (the next visit then takes about a minute). To avoid that:
-  - from 6 AM to 9 PM IST the server pings its own `/api/health` every 10 minutes (`backend/server.js`; change the window with the `KEEP_AWAKE_HOURS_IST` env var, e.g. `5-23`, or turn it off with `KEEP_AWAKE=off`);
-  - the GitHub Action `.github/workflows/wake-render.yml` wakes it at about 6:10 AM IST each day (run it by hand from the repo's Actions tab if needed).
+  - from 27 Oct to 1 Nov 2026 (hackathon day), 6 AM to 9 PM IST, the server pings its own `/api/health` every 10 minutes (`backend/server.js`; change with the `KEEP_AWAKE_DATES_IST` env var, e.g. `2026-10-27..2026-11-02`, and `KEEP_AWAKE_HOURS_IST`, e.g. `5-23`, or turn it off with `KEEP_AWAKE=off`);
+  - on the same dates the GitHub Action `.github/workflows/wake-render.yml` wakes it at about 6:10 AM IST (run it by hand from the repo's Actions tab if needed).
   - The window keeps usage inside Render's 750 free instance-hours per month, which are shared with any other free Render services on the account.
 - Pushes to `main` sometimes deploy automatically and sometimes don't: after pushing, check the Render dashboard and use **Manual Deploy → Deploy latest commit** if no new deploy started.
 

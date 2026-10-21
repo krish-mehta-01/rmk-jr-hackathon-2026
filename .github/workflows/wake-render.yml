@@ -1,10 +1,11 @@
-# Render's free plan sleeps overnight; this opens the site each morning so the
-# server's own daytime keep-awake (backend/server.js) takes over from there.
+# Render's free plan sleeps when idle. From 27 Oct to the hackathon on 1 Nov 2026 this opens the
+# site each morning so the server's own daytime keep-awake (backend/server.js) takes over.
 name: Wake Render service
 
 on:
   schedule:
-    - cron: '40 0 * * *'   # 06:10 IST daily (GitHub may run it a few minutes late)
+    - cron: '40 0 27-31 10 *'   # 06:10 IST, 27-31 Oct (GitHub may run it a few minutes late)
+    - cron: '40 0 1 11 *'       # 06:10 IST, 1 Nov - hackathon day
   workflow_dispatch:
 
 jobs:
@@ -14,6 +15,9 @@ jobs:
     steps:
       - name: Ping until the server answers
         run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(TZ=Asia/Kolkata date +%Y)" != "2026" ]; then
+            echo "Outside the 2026 hackathon window, skipping"; exit 0
+          fi
           for i in $(seq 1 12); do
             if curl -fsS --max-time 90 https://rmk-jr-hackathon-2026.onrender.com/api/health; then
               echo " - awake"; exit 0

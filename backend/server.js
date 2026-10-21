@@ -57,8 +57,8 @@ function createLimiter(max, windowMs) {
   };
 }
 
-// Login is keyed by IP; generous because phones on venue Wi-Fi share one public IP
-const loginLimiter = createLimiter(30, 5 * 60 * 1000);
+// Login is keyed by IP; generous because every phone on the venue Wi-Fi shares one public IP
+const loginLimiter = createLimiter(100, 5 * 60 * 1000);
 // Scans are keyed by team, so one team's bad scans never block other teams
 const scanLimiter = createLimiter(5, 60 * 1000);
 
@@ -90,7 +90,15 @@ if (process.env.RENDER) app.set('trust proxy', true);
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// Phones reopen the page often: images and the scanner library are cached for a day, the app
+// code for 5 minutes (so a fix still reaches phones quickly), and the page itself is always rechecked
+app.use(express.static(path.join(__dirname, '..', 'frontend'), {
+  setHeaders(res, filePath) {
+    if (filePath.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=86400');
+    else if (/\.(js|css)$/.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=300');
+    else res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
 
 // ─────────────────────────────────────────────
 // JWT Middleware
@@ -370,26 +378,35 @@ app.post('/api/admin/teams/:id/toggle-attendance', authAdmin, async (req, res) =
   }
 });
 
-// Uptime check (no DB) so a pinger can keep the free instance awake
-app.get('/api/health', (req, res) => res.json({ ok: true }));
+// Uptime check (no DB) for keep-awake pings; also shows which commit Render is running
+app.get('/api/health', (req, res) => res.json({ ok: true, commit: (process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7) }));
 
 // Unknown API routes return JSON, everything else gets the app
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.get('*', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
 // Render's free plan sleeps after 15 min without visits, and the next visit then takes ~1 min.
-// During the day (IST) the server visits its own public URL every 10 min to stay awake; at night it
-// may sleep to save the account's free instance hours. A GitHub Action wakes it each morning.
-// KEEP_AWAKE_HOURS_IST="6-21" sets the window; KEEP_AWAKE=off disables it.
+// In the run-up to the hackathon (1 Nov 2026) the server visits its own public URL every 10 min
+// during the day (IST) to stay awake; outside that window it may sleep to save the account's free
+// instance hours. A GitHub Action wakes it each morning on the same dates.
+// Overrides: KEEP_AWAKE_DATES_IST="2026-10-27..2026-11-01", KEEP_AWAKE_HOURS_IST="6-21", KEEP_AWAKE=off.
 const KEEP_AWAKE_URL = process.env.RENDER_EXTERNAL_URL;
+const [AWAKE_FROM_DATE, AWAKE_TO_DATE] = (process.env.KEEP_AWAKE_DATES_IST || '2026-10-27..2026-11-01').split('..');
 const [AWAKE_FROM, AWAKE_TO] = (process.env.KEEP_AWAKE_HOURS_IST || '6-21').split('-').map(Number);
+const istDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' });
 const istHour = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', hourCycle: 'h23' });
 
+function inKeepAwakeWindow(now = new Date()) {
+  const day = istDate.format(now);
+  const hour = Number(istHour.format(now));
+  return day >= AWAKE_FROM_DATE && day <= AWAKE_TO_DATE && hour >= AWAKE_FROM && hour < AWAKE_TO;
+}
+
 function keepAwake() {
-  const hour = Number(istHour.format(new Date()));
-  if (hour < AWAKE_FROM || hour >= AWAKE_TO) return;
+  if (!inKeepAwakeWindow()) return;
   fetch(`${KEEP_AWAKE_URL}/api/health`).catch(err => console.warn('[WARN] Keep-awake ping failed:', err.message));
 }
 
@@ -398,6 +415,6 @@ app.listen(PORT, async () => {
   await testConnection();
   if (KEEP_AWAKE_URL && process.env.KEEP_AWAKE !== 'off') {
     setInterval(keepAwake, 10 * 60 * 1000);
-    console.log(`[INFO] Keep-awake on: ${KEEP_AWAKE_URL} every 10 min, ${AWAKE_FROM}:00-${AWAKE_TO}:00 IST`);
+    console.log(`[INFO] Keep-awake on: ${KEEP_AWAKE_URL} every 10 min, ${AWAKE_FROM}:00-${AWAKE_TO}:00 IST, ${AWAKE_FROM_DATE} to ${AWAKE_TO_DATE}`);
   }
 });
