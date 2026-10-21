@@ -379,7 +379,25 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
+// Render's free plan sleeps after 15 min without visits, and the next visit then takes ~1 min.
+// During the day (IST) the server visits its own public URL every 10 min to stay awake; at night it
+// may sleep to save the account's free instance hours. A GitHub Action wakes it each morning.
+// KEEP_AWAKE_HOURS_IST="6-21" sets the window; KEEP_AWAKE=off disables it.
+const KEEP_AWAKE_URL = process.env.RENDER_EXTERNAL_URL;
+const [AWAKE_FROM, AWAKE_TO] = (process.env.KEEP_AWAKE_HOURS_IST || '6-21').split('-').map(Number);
+const istHour = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', hourCycle: 'h23' });
+
+function keepAwake() {
+  const hour = Number(istHour.format(new Date()));
+  if (hour < AWAKE_FROM || hour >= AWAKE_TO) return;
+  fetch(`${KEEP_AWAKE_URL}/api/health`).catch(err => console.warn('[WARN] Keep-awake ping failed:', err.message));
+}
+
 app.listen(PORT, async () => {
   console.log(`\n[INFO] RMK Jr. Hackathon Server running on http://localhost:${PORT}`);
   await testConnection();
+  if (KEEP_AWAKE_URL && process.env.KEEP_AWAKE !== 'off') {
+    setInterval(keepAwake, 10 * 60 * 1000);
+    console.log(`[INFO] Keep-awake on: ${KEEP_AWAKE_URL} every 10 min, ${AWAKE_FROM}:00-${AWAKE_TO}:00 IST`);
+  }
 });
