@@ -4,6 +4,9 @@
 //  Team Details with Mentor · Real-time Attendance Check-in
 // ════════════════════════════════════════════════════════════════
 
+// Team leaders use the site root; admins use /rmkjrhackathon2026-adminlogin (flag set in index.html)
+const IS_ADMIN_PAGE = document.documentElement.classList.contains('admin-page');
+
 let teamToken = null;
 let adminToken = null;
 let teamData = null;
@@ -33,22 +36,26 @@ function setupEventListeners() {
 // SESSION RESTORATION
 // ─────────────────────────────────────────────────────────────
 function restoreSession() {
-  const savedTeamToken = localStorage.getItem('rmk_team_token');
-  const savedAdminToken = localStorage.getItem('rmk_admin_token');
+  if (IS_ADMIN_PAGE) {
+    document.title = 'RMK Jr. Hackathon 2026 — Admin';
+    adminToken = localStorage.getItem('rmk_admin_token');
+    if (adminToken) {
+      initAdminDashboard();
+      showView('view-admin');
+    } else {
+      showView('view-auth');
+    }
+    return;
+  }
 
-  if (savedTeamToken) {
-    teamToken = savedTeamToken;
+  teamToken = localStorage.getItem('rmk_team_token');
+  if (teamToken) {
     teamData = JSON.parse(localStorage.getItem('rmk_team_data') || '{}');
     initTeamDashboard();
     showView('view-team');
     refreshTeamStatus();
-  } else if (savedAdminToken) {
-    adminToken = savedAdminToken;
-    initAdminDashboard();
-    showView('view-admin');
   } else {
     showView('view-auth');
-    switchAuthTab('team');
   }
 }
 
@@ -68,29 +75,6 @@ function showView(viewId) {
 
   if (viewId !== 'view-team') {
     closeScanner();
-  }
-}
-
-function switchAuthTab(type) {
-  const teamBtn = document.getElementById('tab-btn-team');
-  const adminBtn = document.getElementById('tab-btn-admin');
-  const teamPane = document.getElementById('auth-pane-team');
-  const adminPane = document.getElementById('auth-pane-admin');
-
-  if (type === 'team') {
-    teamBtn.classList.add('active');
-    adminBtn.classList.remove('active');
-    teamPane.classList.remove('hidden');
-    teamPane.classList.add('active');
-    adminPane.classList.add('hidden');
-    adminPane.classList.remove('active');
-  } else {
-    adminBtn.classList.add('active');
-    teamBtn.classList.remove('active');
-    adminPane.classList.remove('hidden');
-    adminPane.classList.add('active');
-    teamPane.classList.add('hidden');
-    teamPane.classList.remove('active');
   }
 }
 
@@ -183,18 +167,20 @@ async function handleAdminLogin(e) {
 // ─────────────────────────────────────────────────────────────
 // LOGOUT
 // ─────────────────────────────────────────────────────────────
+// Logs out of this page's role only, and returns to this page's login form
 function logout(message) {
   closeScanner();
-  const wasAdmin = Boolean(adminToken);
-  teamToken = null;
-  adminToken = null;
-  teamData = null;
-  localStorage.removeItem('rmk_team_token');
-  localStorage.removeItem('rmk_team_data');
-  localStorage.removeItem('rmk_admin_token');
+  if (IS_ADMIN_PAGE) {
+    adminToken = null;
+    localStorage.removeItem('rmk_admin_token');
+  } else {
+    teamToken = null;
+    teamData = null;
+    localStorage.removeItem('rmk_team_token');
+    localStorage.removeItem('rmk_team_data');
+  }
 
   showView('view-auth');
-  switchAuthTab(wasAdmin ? 'admin' : 'team');
   if (typeof message === 'string') showToast(message, 'info');
 }
 
@@ -691,9 +677,9 @@ function printQRCode() {
       <body>
         <div class="card">
           <div class="logos">
-            <img src="assets/rmk_group_logo.png" />
+            <img src="/assets/rmk_group_logo.png" />
             <div class="pipe"></div>
-            <img src="assets/rmk_jr_hackathon_2026_logo.png" />
+            <img src="/assets/rmk_jr_hackathon_2026_logo.png" />
           </div>
           <h1>RMK Junior Hackathon 2026</h1>
           <div class="qr"><img src="${permanentQRCodeData}" /></div>

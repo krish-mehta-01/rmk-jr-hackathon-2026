@@ -7,9 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <script src="assets/jsQR.js"></script>
-  <script src="assets/qrcode.min.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <script>
+    // The admin login lives at its own URL; mark it before anything renders
+    if (location.pathname.replace(/\/+$/, '') === '/rmkjrhackathon2026-adminlogin') document.documentElement.classList.add('admin-page');
+  </script>
+  <script src="/assets/jsQR.js"></script>
+  <script src="/assets/qrcode.min.js"></script>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
@@ -32,9 +36,9 @@
           <!-- Official RMK Header with Group Logo & Hackathon 2026 Logo -->
           <div class="auth-brand-head">
             <div class="auth-logos-capsule">
-              <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="rmk-group-banner-logo" />
+              <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="rmk-group-banner-logo" />
               <div class="logo-vertical-divider"></div>
-              <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="rmk-hackathon-banner-logo" />
+              <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="rmk-hackathon-banner-logo" />
             </div>
             <div class="auth-title-block">
               <h2 class="auth-event-title">RMK Junior Hackathon 2026</h2>
@@ -42,13 +46,8 @@
             </div>
           </div>
 
-          <div class="glass-switch-bar">
-            <button type="button" class="glass-pill-btn active" id="tab-btn-team" onclick="switchAuthTab('team')">Team Leader</button>
-            <button type="button" class="glass-pill-btn" id="tab-btn-admin" onclick="switchAuthTab('admin')">Admin</button>
-          </div>
-
           <!-- Team Leader Form -->
-          <div id="auth-pane-team" class="auth-form-pane active">
+          <div id="auth-pane-team" class="auth-form-pane">
             <form id="form-team-login" class="glass-form">
               <div class="form-group">
                 <label for="team-identifier-input">Team Leader Contact Number or Name</label>
@@ -65,7 +64,7 @@
           </div>
 
           <!-- Admin Form (Fully Responsive) -->
-          <div id="auth-pane-admin" class="auth-form-pane hidden">
+          <div id="auth-pane-admin" class="auth-form-pane">
             <form id="form-admin-login" class="glass-form">
               <div class="form-group">
                 <label for="admin-username">Admin Username</label>
@@ -98,9 +97,9 @@
       <header class="app-topbar">
         <div class="app-topbar-inner">
         <div class="topbar-logos">
-          <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="topbar-logo-rmk" />
+          <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="topbar-logo-rmk" />
           <div class="topbar-logo-divider"></div>
-          <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="topbar-logo-hackathon" />
+          <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="topbar-logo-hackathon" />
         </div>
         <button type="button" class="topbar-logout" onclick="logout()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -202,9 +201,9 @@
               <!-- Brand with RMK Group Logo & Hackathon Logo -->
               <div class="laptop-brand">
                 <div class="admin-sidebar-logos-card">
-                  <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="laptop-brand-logo" />
+                  <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="laptop-brand-logo" />
                   <div class="sidebar-logo-divider"></div>
-                  <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="laptop-hackathon-logo" />
+                  <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="laptop-hackathon-logo" />
                 </div>
               </div>
 
@@ -316,9 +315,9 @@
                     
                     <div class="standee-header-branding">
                       <div class="standee-logos-row">
-                        <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="standee-rmk-group-img" />
+                        <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="standee-rmk-group-img" />
                         <div class="standee-pipe"></div>
-                        <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="standee-hackathon-img" />
+                        <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="standee-hackathon-img" />
                       </div>
                     </div>
 
@@ -363,6 +362,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
