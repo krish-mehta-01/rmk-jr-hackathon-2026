@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>RMK Jr. Hackathon 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <script src="assets/jsQR.js"></script>
+  <script src="assets/qrcode.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Ambient Glowing Background -->
+  <div class="glass-ambient-bg">
+    <div class="ambient-blob blob-green-1"></div>
+    <div class="ambient-blob blob-amber-1"></div>
+    <div class="ambient-blob blob-green-2"></div>
+  </div>
+
+  <div class="app-root">
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  1. AUTHENTICATION                          -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-auth" class="app-view active">
+      <div class="auth-center-shell">
+        <div class="glass-card auth-glass-box">
+          
+          <!-- Official RMK Header with Group Logo & Hackathon 2026 Logo -->
+          <div class="auth-brand-head">
+            <div class="auth-logos-capsule">
+              <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="rmk-group-banner-logo" />
+              <div class="logo-vertical-divider"></div>
+              <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="rmk-hackathon-banner-logo" />
+            </div>
+            <div class="auth-title-block">
+              <h2 class="auth-event-title">RMK Junior Hackathon 2026</h2>
+              <p class="auth-portal-sub">Hackathon Day Presence</p>
+            </div>
+          </div>
+
+          <div class="glass-switch-bar">
+            <button type="button" class="glass-pill-btn active" id="tab-btn-team" onclick="switchAuthTab('team')">Team Leader</button>
+            <button type="button" class="glass-pill-btn" id="tab-btn-admin" onclick="switchAuthTab('admin')">Admin</button>
+          </div>
+
+          <!-- Team Leader Form -->
+          <div id="auth-pane-team" class="auth-form-pane active">
+            <form id="form-team-login" class="glass-form">
+              <div class="form-group">
+                <label for="team-identifier-input">Team Leader Contact Number or Name</label>
+                <input type="text" id="team-identifier-input" placeholder="Contact number or full name" required autocomplete="off" />
+              </div>
+
+              <div id="team-login-error" class="glass-alert-error hidden" role="alert"></div>
+
+              <button type="submit" class="glass-btn glass-btn-primary" id="team-login-btn">
+                <span class="btn-text">Access Team Pass</span>
+                <div class="btn-spinner hidden"></div>
+              </button>
+            </form>
+          </div>
+
+          <!-- Admin Form (Fully Responsive) -->
+          <div id="auth-pane-admin" class="auth-form-pane hidden">
+            <form id="form-admin-login" class="glass-form">
+              <div class="form-group">
+                <label for="admin-username">Admin Username</label>
+                <input type="text" id="admin-username" placeholder="Username" required autocomplete="username" />
+              </div>
+
+              <div class="form-group">
+                <label for="admin-password">Admin Password</label>
+                <input type="password" id="admin-password" placeholder="Password" required autocomplete="current-password" />
+              </div>
+
+              <div id="admin-login-error" class="glass-alert-error hidden" role="alert"></div>
+
+              <button type="submit" class="glass-btn glass-btn-primary" id="admin-login-btn">
+                <span class="btn-text">Sign in to Admin Portal</span>
+                <div class="btn-spinner hidden"></div>
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  2. TEAM VIEW                              -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-team" class="app-view hidden">
+      <header class="app-topbar">
+        <div class="app-topbar-inner">
+        <div class="topbar-logos">
+          <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="topbar-logo-rmk" />
+          <div class="topbar-logo-divider"></div>
+          <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="topbar-logo-hackathon" />
+        </div>
+        <button type="button" class="topbar-logout" onclick="logout()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Logout</span>
+        </button>
+        </div>
+      </header>
+
+      <main class="team-pass-shell">
+
+        <!-- Presence Pass Card -->
+        <div class="attendance-pass-card glass-card">
+
+          <div class="pass-header-strip">
+            <h1 class="pass-team-name" id="pass-team-name">Team Name</h1>
+            <div id="pass-status-pill" class="status-pill-badge pill-absent">Not Scanned</div>
+          </div>
+
+          <div id="scan-feedback" class="glass-feedback hidden" role="alert"></div>
+
+          <!-- Scan action (shown until the team has scanned) -->
+          <div id="pass-scan-action-wrap" class="pass-scan-wrap">
+            <button type="button" class="scan-zone" onclick="openScanner()" aria-label="Scan QR Code">
+              <span class="lens-target-corners" aria-hidden="true">
+                <span class="cor-tl"></span><span class="cor-tr"></span>
+                <span class="cor-bl"></span><span class="cor-br"></span>
+              </span>
+              <svg class="scan-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
+            </button>
+            <button type="button" class="glass-btn glass-btn-primary btn-scan-pass" id="btn-open-scanner" onclick="openScanner()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Scan QR Code
+            </button>
+          </div>
+
+          <!-- Camera Scanner Viewfinder -->
+          <div id="team-camera-view" class="mobile-camera-box hidden">
+            <div class="camera-lens-frame">
+              <video id="qr-video" playsinline></video>
+              <canvas id="qr-canvas" hidden></canvas>
+              <div class="lens-target-corners">
+                <span class="cor-tl"></span><span class="cor-tr"></span>
+                <span class="cor-bl"></span><span class="cor-br"></span>
+              </div>
+              <div class="lens-laser-line"></div>
+            </div>
+            <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="closeScanner()">
+              Close Camera
+            </button>
+          </div>
+
+          <!-- Success notification (after scanning) -->
+          <div id="pass-scanned-success-box" class="pass-success-box hidden" role="status">
+            <div class="success-check-badge">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="success-headline">Scanned Successfully</div>
+            <div class="success-sub" id="pass-scanned-time-sub"></div>
+          </div>
+
+          <!-- Team details (after scanning) -->
+          <dl id="pass-team-details" class="pass-details-list hidden">
+            <div class="pass-detail-row">
+              <dt>Idea Title</dt>
+              <dd id="pass-project-title">—</dd>
+            </div>
+            <div class="pass-detail-row">
+              <dt>School</dt>
+              <dd id="pass-school-name">—</dd>
+            </div>
+            <div class="pass-detail-row">
+              <dt>Mentor</dt>
+              <dd id="pass-mentor-name">—</dd>
+            </div>
+            <div class="pass-detail-row">
+              <dt>Team Members</dt>
+              <dd><ol id="pass-members-list" class="members-ol"></ol></dd>
+            </div>
+          </dl>
+
+
+        </div>
+
+      </main>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  3. ADMIN VIEW (Responsive to all screens)  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-admin" class="app-view hidden">
+      <div class="macos-window-shell">
+        <div class="laptop-bento-layout">
+          
+          <!-- Admin Sidebar / Responsive Navigation -->
+          <aside class="laptop-sidebar glass-card-dark">
+            <div class="sidebar-top">
+              
+              <!-- Brand with RMK Group Logo & Hackathon Logo -->
+              <div class="laptop-brand">
+                <div class="admin-sidebar-logos-card">
+                  <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="laptop-brand-logo" />
+                  <div class="sidebar-logo-divider"></div>
+                  <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="laptop-hackathon-logo" />
+                </div>
+              </div>
+
+              <nav class="laptop-nav">
+                <button type="button" class="laptop-nav-item active" id="alink-table" onclick="switchAdminSection('table')">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span>Teams Status</span>
+                </button>
+                <button type="button" class="laptop-nav-item" id="alink-qr" onclick="switchAdminSection('qr')">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
+                  <span>Hackathon Day QR</span>
+                </button>
+              </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+              <button type="button" class="glass-logout-pill" onclick="logout()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          </aside>
+
+          <!-- Main Content Area -->
+          <main class="laptop-main-content">
+            
+            <!-- Pane 1: Teams Attendance -->
+            <div id="admin-sec-table" class="admin-tab-pane active">
+              
+              <!-- Bento Stats Cards -->
+              <div class="laptop-stats-grid">
+                <div class="glass-card stat-bento-card">
+                  <span class="stat-tag">REGISTERED TEAMS</span>
+                  <div class="stat-number" id="stat-total">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card stat-green">
+                  <span class="stat-tag">SCANNED</span>
+                  <div class="stat-number" id="stat-present">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card stat-amber">
+                  <span class="stat-tag">NOT SCANNED</span>
+                  <div class="stat-number" id="stat-absent">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card">
+                  <span class="stat-tag">SCANNED RATE</span>
+                  <div class="stat-number" id="stat-rate">0%</div>
+                </div>
+              </div>
+
+              <!-- Teams Table Card -->
+              <div class="glass-card laptop-table-card">
+                <div class="table-action-header">
+                  
+                  <div class="table-search-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="admin-search-input" placeholder="Search by Team, Leader, Mentor, School, Idea..." oninput="handleTableSearch()" />
+                  </div>
+
+                  <div class="table-filter-pill">
+                    <button type="button" class="filter-tab active" data-filter="all" onclick="setAttendanceFilter('all', this)">All</button>
+                    <button type="button" class="filter-tab" data-filter="true" onclick="setAttendanceFilter('true', this)">Scanned</button>
+                    <button type="button" class="filter-tab" data-filter="false" onclick="setAttendanceFilter('false', this)">Not Scanned</button>
+                  </div>
+
+                  <div class="table-btn-cluster">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadTeamsTable()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                      Refresh
+                    </button>
+                    <button type="button" class="glass-btn glass-btn-primary btn-sm" onclick="exportExcel()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      Export Excel
+                    </button>
+                  </div>
+                </div>
+
+                <div class="table-scroll-container">
+                  <table class="glass-data-table">
+                    <thead>
+                      <tr>
+                        <th>Team</th>
+                        <th>Team Leader</th>
+                        <th>Mentor</th>
+                        <th>School</th>
+                        <th>Status</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="teams-table-body">
+                      <tr><td colspan="6" class="text-center loading-cell">Loading teams...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+
+
+            <!-- Pane 2: Hackathon Day Presence QR Standee -->
+            <div id="admin-sec-qr" class="admin-tab-pane hidden">
+              <div class="glass-card laptop-standee-bento">
+                <div class="standee-flex-row">
+                  
+                  <!-- Physical Standee Poster Preview -->
+                  <div class="standee-frame-card" id="standee-printable-card">
+                    
+                    <div class="standee-header-branding">
+                      <div class="standee-logos-row">
+                        <img src="assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="standee-rmk-group-img" />
+                        <div class="standee-pipe"></div>
+                        <img src="assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="standee-hackathon-img" />
+                      </div>
+                    </div>
+
+                    <h2 class="standee-event-heading">RMK Junior Hackathon 2026</h2>
+                    
+                    <div class="qr-canvas-holder" id="admin-qr-container">
+                      <div class="qr-loading">Generating Standee QR...</div>
+                    </div>
+
+                    <div class="standee-instruction-text">
+                      Scan this QR code from your team login to mark presence.
+                    </div>
+                  </div>
+
+                  <!-- Standee Controls & Info -->
+                  <div class="standee-details-col">
+                    <h3>Hackathon Day Venue Standee</h3>
+                    <p>Display or print this QR code at the venue. Teams scan this code from their phones to mark presence.</p>
+
+                    <div class="standee-btn-cluster">
+                      <button type="button" class="glass-btn glass-btn-primary" onclick="downloadQRCode()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Standee QR (PNG)
+                      </button>
+                      <button type="button" class="glass-btn glass-btn-secondary" onclick="printQRCode()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Print Official Standee
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </main>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast-notify" class="glass-toast hidden" role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

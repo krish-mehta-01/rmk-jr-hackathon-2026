@@ -1,0 +1,2099 @@
+/* ════════════════════════════════════════════════════════════════
+   RMK JR. HACKATHON 2026 — PRESENCE PORTAL STYLES
+   - Team view: top bar pinned to the top, phone first, centred column on tablet / laptop
+   - Admin view: sidebar on laptop, top bar + card list on tablet / phone
+   - Primary accent: Innovate Green (#059669). No emojis.
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Innovate Palette */
+  --accent-green:        #059669;
+  --accent-green-dark:   #047857;
+  --accent-green-light:  #10b981;
+  --accent-green-soft:   #ecfdf5;
+  --accent-green-border: #a7f3d0;
+
+  --accent-blue:         #0284c7;
+  --accent-blue-soft:    #f0f9ff;
+  --accent-blue-border:  #bae6fd;
+
+  --accent-amber:        #d97706;
+  --accent-amber-soft:   #fffbeb;
+
+  /* Typography Stack: Apple SF Pro & Modern Google Fonts */
+  --font-display:        -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif;
+  --font-text:           -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+  --font-mono:           "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Surfaces */
+  --bg-color:            #f8fafc;
+  --surface-card:        #ffffff;
+  --border-card:         #e2e8f0;
+  --border-subtle:       #edf2f7;
+
+  /* Text Colors */
+  --text-primary:        #0f172a;
+  --text-secondary:      #334155;
+  --text-muted:          #64748b;
+  --text-sub:            #94a3b8;
+
+  /* macOS Dark Sidebar */
+  --mac-sidebar-bg:      #0b1324;
+  --mac-card-bg:         rgba(255, 255, 255, 0.05);
+  --mac-card-border:     rgba(255, 255, 255, 0.08);
+  --mac-text:            #f8fafc;
+  --mac-text-muted:      #94a3b8;
+  --mac-active-item:     #059669;
+
+  /* Radii */
+  --radius-xs:           6px;
+  --radius-sm:           10px;
+  --radius-md:           16px;
+  --radius-lg:           24px;
+  --radius-xl:           36px;
+  --radius-pill:         9999px;
+
+  /* Transitions */
+  --transition:          all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── HIDE SCROLLBARS GLOBALLY ─── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+html, body {
+  height: 100%;
+  min-height: 100vh;
+  font-family: var(--font-text);
+  color: var(--text-primary);
+  background-color: var(--bg-color);
+  line-height: 1.5;
+  font-size: 14px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* ─── AMBIENT BACKGROUND GLOW ─── */
+.glass-ambient-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.28;
+  animation: floatBlobs 16s infinite ease-in-out alternate;
+}
+
+.blob-green-1 {
+  width: 440px;
+  height: 440px;
+  background: radial-gradient(circle, #059669 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+}
+
+.blob-amber-1 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, #0284c7 0%, transparent 70%);
+  top: 40%;
+  right: -80px;
+  animation-duration: 20s;
+}
+
+.blob-green-2 {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, #10b981 0%, transparent 70%);
+  bottom: -120px;
+  left: 20%;
+  animation-duration: 24s;
+}
+
+@keyframes floatBlobs {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(30px, 40px) scale(1.08); }
+  100% { transform: translate(-20px, 20px) scale(0.96); }
+}
+
+.app-root {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.app-view {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none !important;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   1. AUTHENTICATION VIEW
+   ════════════════════════════════════════════════════════════════ */
+.auth-center-shell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+}
+
+.auth-glass-box {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: var(--radius-xl);
+  padding: 38px 32px 28px 32px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.auth-brand-head {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.auth-logos-capsule {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 12px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  margin-bottom: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.rmk-group-banner-logo {
+  height: 44px;
+  width: auto;
+  max-width: 170px;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-vertical-divider {
+  width: 2px;
+  height: 36px;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.8), rgba(16, 185, 129, 0.2));
+  border-radius: 2px;
+}
+
+.rmk-hackathon-banner-logo {
+  height: 48px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.06));
+}
+
+.auth-title-block {
+  margin-top: 4px;
+}
+
+.auth-event-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+}
+
+.auth-portal-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Glass Segmented Switch (Apple Style) */
+.glass-switch-bar {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.glass-pill-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.glass-pill-btn.active {
+  background: #ffffff;
+  color: var(--text-primary);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+  letter-spacing: 0.01em;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  font-family: var(--font-text);
+  font-size: 14.5px;
+  color: var(--text-primary);
+  background: #ffffff;
+  outline: none;
+  transition: var(--transition);
+}
+
+.form-group input:focus {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.14);
+}
+
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+
+.glass-btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28);
+}
+
+.glass-btn-primary:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.36);
+  transform: translateY(-1px);
+}
+
+.glass-btn-secondary {
+  background: #f1f5f9;
+  color: var(--text-primary);
+  border: 1px solid #cbd5e1;
+}
+
+.glass-btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.glass-btn.btn-sm {
+  padding: 8px 16px;
+  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+}
+
+.glass-alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   2. TEAM LEADER VIEW — CLEAN PARTICIPANT PASS
+   ════════════════════════════════════════════════════════════════ */
+.team-pass-shell {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 14px 40px;
+}
+
+/* Modern Attendance Pass Card */
+.attendance-pass-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 24px 20px 22px 20px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  position: relative;
+  overflow: hidden;
+}
+
+.attendance-pass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #059669 0%, #10b981 50%, #0284c7 100%);
+}
+
+.pass-header-strip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pass-team-name {
+  font-size: 21px;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.25;
+  margin: 0 0 4px 0;
+}
+
+.status-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 5px 13px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pill-absent {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.pill-present {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.pass-scan-wrap {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.btn-scan-pass {
+  width: 100%;
+  font-size: 15.5px;
+  font-weight: 800;
+  padding: 15px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.28);
+}
+
+/* Scanned Success Notification Box */
+.pass-success-box {
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(209, 250, 229, 0.95));
+  border: 1.5px solid #10b981;
+  border-radius: var(--radius-lg);
+  padding: 22px 18px;
+  text-align: center;
+  margin: 16px 0;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+  animation: popSuccess 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popSuccess {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.success-check-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid #059669;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+}
+
+.success-headline {
+  font-size: 18px;
+  font-weight: 900;
+  color: #065f46;
+  margin-bottom: 4px;
+}
+
+.success-sub {
+  font-size: 13px;
+  color: #047857;
+  font-weight: 700;
+}
+
+/* Team Details with Mentor Bento Card */
+
+/* Camera Scanner Viewfinder */
+.mobile-camera-box {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.camera-lens-frame {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  background: #000000;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.camera-lens-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lens-target-corners {
+  position: absolute;
+  inset: 20px;
+  pointer-events: none;
+}
+
+.lens-target-corners span {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #10b981;
+  border-style: solid;
+}
+
+.cor-tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.cor-tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.cor-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.cor-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+.lens-laser-line {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
+  animation: laserScan 2s infinite ease-in-out alternate;
+}
+
+@keyframes laserScan {
+  0% { top: 25px; }
+  100% { top: calc(100% - 25px); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   3. ADMIN WORKSPACE — macOS SONOMA / SEQUOIA DESIGN
+   ════════════════════════════════════════════════════════════════ */
+.macos-window-shell {
+  padding: 16px 20px;
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.laptop-bento-layout {
+  display: flex;
+  width: 100%;
+  max-width: 1440px;
+  height: 100%;
+  max-height: calc(100vh - 32px);
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+/* macOS Sidebar */
+.laptop-sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: var(--mac-sidebar-bg);
+  color: var(--mac-text);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 14px;
+  border-right: 1px solid var(--mac-card-border);
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none !important;
+}
+
+/* macOS Traffic Lights */
+
+.laptop-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.laptop-brand-logo {
+  height: 34px;
+  width: auto;
+  max-width: 170px;
+  object-fit: contain;
+  display: block;
+}
+
+.laptop-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.laptop-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--mac-text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+
+.laptop-nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.laptop-nav-item.active {
+  background: var(--accent-green);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+}
+
+.glass-logout-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: #cbd5e1;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.glass-logout-pill:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Main macOS Content Area */
+.laptop-main-content {
+  flex: 1;
+  padding: 18px 24px;
+  background: #f8fafc;
+  overflow-y: auto;
+  scrollbar-width: none !important;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bento Stats Grid */
+.laptop-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.stat-bento-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
+.stat-tag {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.stat-number {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.stat-green .stat-number {
+  color: var(--accent-green);
+}
+
+.stat-amber .stat-number {
+  color: var(--accent-amber);
+}
+
+/* Teams Table Bento Card */
+.laptop-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.table-action-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.table-search-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  flex: 1;
+  max-width: 340px;
+}
+
+.table-search-pill input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-text);
+  font-size: 13px;
+  width: 100%;
+}
+
+.table-filter-pill {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  border: 1px solid #cbd5e1;
+}
+
+.filter-tab {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filter-tab.active {
+  background: #ffffff;
+  color: var(--text-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.table-btn-cluster {
+  display: flex;
+  gap: 8px;
+}
+
+.table-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: none !important;
+  min-height: 0;
+}
+
+.glass-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.glass-data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1.5px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.glass-data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.glass-data-table th:nth-child(5),
+.glass-data-table td:nth-child(5),
+.glass-data-table td:nth-child(6) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.glass-data-table tr:hover td {
+  background: #f8fafc;
+}
+
+.pill-present {
+  background: var(--accent-green-soft);
+  color: var(--accent-green-dark);
+  border: 1px solid var(--accent-green-border);
+}
+
+.pill-absent {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PANE 2: ENTRANCE PASS SCANNER (GATE ADMIN MODE)
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   PANE 3: HACKATHON DAY QR STANDEE
+   ════════════════════════════════════════════════════════════════ */
+.laptop-standee-bento {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  padding: 24px 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.standee-flex-row {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  justify-content: center;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.standee-frame-card {
+  width: 320px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 2px solid var(--accent-green);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(5, 150, 105, 0.08);
+}
+
+.standee-header-branding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.standee-rmk-group-img {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+
+
+.standee-event-heading {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.qr-canvas-holder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.qr-canvas-holder img {
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.standee-instruction-text {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.standee-details-col {
+  flex: 1;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.standee-details-col h3 {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  line-height: 1.25;
+}
+
+.standee-details-col p {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.standee-btn-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.standee-btn-cluster .glass-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 11px 18px;
+  font-size: 13.5px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ABOUT JUNIOR HACKATHON MODAL
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ════════════════════════════════════════════════════════════════ */
+.glass-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 13.5px;
+  font-weight: 700;
+  z-index: 9999;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: slideToastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideToastIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.toast-success {
+  background: #059669;
+  color: #ffffff;
+}
+
+.toast-error {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.toast-info {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ADMIN TABLE CELL STYLES & BADGES
+   ════════════════════════════════════════════════════════════════ */
+.table-team-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.glass-btn-table-action {
+  font-family: var(--font-text);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-action-unmarked {
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.btn-action-unmarked:hover {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+.btn-action-marked {
+  background: #ffffff;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-action-marked:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+/* Sidebar & Standee Logo Layouts */
+.admin-sidebar-logos-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sidebar-logo-divider {
+  width: 1.5px;
+  height: 28px;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.8), rgba(16, 185, 129, 0.2));
+  border-radius: 1px;
+}
+
+.standee-logos-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.standee-rmk-group-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+}
+
+.standee-pipe {
+  width: 2px;
+  height: 32px;
+  background: #10b981;
+}
+
+.standee-hackathon-img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN ACROSS ALL SCREENS
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  .macos-window-shell {
+    padding: 8px;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .laptop-bento-layout {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .laptop-sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--mac-card-border);
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+    box-sizing: border-box;
+  }
+
+  .sidebar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .laptop-brand {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .laptop-nav {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .laptop-nav-item {
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+
+  .sidebar-bottom {
+    position: static;
+    margin-top: 0;
+  }
+
+  .glass-logout-pill {
+    padding: 8px 14px;
+    font-size: 12.5px;
+  }
+
+  .laptop-main-content {
+    padding: 12px 6px;
+  }
+
+  .laptop-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-bento-card {
+    padding: 12px 14px;
+  }
+
+  .stat-number {
+    font-size: 24px;
+  }
+
+  .laptop-table-card {
+    padding: 14px 10px;
+    border-radius: var(--radius-lg);
+  }
+
+  .table-action-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .table-search-pill {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .table-filter-pill {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .table-btn-cluster {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .table-scroll-container {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .standee-flex-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .standee-frame-card {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .standee-details-col {
+    max-width: 100%;
+    width: 100%;
+    text-align: center;
+  }
+
+  .standee-btn-cluster {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 540px) {
+  .auth-center-shell {
+    padding: 16px 10px;
+  }
+
+  .auth-glass-box {
+    padding: 24px 18px 20px 18px;
+    border-radius: var(--radius-lg);
+  }
+
+  .auth-logos-capsule {
+    padding: 8px 14px;
+    gap: 10px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .rmk-group-banner-logo {
+    height: 34px;
+    max-width: 120px;
+  }
+
+  .logo-vertical-divider {
+    height: 26px;
+  }
+
+  .rmk-hackathon-banner-logo {
+    height: 38px;
+    max-width: 140px;
+  }
+
+  .auth-event-title {
+    font-size: 17px;
+  }
+
+  .auth-portal-sub {
+    font-size: 12px;
+  }
+
+  .glass-pill-btn {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .glass-form input {
+    font-size: 16px; /* Prevents mobile browser auto-zoom */
+    padding: 12px 14px;
+  }
+
+  .glass-btn {
+    padding: 13px 18px;
+    font-size: 14.5px;
+  }
+
+  .attendance-pass-card {
+    padding: 18px 14px;
+  }
+
+  .pass-team-name {
+    font-size: 18px;
+  }
+
+  .laptop-sidebar {
+    padding: 10px 12px;
+  }
+
+  .admin-sidebar-logos-card {
+    padding: 8px 10px;
+  }
+
+  .laptop-brand-logo {
+    height: 26px;
+  }
+
+  .laptop-hackathon-logo {
+    height: 30px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LOGOS — white backgrounds so both logos stay readable
+   ════════════════════════════════════════════════════════════════ */
+.admin-sidebar-logos-card {
+  background: #ffffff;
+  border-color: #ffffff;
+  justify-content: center;
+}
+
+.laptop-brand-logo {
+  height: 30px;
+  max-width: 96px;
+}
+
+.laptop-hackathon-logo {
+  height: 32px;
+  width: auto;
+  max-width: 100px;
+  object-fit: contain;
+  display: block;
+}
+
+.sidebar-logo-divider {
+  background: #cbd5e1;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TEAM PASS — before scan: name, status, button; after scan: details
+   ════════════════════════════════════════════════════════════════ */
+.pass-header-strip {
+  align-items: center;
+}
+
+.pass-team-name {
+  margin: 0;
+}
+
+.pass-details-list {
+  margin: 0;
+  border-top: 1px solid #f1f5f9;
+  animation: popSuccess 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pass-detail-row {
+  padding: 12px 2px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pass-detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.pass-detail-row dt {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.pass-detail-row dd {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.members-ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+  margin: 0;
+}
+
+.members-ol li {
+  padding-left: 2px;
+  margin: 2px 0;
+}
+
+.members-ol li::marker {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.member-leader-tag {
+  margin-left: 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  vertical-align: middle;
+}
+
+.mobile-camera-box {
+  margin: 16px 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TOAST — top centre so it never covers buttons or table actions
+   ════════════════════════════════════════════════════════════════ */
+.glass-toast {
+  top: 16px;
+  bottom: auto;
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  text-align: center;
+  animation: none;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ADMIN TABLE — card list on tablets and phones
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  .glass-data-table thead {
+    display: none;
+  }
+
+  .glass-data-table,
+  .glass-data-table tbody,
+  .glass-data-table tr,
+  .glass-data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .glass-data-table tr {
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: #ffffff;
+  }
+
+  .glass-data-table td,
+  .glass-data-table td:nth-child(5),
+  .glass-data-table td:nth-child(6) {
+    border-bottom: none;
+    padding: 4px 0;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .glass-data-table td[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+
+  .glass-data-table td:nth-child(5) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .glass-data-table td:nth-child(5)::before {
+    width: 100%;
+  }
+
+  .glass-data-table td.table-actions-cell {
+    display: flex;
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .table-actions-cell .btn-view-details {
+    flex: 1;
+    padding: 10px 12px;
+    margin: 0;
+  }
+
+  .team-detail-row .team-detail-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .team-detail-body .glass-btn-table-action {
+    width: 100%;
+    padding: 10px 12px;
+  }
+
+  .table-actions-cell .btn-view-details {
+    border: 1px solid var(--accent-green-border);
+    border-radius: var(--radius-sm);
+    background: var(--accent-green-soft);
+  }
+
+  /* Expanded details attach to the bottom of their card */
+  .glass-data-table tr.team-row.is-open {
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .glass-data-table tr.team-detail-row {
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    background: #f8fafc;
+  }
+
+  .glass-data-table tr.team-detail-row td {
+    padding: 0;
+    background: transparent;
+  }
+
+  .glass-data-table tr:hover td {
+    background: transparent;
+  }
+
+  .table-scroll-container {
+    overflow: visible;
+  }
+
+  .laptop-table-card {
+    overflow: visible;
+  }
+}
+
+/* Scan error message under the button */
+.glass-feedback {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.feedback-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+/* Admin on tablets and phones: no fixed-height window, the admin view itself scrolls */
+@media (max-width: 960px) {
+  .laptop-bento-layout {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .laptop-sidebar {
+    flex-shrink: 0;
+  }
+
+  .laptop-main-content {
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PAGE HEIGHT — dynamic viewport so phone browser bars never hide content
+   ════════════════════════════════════════════════════════════════ */
+.app-root,
+.app-view {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TEAM LEADER TOP BAR — pinned to the top on every device
+   ════════════════════════════════════════════════════════════════ */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-card);
+}
+
+.app-topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.topbar-logos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-logo-rmk {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+.topbar-logo-hackathon {
+  height: 34px;
+  width: auto;
+  display: block;
+}
+
+.topbar-logo-divider {
+  width: 1px;
+  height: 26px;
+  background: #cbd5e1;
+}
+
+.topbar-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.topbar-logout:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* Tablet and laptop: wider team column, details side by side */
+@media (min-width: 768px) {
+  .team-pass-shell {
+    max-width: 640px;
+    padding-top: 40px;
+  }
+
+  .attendance-pass-card {
+    padding: 28px 28px 26px;
+  }
+
+  .pass-team-name {
+    font-size: 24px;
+  }
+
+  .pass-details-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+  }
+
+  .pass-detail-row:first-child,
+  .pass-detail-row:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .app-topbar-inner {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .topbar-logo-rmk {
+    height: 26px;
+  }
+
+  .topbar-logo-hackathon {
+    height: 28px;
+  }
+
+  .topbar-logo-divider {
+    height: 20px;
+  }
+
+  .topbar-logout {
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ADMIN TABLE — expandable team details
+   ════════════════════════════════════════════════════════════════ */
+.table-actions-cell {
+  text-align: right;
+}
+
+.btn-view-details {
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-green-dark);
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  margin-right: 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-view-details:hover {
+  background: var(--accent-green-soft);
+}
+
+.team-row.is-open td {
+  border-bottom-color: transparent;
+}
+
+.team-detail-row td {
+  background: #f8fafc;
+  padding: 12px 16px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.glass-data-table tr.team-detail-row:hover td {
+  background: #f8fafc;
+}
+
+.team-detail-body {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.team-detail-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 24px;
+  margin: 0;
+}
+
+.team-detail-grid dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.team-detail-grid dd {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SCAN AREA — tap target that becomes the camera when scanning
+   ════════════════════════════════════════════════════════════════ */
+.scan-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 240px;
+  margin-bottom: 14px;
+  background: var(--accent-green-soft);
+  border: 1px solid var(--accent-green-border);
+  border-radius: var(--radius-md);
+  color: var(--accent-green);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+@media (hover: hover) {
+  .scan-zone:hover {
+    background: #d1fae5;
+  }
+}
+
+.scan-zone-icon {
+  width: 84px;
+  height: 84px;
+}
+
+#pass-status-pill {
+  flex-shrink: 0;
+}
+
+#scan-feedback {
+  margin: 0 0 14px;
+}
+
+/* Phones and tablets (any touch screen): the card fills the screen, scan area in the middle, button within thumb reach */
+@media (max-width: 1024px), (pointer: coarse) {
+  .team-pass-shell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .attendance-pass-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pass-scan-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+  }
+
+  .scan-zone {
+    flex: 1;
+    height: auto;
+    min-height: 220px;
+    margin-bottom: 0;
+  }
+
+  .scan-zone-icon {
+    width: clamp(96px, 18vw, 140px);
+    height: clamp(96px, 18vw, 140px);
+  }
+
+  .btn-scan-pass {
+    padding: 17px 22px;
+    font-size: 16px;
+  }
+
+  .mobile-camera-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .mobile-camera-box .camera-lens-frame {
+    flex: 1;
+    height: auto;
+    min-height: 260px;
+  }
+
+  .mobile-camera-box .glass-btn {
+    padding: 15px 22px;
+    font-size: 15px;
+  }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .team-pass-shell {
+    max-width: none;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .attendance-pass-card {
+    border-radius: var(--radius-lg);
+    padding: 20px 16px 16px;
+  }
+
+  .pass-team-name {
+    font-size: 22px;
+  }
+
+  .topbar-logo-rmk {
+    height: 28px;
+  }
+
+  .topbar-logo-hackathon {
+    height: 30px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ADMIN — compact layout on tablets and phones (laptop keeps the sidebar)
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  /* Header pinned to the top: logos + logout on one row, section tabs full width below */
+  .laptop-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand logout"
+      "nav nav";
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .sidebar-top {
+    display: contents;
+  }
+
+  .laptop-brand {
+    grid-area: brand;
+    min-width: 0;
+  }
+
+  .admin-sidebar-logos-card {
+    padding: 8px 12px;
+  }
+
+  .laptop-brand-logo {
+    height: 26px;
+  }
+
+  .laptop-hackathon-logo {
+    height: 28px;
+  }
+
+  .sidebar-logo-divider {
+    height: 22px;
+  }
+
+  .sidebar-bottom {
+    grid-area: logout;
+    display: flex;
+    align-self: stretch;
+  }
+
+  .glass-logout-pill {
+    width: auto;
+    padding: 0 16px;
+    font-size: 13.5px;
+  }
+
+  .laptop-nav {
+    grid-area: nav;
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .laptop-nav-item {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Stats: one compact row */
+  .laptop-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .stat-bento-card {
+    padding: 10px;
+  }
+
+  .stat-tag {
+    font-size: 9px;
+    line-height: 1.25;
+    min-height: 2.5em;
+  }
+
+  .stat-number {
+    font-size: 22px;
+  }
+
+  /* Team cards: name + status on top, short lines below */
+  .glass-data-table tr.team-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "team status"
+      "leader leader"
+      "mentor mentor"
+      "school school"
+      "actions actions";
+    column-gap: 10px;
+    row-gap: 3px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+
+  .glass-data-table .team-row td {
+    padding: 0;
+    font-size: 13px;
+  }
+
+  .glass-data-table .team-row td:nth-child(1) { grid-area: team; }
+  .glass-data-table .team-row td:nth-child(2) { grid-area: leader; }
+  .glass-data-table .team-row td:nth-child(3) { grid-area: mentor; }
+  .glass-data-table .team-row td:nth-child(4) { grid-area: school; color: var(--text-muted); font-size: 12px; }
+
+  .glass-data-table .team-row td:nth-child(5) {
+    grid-area: status;
+    display: block;
+    align-self: start;
+  }
+
+  .glass-data-table .team-row td:nth-child(6) {
+    grid-area: actions;
+    padding-top: 8px;
+  }
+
+  .glass-data-table .team-row .table-team-title {
+    font-size: 15px;
+  }
+
+  /* Only Team Leader and Mentor keep a label, inline */
+  .glass-data-table .team-row td[data-label]::before {
+    content: none;
+  }
+
+  .glass-data-table .team-row td[data-label="Team Leader"]::before,
+  .glass-data-table .team-row td[data-label="Mentor"]::before {
+    content: attr(data-label) ": ";
+    display: inline;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .table-actions-cell .btn-view-details {
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .macos-window-shell {
+    padding: 0;
+  }
+
+  .laptop-bento-layout {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .laptop-sidebar {
+    border-radius: 0;
+  }
+
+  .laptop-main-content {
+    padding: 10px 8px 24px;
+  }
+}

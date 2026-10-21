@@ -1,0 +1,10 @@
+{
+  "name": "rmk-jr-hackathon-2026",
+  "private": true,
+  "description": "RMK Jr. Hackathon 2026 presence portal",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "import": "npm --prefix backend run import --"
+  }
+}
