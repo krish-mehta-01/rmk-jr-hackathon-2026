@@ -45,7 +45,9 @@ const rawPool = mysql.createPool({
   maxIdle: 10,
   idleTimeout: 60000,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 10000
+  keepAliveInitialDelay: 10000,
+  // Store times in UTC so the cloud server (UTC) and this laptop (IST) agree
+  timezone: 'Z'
 });
 
 const TRANSIENT_ERRORS = new Set(['ECONNRESET', 'PROTOCOL_CONNECTION_LOST', 'EPIPE', 'ETIMEDOUT']);

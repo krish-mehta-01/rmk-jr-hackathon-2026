@@ -42,9 +42,15 @@ Rows are matched by team leader contact number; re-importing updates details wit
 
 Registered contact number, or the leader's full name as registered (initials optional, e.g. `Janani` for `S. Janani`).
 
-## Hosting for hackathon day
+## Live site (Render)
 
-Phone cameras only work on **https://** pages, so the portal must be reachable over HTTPS (e.g. a cloud host with HTTPS, or an HTTPS tunnel to this machine). `http://<laptop-ip>:3000` will not be able to open the camera.
+https://rmk-jr-hackathon-2026.onrender.com — Render free web service (Singapore), built from the `main` branch of the private GitHub repo `krish-mehta-01/rmk-jr-hackathon-2026`.
+
+- Every push to `main` redeploys automatically (settings: root `backend`, build `npm ci`, start `node server.js`, health check `/api/health`).
+- Secrets are set as Render environment variables (same keys as `backend/.env`, plus `NODE_VERSION=22`). `.env` is never committed.
+- Free instances sleep after 15 minutes without visitors; the next visit takes about a minute. On hackathon day, keep it awake with a free uptime pinger (e.g. cron-job.org or UptimeRobot) hitting `https://rmk-jr-hackathon-2026.onrender.com/api/health` every 10 minutes.
+
+Phone cameras only work on **https://** pages, so always share the onrender.com link, not `http://<laptop-ip>:3000`.
 
 ## Before the event
 
