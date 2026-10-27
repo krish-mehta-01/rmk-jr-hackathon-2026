@@ -83,25 +83,34 @@ function showView(viewId) {
 // ─────────────────────────────────────────────────────────────
 async function handleTeamLogin(e) {
   e.preventDefault();
-  const inputEl = document.getElementById('team-identifier-input');
-  const identifier = inputEl ? inputEl.value.trim() : '';
   const errorEl = document.getElementById('team-login-error');
   const btn = document.getElementById('team-login-btn');
 
+  // Team IDs are RMKJH2610 + two digits; leaders type only the digits ("5" means "05")
+  const idDigits = document.getElementById('team-id-input').value.replace(/\D/g, '');
+  const phone = document.getElementById('team-phone-input').value.replace(/\D/g, '').slice(-10);
+
   errorEl.classList.add('hidden');
   errorEl.textContent = '';
+
+  if (!idDigits || phone.length !== 10) {
+    errorEl.textContent = 'Enter the last digits of your Team ID and the 10-digit phone number.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
   setButtonLoading(btn, true);
 
   try {
     const res = await fetch('/api/team/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier })
+      body: JSON.stringify({ team_id: 'RMKJH2610' + idDigits.padStart(2, '0'), phone })
     });
 
     const data = await res.json();
     if (!res.ok) {
-      errorEl.textContent = data.error || 'Team not found. Please enter registered Contact Number or Team Leader Name.';
+      errorEl.textContent = data.error || 'Team ID and phone number do not match. Please check both.';
       errorEl.classList.remove('hidden');
       return;
     }

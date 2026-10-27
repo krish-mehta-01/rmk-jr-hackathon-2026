@@ -49,8 +49,19 @@
           <div id="auth-pane-team" class="auth-form-pane">
             <form id="form-team-login" class="glass-form">
               <div class="form-group">
-                <label for="team-identifier-input">Team Leader Contact Number or Name</label>
-                <input type="text" id="team-identifier-input" placeholder="Contact number or full name" required autocomplete="off" />
+                <label for="team-id-input">Team ID</label>
+                <div class="input-prefix-group">
+                  <span class="input-prefix">RMKJH2610</span>
+                  <input type="text" id="team-id-input" inputmode="numeric" maxlength="2" placeholder="00" required autocomplete="off" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="team-phone-input">Team Leader Phone Number</label>
+                <div class="input-prefix-group">
+                  <span class="input-prefix">+91</span>
+                  <input type="tel" id="team-phone-input" inputmode="numeric" maxlength="10" placeholder="Phone number" required autocomplete="tel-national" />
+                </div>
               </div>
 
               <div id="team-login-error" class="glass-alert-error hidden" role="alert"></div>

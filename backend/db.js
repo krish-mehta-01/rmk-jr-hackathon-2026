@@ -80,9 +80,10 @@ async function setupSchema() {
     CREATE TABLE IF NOT EXISTS teams (
       id INT AUTO_INCREMENT PRIMARY KEY,
       team_uuid VARCHAR(36) NULL,
+      team_code VARCHAR(20) NULL,
       team_name VARCHAR(200) NOT NULL,
       leader_name VARCHAR(200) NOT NULL,
-      mobile_no VARCHAR(15) UNIQUE NOT NULL,
+      mobile_no VARCHAR(15) NOT NULL,
       email VARCHAR(200),
       college_name VARCHAR(300),
       project_title VARCHAR(300),
@@ -96,6 +97,7 @@ async function setupSchema() {
       qr_verification_token VARCHAR(64) NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE INDEX uq_team_code (team_code),
       INDEX idx_mobile (mobile_no),
       INDEX idx_present (is_present)
     )
@@ -103,6 +105,22 @@ async function setupSchema() {
   await pool.execute('ALTER TABLE teams ADD COLUMN IF NOT EXISTS mentor_name VARCHAR(200) NULL');
   await pool.execute('ALTER TABLE teams ADD COLUMN IF NOT EXISTS mentor_contact VARCHAR(50) NULL');
   await pool.execute('ALTER TABLE teams ADD COLUMN IF NOT EXISTS mentor_email VARCHAR(200) NULL');
+
+  // Teams are identified by their official TEAM ID (e.g. RMKJH261049). Phone numbers are not
+  // unique: some schools registered several teams under one teacher's number.
+  await pool.execute('ALTER TABLE teams ADD COLUMN IF NOT EXISTS team_code VARCHAR(20) NULL');
+  await pool.execute('CREATE UNIQUE INDEX IF NOT EXISTS uq_team_code ON teams (team_code)');
+  const [indexes] = await pool.execute('SHOW INDEX FROM teams');
+  const uniqueOnMobile = new Set(
+    indexes
+      .filter(i => i.Key_name !== 'PRIMARY' && !i.Non_unique)
+      .filter(i => indexes.filter(j => j.Key_name === i.Key_name).every(j => j.Column_name === 'mobile_no'))
+      .map(i => i.Key_name)
+  );
+  for (const name of uniqueOnMobile) {
+    await pool.execute(`ALTER TABLE teams DROP INDEX \`${name}\``);
+    console.log(`[OK] Dropped unique index ${name} on teams.mobile_no`);
+  }
 
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS admins (

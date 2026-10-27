@@ -2077,3 +2077,50 @@ h4 {
   display: block;
 }
 
+
+/* ════════════════════════════════════════════════════════════════
+   TEAM LOGIN — fixed prefix inside the box (Team ID "RMKJH2610", phone "+91")
+   ════════════════════════════════════════════════════════════════ */
+.input-prefix-group {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.input-prefix-group:focus-within {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.14);
+}
+
+.input-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 16px;
+  background: #f1f5f9;
+  border-right: 1.5px solid #e2e8f0;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.form-group .input-prefix-group input,
+.form-group .input-prefix-group input:focus {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#team-id-input {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

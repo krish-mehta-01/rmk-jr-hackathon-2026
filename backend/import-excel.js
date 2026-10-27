@@ -1,17 +1,16 @@
 /**
- * RMK Jr. Hackathon 2026 — Official Excel Importer Script
- * Seamlessly parses Google Forms responses and custom spreadsheets into TiDB Cloud.
+ * RMK Jr. Hackathon 2026 — Excel importer
+ * Loads the Google Forms responses sheet into TiDB. Teams are matched by their official TEAM ID,
+ * so re-importing a newer sheet adds new teams and updates details without touching scan status.
  *
  * Usage:
- *   node backend/import-excel.js [optional_path_to_excel_file]
- *   npm run import
+ *   npm run import -- "C:\path\to\Junior Hackathon 2026 (Responses).xlsx"
  */
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const XLSX = require('xlsx');
 const { pool, testConnection } = require('./db');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // Flexible column matcher with exclusions
 function findKey(row, aliases, excludeWords = []) {
@@ -48,17 +47,23 @@ function cleanMobile(raw) {
   return str;
 }
 
+// "S. Janani" and "S Janani" count as the same leader
+function sameName(a, b) {
+  const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return norm(a) === norm(b);
+}
+
 // Build list of team members
 function extractMembers(row, leaderName) {
   const members = [leaderName];
   for (let i = 2; i <= 6; i++) {
     const key = Object.keys(row).find(k => {
       const clean = k.toLowerCase().replace(/[^a-z0-9]/g, '');
-      return clean.includes(`member${i}`) && 
-             !clean.includes('id') && 
-             !clean.includes('card') && 
-             !clean.includes('contact') && 
-             !clean.includes('phone') && 
+      return clean.includes(`member${i}`) &&
+             !clean.includes('id') &&
+             !clean.includes('card') &&
+             !clean.includes('contact') &&
+             !clean.includes('phone') &&
              !clean.includes('email');
     });
     if (key && row[key]) {
@@ -84,27 +89,12 @@ async function importExcel(filePath) {
   console.log('   RMK JR. HACKATHON 2026 — EXCEL TO TiDB IMPORTER');
   console.log('====================================================\n');
 
-  // 1. Locate file
-  let targetFile = filePath;
-  const defaultDownloadPath = 'C:\\Users\\krish\\Downloads\\Junior Hackathon 2026 (Responses) (1).xlsx';
-
-  if (!targetFile) {
-    if (fs.existsSync(defaultDownloadPath)) {
-      targetFile = defaultDownloadPath;
-      console.log(`[INFO] Auto-detected download responses file: ${targetFile}`);
-    } else {
-      const files = fs.readdirSync(__dirname).filter(f => f.endsWith('.xlsx') || f.endsWith('.xls'));
-      if (files.length > 0) {
-        targetFile = path.join(__dirname, files[0]);
-        console.log(`[INFO] Auto-detected Excel file in workspace: ${files[0]}`);
-      } else {
-        console.error('[ERROR] No Excel file specified and none found.');
-        process.exit(1);
-      }
-    }
+  // 1. Locate file (always explicit, so an outdated download is never picked up by accident)
+  if (!filePath) {
+    console.error('[ERROR] Give the Excel file: npm run import -- "C:\\path\\to\\responses.xlsx"');
+    process.exit(1);
   }
-
-  const resolvedPath = path.resolve(targetFile);
+  const resolvedPath = path.resolve(filePath);
   if (!fs.existsSync(resolvedPath)) {
     console.error(`[ERROR] File does not exist: ${resolvedPath}`);
     process.exit(1);
@@ -115,35 +105,30 @@ async function importExcel(filePath) {
   const sheetName = workbook.SheetNames[0];
   console.log(`[INFO] Processing Sheet: "${sheetName}"`);
 
-  const worksheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
   if (rows.length === 0) {
     console.error('[ERROR] The spreadsheet contains no data rows.');
     process.exit(1);
   }
-
   console.log(`[INFO] Found ${rows.length} rows in sheet.\n`);
 
-  // 2. Connect and verify TiDB schema
+  // 2. Connect and verify TiDB schema (db.js adds the team_code column if needed)
   console.log('[STEP 2] Connecting to database and verifying schema...');
-  const connected = await testConnection();
-  if (!connected) {
-    console.warn('[WARN] Running import against in-memory fallback.');
+  if (!(await testConnection())) {
+    console.error('[ERROR] Could not connect to TiDB.');
+    process.exit(1);
   }
 
-  // Ensure mentor columns exist
-  try {
-    await pool.execute('ALTER TABLE teams ADD COLUMN IF NOT EXISTS mentor_name VARCHAR(200) NULL');
-    await pool.execute('ALTER TABLE teams ADD COLUMN IF NOT EXISTS mentor_contact VARCHAR(50) NULL');
-    await pool.execute('ALTER TABLE teams ADD COLUMN IF NOT EXISTS mentor_email VARCHAR(200) NULL');
-  } catch {}
-
-  // 3. Process and map columns
-  console.log('\n[STEP 3] Parsing and inserting team records into TiDB...');
+  // 3. Map columns
+  console.log('\n[STEP 3] Parsing and saving team records...');
   const firstRow = rows[0];
 
-  const colName = findKey(firstRow, ['team name', 'team_name', 'teamname', 'name of team'], ['card']);
+  const colTeamId = findKey(firstRow, ['team id', 'team_id', 'teamid']);
+  if (!colTeamId) {
+    console.error('[ERROR] No "TEAM ID" column found. Teams are matched by their official TEAM ID.');
+    process.exit(1);
+  }
+  const colName = findKey(firstRow, ['team name', 'team_name', 'teamname', 'name of team'], ['card', 'team id']);
   const colLeader = findKey(firstRow, ['team leader name', 'leader name', 'leader_name', 'team leader', 'leader', 'student name'], ['card', 'id']);
   const colMobile = findKey(firstRow, ['team leader contact number', 'mobile', 'mobile no', 'mobile number', 'phone', 'contact number', 'phone no'], ['mentor', 'member']);
   const colEmail = findKey(firstRow, ['team leader email id', 'email address', 'email', 'email id', 'mail'], ['mentor', 'member']);
@@ -155,6 +140,7 @@ async function importExcel(filePath) {
   const colMentorEmail = findKey(firstRow, ['mentor email id', 'mentor email', 'mentor mail']);
 
   console.log('[INFO] Column Mapping Detected:');
+  console.log(`  - Team ID:       ${colTeamId}`);
   console.log(`  - Team Name:     ${colName || '(Project title / Leader fallback)'}`);
   console.log(`  - Leader Name:   ${colLeader || '(Required)'}`);
   console.log(`  - Mobile No:     ${colMobile || '(Required)'}`);
@@ -167,77 +153,86 @@ async function importExcel(filePath) {
   let updated = 0;
   let skipped = 0;
   const skippedDetails = [];
+  const sheetCodes = new Set();
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const rowNum = i + 2;
+    const text = col => (col && row[col] ? String(row[col]).trim() : '');
 
-    const leaderName = colLeader && row[colLeader] ? String(row[colLeader]).trim() : '';
-    const rawMobile = colMobile && row[colMobile] ? String(row[colMobile]).trim() : '';
+    const teamCode = text(colTeamId).toUpperCase().replace(/\s+/g, '');
+    const leaderName = text(colLeader);
+    const rawMobile = text(colMobile);
     const mobileNo = cleanMobile(rawMobile);
-    const email = colEmail && row[colEmail] ? String(row[colEmail]).trim() : '';
-    const school = colSchool && row[colSchool] ? String(row[colSchool]).trim() : 'RMK Group of Institutions';
-    const project = colProject && row[colProject] ? String(row[colProject]).trim() : '';
-    const category = colCategory && row[colCategory] ? String(row[colCategory]).trim() : 'General Innovation';
-    const mentorName = colMentor && row[colMentor] ? String(row[colMentor]).trim() : '';
-    const mentorContact = colMentorMobile && row[colMentorMobile] ? String(row[colMentorMobile]).trim() : '';
-    const mentorEmail = colMentorEmail && row[colMentorEmail] ? String(row[colMentorEmail]).trim() : '';
+    const email = text(colEmail);
+    const school = text(colSchool) || 'RMK Group of Institutions';
+    const project = text(colProject);
+    const category = text(colCategory) || 'General Innovation';
+    const mentorName = text(colMentor);
+    const mentorContact = text(colMentorMobile);
+    const mentorEmail = text(colMentorEmail);
 
-    const rawTeamName = colName && row[colName] ? String(row[colName]).trim() : '';
-    let teamName = rawTeamName;
+    let teamName = text(colName);
     if (!teamName) {
-      if (project && project.length <= 40) {
-        teamName = project;
-      } else if (leaderName) {
-        teamName = `Team ${leaderName}`;
-      } else {
-        teamName = `Team #${i + 1}`;
-      }
+      if (project && project.length <= 40) teamName = project;
+      else if (leaderName) teamName = `Team ${leaderName}`;
+      else teamName = `Team #${i + 1}`;
     }
-
     const members = extractMembers(row, leaderName);
-    const teamUuid = crypto.randomUUID();
+
+    if (!teamCode) {
+      skipped++;
+      skippedDetails.push(`Row ${rowNum} (${teamName}): Missing TEAM ID`);
+      continue;
+    }
+    sheetCodes.add(teamCode);
 
     if (!leaderName) {
       skipped++;
-      skippedDetails.push(`Row ${rowNum}: Missing Leader Name`);
+      skippedDetails.push(`Row ${rowNum} (${teamCode}): Missing Leader Name`);
       continue;
     }
 
     if (!mobileNo || mobileNo.length < 10) {
       skipped++;
-      skippedDetails.push(`Row ${rowNum} (${teamName}): Invalid Mobile Number "${rawMobile}"`);
+      skippedDetails.push(`Row ${rowNum} (${teamCode} ${teamName}): Invalid Mobile Number "${rawMobile}"`);
       continue;
     }
 
     try {
-      const [res] = await pool.execute(
-        `INSERT INTO teams (team_uuid, team_name, leader_name, mobile_no, email, college_name, project_title, category, members, mentor_name, mentor_contact, mentor_email, is_present, check_in_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, NULL)
-         ON DUPLICATE KEY UPDATE
-           team_name = VALUES(team_name),
-           leader_name = VALUES(leader_name),
-           email = VALUES(email),
-           college_name = VALUES(college_name),
-           project_title = VALUES(project_title),
-           category = VALUES(category),
-           members = VALUES(members),
-           mentor_name = VALUES(mentor_name),
-           mentor_contact = VALUES(mentor_contact),
-           mentor_email = VALUES(mentor_email)`,
-        [teamUuid, teamName, leaderName, mobileNo, email, school, project, category, members, mentorName, mentorContact, mentorEmail]
-      );
+      const details = [teamName, leaderName, mobileNo, email, school, project, category, members, mentorName, mentorContact, mentorEmail];
 
-      if (res && res.affectedRows === 1) {
-        inserted++;
-      } else {
+      let [existing] = await pool.execute('SELECT id FROM teams WHERE team_code = ?', [teamCode]);
+      if (existing.length === 0) {
+        // Teams imported before TEAM IDs existed: same phone number and same leader name
+        const [legacy] = await pool.execute('SELECT id, leader_name FROM teams WHERE team_code IS NULL AND mobile_no = ?', [mobileNo]);
+        existing = legacy.filter(t => sameName(t.leader_name, leaderName));
+      }
+
+      if (existing.length > 0) {
+        await pool.execute(
+          `UPDATE teams SET team_code = ?, team_name = ?, leader_name = ?, mobile_no = ?, email = ?, college_name = ?, project_title = ?,
+             category = ?, members = ?, mentor_name = ?, mentor_contact = ?, mentor_email = ? WHERE id = ?`,
+          [teamCode, ...details, existing[0].id]
+        );
         updated++;
+      } else {
+        await pool.execute(
+          `INSERT INTO teams (team_uuid, team_code, team_name, leader_name, mobile_no, email, college_name, project_title, category,
+             members, mentor_name, mentor_contact, mentor_email, is_present, check_in_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, NULL)`,
+          [crypto.randomUUID(), teamCode, ...details]
+        );
+        inserted++;
       }
     } catch (err) {
       skipped++;
-      skippedDetails.push(`Row ${rowNum}: Database error ${err.message}`);
+      skippedDetails.push(`Row ${rowNum} (${teamCode}): Database error ${err.message}`);
     }
   }
+
+  const [dbTeams] = await pool.execute('SELECT team_code, team_name, leader_name FROM teams');
+  const notInSheet = dbTeams.filter(t => !t.team_code || !sheetCodes.has(t.team_code));
 
   console.log('====================================================');
   console.log('                 IMPORT SUMMARY');
@@ -246,18 +241,23 @@ async function importExcel(filePath) {
   console.log(`  - Teams Added:          ${inserted}`);
   console.log(`  - Teams Updated:        ${updated}`);
   console.log(`  - Rows Skipped:         ${skipped}`);
+  console.log(`  - Teams in database:    ${dbTeams.length}`);
 
   if (skippedDetails.length > 0) {
     console.log('\n[WARNING] Skipped Rows Details:');
-    skippedDetails.slice(0, 10).forEach(d => console.log(`  * ${d}`));
+    skippedDetails.forEach(d => console.log(`  * ${d}`));
   }
 
-  console.log('\n[SUCCESS] Excel import completed successfully with mentor details!');
+  if (notInSheet.length > 0) {
+    console.log('\n[WARNING] In the database but not in this sheet (left unchanged):');
+    notInSheet.forEach(t => console.log(`  * ${t.team_code || '(no TEAM ID)'} ${t.team_name} (${t.leader_name})`));
+  }
+
+  console.log('\n[SUCCESS] Excel import completed.');
   process.exit(0);
 }
 
-const fileArg = process.argv[2];
-importExcel(fileArg).catch(err => {
+importExcel(process.argv[2]).catch(err => {
   console.error('[FATAL] Import failed:', err);
   process.exit(1);
 });

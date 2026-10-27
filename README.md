@@ -36,11 +36,11 @@ cd backend
 npm run import -- "C:\path\to\Junior Hackathon 2026 (Responses).xlsx"
 ```
 
-Rows are matched by team leader contact number; re-importing updates details without touching scan status.
+Rows are matched by the sheet's **TEAM ID** column; re-importing a newer sheet adds new teams and updates details without touching scan status. Teams in the database that are missing from the sheet are listed, never deleted. The file path is required.
 
 ## Team leader login
 
-Registered contact number, or the leader's full name as registered (initials optional, e.g. `Janani` for `S. Janani`).
+**Team ID + team leader phone number.** The Team ID box shows the fixed `RMKJH2610` prefix, so leaders type only the last two digits (`49` → `RMKJH261049`); the phone box shows `+91`. Some schools registered several teams under one phone number, so the Team ID picks the team and the phone number confirms it.
 
 ## Live site (Render)
 

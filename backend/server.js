@@ -62,11 +62,6 @@ const loginLimiter = createLimiter(100, 5 * 60 * 1000);
 // Scans are keyed by team, so one team's bad scans never block other teams
 const scanLimiter = createLimiter(5, 60 * 1000);
 
-// "S. Janani" -> ["janani"]; initials and punctuation are ignored
-function nameWords(name) {
-  return String(name || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 1).sort();
-}
-
 // Fields a team leader is allowed to see about their own team
 function teamPassView(team) {
   return {
@@ -151,32 +146,24 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-// Team Leader Login: registered contact number, or full leader name (initials optional)
+// Team Leader Login: official TEAM ID plus the team leader's registered phone number.
+// The TEAM ID identifies the team (phone numbers can be shared by several teams); the phone confirms it.
 app.post('/api/team/login', async (req, res) => {
   try {
-    const raw = String(req.body.identifier || '').trim();
-    if (!raw) return res.status(400).json({ error: 'Enter the team leader contact number or name' });
+    const teamCode = String(req.body.team_id || '').trim().toUpperCase().replace(/\s+/g, '');
+    const phone = String(req.body.phone || '').replace(/[^0-9]/g, '').slice(-10);
+    if (!teamCode || phone.length !== 10) {
+      return res.status(400).json({ error: 'Enter your Team ID and the 10-digit team leader phone number.' });
+    }
     if (loginLimiter.isLimited(req.ip)) return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
 
-    const digits = raw.replace(/[^0-9]/g, '');
-    let matches = [];
-
-    if (digits.length >= 10) {
-      [matches] = await pool.execute(`SELECT ${TEAM_PASS_COLUMNS} FROM teams WHERE mobile_no = ?`, [digits.slice(-10)]);
-    } else if (digits.length === 0) {
-      const wanted = nameWords(raw).join(' ');
-      if (wanted) {
-        const [all] = await pool.execute(`SELECT ${TEAM_PASS_COLUMNS} FROM teams`);
-        matches = all.filter(t => nameWords(t.leader_name).join(' ') === wanted);
-      }
-    }
-
-    if (matches.length > 1) {
-      return res.status(409).json({ error: 'More than one team matches this name. Use the contact number instead.' });
-    }
+    const [matches] = await pool.execute(
+      `SELECT ${TEAM_PASS_COLUMNS} FROM teams WHERE team_code = ? AND mobile_no = ?`,
+      [teamCode, phone]
+    );
     if (matches.length === 0) {
       loginLimiter.fail(req.ip);
-      return res.status(401).json({ error: 'Team not found. Enter the registered contact number or the full team leader name.' });
+      return res.status(401).json({ error: 'Team ID and phone number do not match. Please check both.' });
     }
 
     loginLimiter.clear(req.ip);
