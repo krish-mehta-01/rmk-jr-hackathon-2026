@@ -19,7 +19,7 @@ jobs:
             echo "Outside the 2026 hackathon window, skipping"; exit 0
           fi
           for i in $(seq 1 12); do
-            if curl -fsS --max-time 90 https://rmk-jr-hackathon-2026.onrender.com/api/health; then
+            if curl -fsS --max-time 90 https://rmkjuniorhackathon2026.onrender.com/api/health; then
               echo " - awake"; exit 0
             fi
             sleep 10

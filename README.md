@@ -44,10 +44,10 @@ Rows are matched by the sheet's **TEAM ID** column; re-importing a newer sheet a
 
 ## Live site (Render)
 
-- Team leaders: https://rmk-jr-hackathon-2026.onrender.com
-- Admins: https://rmk-jr-hackathon-2026.onrender.com/rmkjrhackathon2026-adminlogin
+- Team leaders: https://rmkjuniorhackathon2026.onrender.com
+- Admins: https://rmkjuniorhackathon2026.onrender.com/rmkjrhackathon2026-adminlogin
 
-Render free web service (Singapore), built from the `main` branch of the private GitHub repo `krish-mehta-01/rmk-jr-hackathon-2026`.
+Render free web service `rmkjuniorhackathon2026` (Singapore) on the rmkec.ac.in Render account, built from the `main` branch of the private GitHub repo `krish-mehta-01/rmk-jr-hackathon-2026`.
 
 - Service settings: root `backend`, build `npm ci`, start `node server.js`, health check `/api/health`.
 - Secrets are set as Render environment variables (same keys as `backend/.env`, plus `NODE_VERSION=22`). `.env` is never committed.
