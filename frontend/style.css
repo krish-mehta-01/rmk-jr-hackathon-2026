@@ -1011,6 +1011,14 @@ h4 {
   line-height: 1.3;
 }
 
+.table-team-id {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
 .glass-btn-table-action {
   font-family: var(--font-text);
   font-size: 11.5px;
@@ -1476,14 +1484,8 @@ h4 {
 
   .glass-data-table td.table-actions-cell {
     display: flex;
-    gap: 8px;
-    padding-top: 10px;
-  }
-
-  .table-actions-cell .btn-view-details {
-    flex: 1;
-    padding: 10px 12px;
-    margin: 0;
+    justify-content: flex-end;
+    align-items: flex-end;
   }
 
   .team-detail-row .team-detail-body {
@@ -1497,11 +1499,6 @@ h4 {
     padding: 10px 12px;
   }
 
-  .table-actions-cell .btn-view-details {
-    border: 1px solid var(--accent-green-border);
-    border-radius: var(--radius-sm);
-    background: var(--accent-green-soft);
-  }
 
   /* Expanded details attach to the bottom of their card */
   .glass-data-table tr.team-row.is-open {
@@ -1708,22 +1705,33 @@ h4 {
   text-align: right;
 }
 
+/* V-shaped arrow that opens a row's details; points up while open */
 .btn-view-details {
-  font-family: var(--font-text);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent-green-dark);
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: none;
-  padding: 6px 10px;
-  margin-right: 4px;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--accent-green);
   cursor: pointer;
-  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.btn-view-details svg {
+  transition: transform 0.2s ease;
 }
 
 .btn-view-details:hover {
   background: var(--accent-green-soft);
+  color: var(--accent-green-dark);
+}
+
+.team-row.is-open .btn-view-details svg {
+  transform: rotate(180deg);
 }
 
 .team-row.is-open td {
@@ -1990,8 +1998,7 @@ h4 {
       "team status"
       "leader leader"
       "mentor mentor"
-      "school school"
-      "actions actions";
+      "school actions";
     column-gap: 10px;
     row-gap: 3px;
     padding: 12px 14px;
@@ -2016,7 +2023,6 @@ h4 {
 
   .glass-data-table .team-row td:nth-child(6) {
     grid-area: actions;
-    padding-top: 8px;
   }
 
   .glass-data-table .team-row .table-team-title {
@@ -2040,9 +2046,6 @@ h4 {
     margin: 0;
   }
 
-  .table-actions-cell .btn-view-details {
-    padding: 8px 12px;
-  }
 }
 
 @media (max-width: 640px) {
@@ -2123,4 +2126,83 @@ h4 {
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+/* QR tab fills the content area so the standee sits in the centre of it */
+#admin-sec-qr {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#admin-sec-qr .laptop-standee-bento {
+  flex: 1;
+  height: auto;
+}
+
+/* Phones and tablets: the admin window grows with its content and starts at the top. Centring it
+   in a screen-high box pushed the top of a long list above the screen, where it couldn't be scrolled to. */
+@media (max-width: 960px) {
+  .macos-window-shell {
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+}
+
+
+/* Phones: Logout is icon-only (label kept for screen readers), and the logos use the freed space */
+@media (max-width: 640px) {
+  .glass-logout-pill span,
+  .topbar-logout span {
+    display: none;
+  }
+
+  .glass-logout-pill,
+  .topbar-logout {
+    justify-content: center;
+  }
+
+  .glass-logout-pill {
+    padding: 0 14px;
+  }
+
+  .topbar-logout {
+    padding: 9px;
+  }
+
+  .glass-logout-pill svg,
+  .topbar-logout svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .laptop-brand-logo,
+  .laptop-hackathon-logo {
+    max-width: none;
+  }
+
+  .laptop-brand-logo {
+    height: 36px;
+  }
+
+  .laptop-hackathon-logo {
+    height: 40px;
+  }
+
+  .sidebar-logo-divider {
+    height: 30px;
+  }
+
+  .topbar-logo-rmk {
+    height: 34px;
+  }
+
+  .topbar-logo-hackathon {
+    height: 38px;
+  }
+
+  .topbar-logo-divider {
+    height: 26px;
+  }
 }

@@ -524,7 +524,10 @@ function renderTeamsRows(teams) {
 
     return `
       <tr class="team-row${isOpen ? ' is-open' : ''}">
-        <td data-label="Team"><div class="table-team-title">${escapeHtml(t.team_name || '—')}</div></td>
+        <td data-label="Team">
+          <div class="table-team-id mono">${escapeHtml(t.team_code || '')}</div>
+          <div class="table-team-title">${escapeHtml(t.team_name || '—')}</div>
+        </td>
         <td data-label="Team Leader">${escapeHtml(t.leader_name || '—')}</td>
         <td data-label="Mentor">${escapeHtml(t.mentor_name || '—')}</td>
         <td data-label="School">${escapeHtml(t.college_name || '—')}</td>
@@ -532,8 +535,8 @@ function renderTeamsRows(teams) {
           <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">${isPresent ? 'Scanned' : 'Not Scanned'}</span>
         </td>
         <td data-label="" class="table-actions-cell">
-          <button type="button" class="btn-view-details" data-details-id="${id}" aria-expanded="${isOpen}">
-            ${isOpen ? 'Hide details' : 'View details'}
+          <button type="button" class="btn-view-details" data-details-id="${id}" aria-expanded="${isOpen}" aria-label="${isOpen ? 'Hide details' : 'View details'}" title="${isOpen ? 'Hide details' : 'View details'}">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </button>
         </td>
       </tr>
@@ -562,7 +565,8 @@ function toggleTeamDetails(id, btn) {
   document.querySelector(`tr[data-detail-for="${id}"]`).classList.toggle('hidden', !open);
   btn.closest('tr').classList.toggle('is-open', open);
   btn.setAttribute('aria-expanded', String(open));
-  btn.textContent = open ? 'Hide details' : 'View details';
+  btn.setAttribute('aria-label', open ? 'Hide details' : 'View details');
+  btn.title = open ? 'Hide details' : 'View details';
 }
 
 document.addEventListener('click', e => {

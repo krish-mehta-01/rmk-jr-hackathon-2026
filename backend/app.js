@@ -271,17 +271,17 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
     let where = ' WHERE 1=1';
     const params = [];
     if (search) {
-      where += ' AND (team_name LIKE ? OR leader_name LIKE ? OR mentor_name LIKE ? OR college_name LIKE ? OR project_title LIKE ? OR mobile_no LIKE ?)';
+      where += ' AND (team_code LIKE ? OR team_name LIKE ? OR leader_name LIKE ? OR mentor_name LIKE ? OR college_name LIKE ? OR project_title LIKE ? OR mobile_no LIKE ?)';
       const s = `%${search}%`;
-      params.push(s, s, s, s, s, s);
+      params.push(s, s, s, s, s, s, s);
     }
     if (present === 'true') where += ' AND is_present = TRUE';
     else if (present === 'false') where += ' AND (is_present = FALSE OR is_present IS NULL)';
 
     const [rows] = await pool.execute(
-      'SELECT id, team_name, leader_name, mobile_no, college_name, project_title, members, mentor_name, is_present, check_in_time FROM teams' +
+      'SELECT id, team_code, team_name, leader_name, mobile_no, college_name, project_title, members, mentor_name, is_present, check_in_time FROM teams' +
         where +
-        ` ORDER BY is_present DESC, check_in_time DESC, id ASC LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
+        ` ORDER BY is_present DESC, check_in_time DESC, team_code ASC, id ASC LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
       params
     );
     const [countRows] = await pool.execute('SELECT COUNT(*) as total FROM teams' + where, params);
@@ -315,11 +315,12 @@ app.get('/api/admin/stats', authAdmin, async (req, res) => {
 app.get('/api/admin/export', authAdmin, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT team_name, project_title, leader_name, members, mentor_name, mobile_no, email, college_name, category, is_present, check_in_time FROM teams ORDER BY is_present DESC, check_in_time ASC, id ASC'
+      'SELECT team_code, team_name, project_title, leader_name, members, mentor_name, mobile_no, email, college_name, category, is_present, check_in_time FROM teams ORDER BY is_present DESC, check_in_time ASC, team_code ASC, id ASC'
     );
 
     const XLSX = require('xlsx');
     const ws = XLSX.utils.json_to_sheet(rows.map(r => ({
+      'Team ID': r.team_code || '',
       'Team Name': r.team_name,
       'Idea / Project Title': r.project_title || '',
       'Team Leader': r.leader_name,
