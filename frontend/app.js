@@ -18,6 +18,7 @@ let permanentQRCodeData = null;
 // Camera / Scanner state for Student View
 let qrStream = null;
 let isScanning = false;
+let autoScanTried = false;   // the camera opens by itself once per login; after "Close Camera" it stays closed
 
 // ─────────────────────────────────────────────────────────────
 // INITIALIZATION
@@ -53,6 +54,7 @@ function restoreSession() {
     teamData = JSON.parse(localStorage.getItem('rmk_team_data') || '{}');
     initTeamDashboard();
     showView('view-team');
+    autoOpenScanner();
     refreshTeamStatus();
   } else {
     showView('view-auth');
@@ -122,6 +124,7 @@ async function handleTeamLogin(e) {
 
     initTeamDashboard();
     showView('view-team');
+    autoOpenScanner();
 
   } catch {
     errorEl.textContent = 'Connection error. Please try again.';
@@ -185,6 +188,7 @@ function logout(message) {
   } else {
     teamToken = null;
     teamData = null;
+    autoScanTried = false;
     localStorage.removeItem('rmk_team_token');
     localStorage.removeItem('rmk_team_data');
   }
@@ -274,6 +278,14 @@ async function refreshTeamStatus() {
 // ─────────────────────────────────────────────────────────────
 // STUDENT QR SCANNER (SCANS VENUE STANDEE)
 // ─────────────────────────────────────────────────────────────
+// Right after login the camera opens by itself, so the leader just points it at the venue QR. If the browser
+// blocks or the leader denies the camera, the "Scan QR Code" button is still there to try again.
+function autoOpenScanner() {
+  if (autoScanTried || isScanning || !teamData || teamData.is_present) return;
+  autoScanTried = true;
+  openScanner();
+}
+
 async function openScanner() {
   const scanActionWrap = document.getElementById('pass-scan-action-wrap');
   const camSec = document.getElementById('team-camera-view');
