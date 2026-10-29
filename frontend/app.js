@@ -54,8 +54,8 @@ function restoreSession() {
     teamData = JSON.parse(localStorage.getItem('rmk_team_data') || '{}');
     initTeamDashboard();
     showView('view-team');
-    autoOpenScanner();
-    refreshTeamStatus();
+    // A saved login may have expired: confirm it with the server before opening the camera
+    refreshTeamStatus().then(valid => { if (valid) autoOpenScanner(); });
   } else {
     showView('view-auth');
   }
@@ -260,19 +260,23 @@ function renderPassStatus(isPresent, checkInTime) {
   }
 }
 
+// Returns true when the saved login is still valid and the team data is fresh
 async function refreshTeamStatus() {
-  if (!teamToken) return;
+  if (!teamToken) return false;
   try {
     const res = await fetch('/api/team/status', {
       headers: { Authorization: 'Bearer ' + teamToken }
     });
-    if (sessionExpired(res) || !res.ok) return;
+    if (sessionExpired(res) || !res.ok) return false;
 
     const updated = await res.json();
     teamData = { ...teamData, ...updated };
     localStorage.setItem('rmk_team_data', JSON.stringify(teamData));
     initTeamDashboard();
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -313,6 +317,11 @@ async function openScanner() {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     });
+    // The leader may have been logged out while the browser was asking for the camera
+    if (!teamToken || document.getElementById('view-team').classList.contains('hidden')) {
+      stream.getTracks().forEach(track => track.stop());
+      return;
+    }
     qrStream = stream;
     video.srcObject = stream;
     video.setAttribute('playsinline', 'true');
