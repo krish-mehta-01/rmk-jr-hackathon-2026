@@ -1,11 +1,13 @@
-# Render's free plan sleeps when idle. From 27 Oct to the hackathon on 1 Nov 2026 this opens the
-# site each morning so the server's own daytime keep-awake (backend/server.js) takes over.
+# Render's free plan sleeps when idle. On 29-31 Oct and the hackathon day (1 Nov 2026) this opens the
+# site every hour from about 6 AM to 9 PM IST. GitHub runs schedules late or skips them at busy times,
+# so hourly runs make sure the site is woken within the hour; the server's own keep-awake
+# (backend/server.js) then keeps it up between runs.
 name: Wake Render service
 
 on:
   schedule:
-    - cron: '40 0 27-31 10 *'   # 06:10 IST, 27-31 Oct (GitHub may run it a few minutes late)
-    - cron: '40 0 1 11 *'       # 06:10 IST, 1 Nov - hackathon day
+    - cron: '20 0-15 29-31 10 *'   # every hour 05:50-20:50 IST, 29-31 Oct
+    - cron: '20 0-15 1 11 *'       # every hour 05:50-20:50 IST, 1 Nov - hackathon day
   workflow_dispatch:
 
 jobs:
