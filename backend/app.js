@@ -74,12 +74,16 @@ function teamPassView(team) {
     project_title: team.project_title,
     members: team.members,
     mentor_name: team.mentor_name,
+    theme: team.category,
+    venue: team.venue || null,
     is_present: Boolean(team.is_present),
     check_in_time: team.check_in_time
   };
 }
 
-const TEAM_PASS_COLUMNS = 'id, team_name, leader_name, college_name, project_title, members, mentor_name, is_present, check_in_time';
+// venue = the sitting place for the team's theme (theme_venues table)
+const TEAM_PASS_COLUMNS = 'id, team_name, leader_name, college_name, project_title, members, mentor_name, category, '
+  + '(SELECT venue FROM theme_venues v WHERE v.theme = teams.category) AS venue, is_present, check_in_time';
 
 // On Render/Vercel the app sits behind a proxy; use the client IP it forwards
 if (process.env.RENDER || process.env.VERCEL) app.set('trust proxy', true);
@@ -292,6 +296,36 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
     const [countRows] = await pool.execute('SELECT COUNT(*) as total FROM teams' + where, params);
 
     res.json({ teams: rows, total: countRows[0].total, page, limit });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Teams grouped by theme, with each theme's sitting place
+app.get('/api/admin/themes', authAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT t.team_code, t.team_name, t.leader_name, t.college_name, t.category, t.is_present, v.venue
+       FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
+       ORDER BY t.category, t.team_code`
+    );
+    const themes = new Map();
+    for (const r of rows) {
+      const name = r.category || 'No theme';
+      if (!themes.has(name)) themes.set(name, { theme: name, venue: r.venue || null, total: 0, scanned: 0, teams: [] });
+      const group = themes.get(name);
+      group.total++;
+      if (r.is_present) group.scanned++;
+      group.teams.push({
+        team_code: r.team_code,
+        team_name: r.team_name,
+        leader_name: r.leader_name,
+        college_name: r.college_name,
+        is_present: Boolean(r.is_present)
+      });
+    }
+    res.json({ themes: [...themes.values()] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

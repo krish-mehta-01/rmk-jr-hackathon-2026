@@ -1667,7 +1667,7 @@ h4 {
     column-gap: 24px;
   }
 
-  .pass-detail-row:first-child,
+  .pass-detail-row.full-row,
   .pass-detail-row:last-child {
     grid-column: 1 / -1;
   }
@@ -2204,5 +2204,140 @@ h4 {
 
   .topbar-logo-divider {
     height: 26px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SITTING PLACE — team pass (after scanning) and admin Themes tab
+   ════════════════════════════════════════════════════════════════ */
+.pass-detail-row.pass-venue-row {
+  background: var(--accent-green-soft);
+  border: 1px solid var(--accent-green-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin: 12px 0 4px;
+}
+
+.pass-venue-row dt {
+  color: var(--accent-green-dark);
+}
+
+#pass-venue {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent-green-dark);
+}
+
+.pass-venue-theme {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.theme-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
+.theme-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.theme-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.theme-venue {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-green-dark);
+}
+
+.theme-venue.is-unset {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.theme-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.theme-count strong {
+  font-size: 15px;
+  color: var(--accent-green);
+}
+
+.theme-team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.theme-team-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 13px;
+}
+
+.theme-team-list li:last-child {
+  border-bottom: none;
+}
+
+.theme-team-id {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.theme-team-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.theme-team-list .status-pill-badge {
+  font-size: 10.5px;
+  padding: 3px 9px;
+}
+
+@media (max-width: 640px) {
+  .themes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .laptop-nav-item {
+    font-size: 12px;
+    padding: 8px 6px;
+    gap: 6px;
   }
 }

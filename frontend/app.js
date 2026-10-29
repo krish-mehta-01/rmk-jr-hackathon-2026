@@ -237,6 +237,11 @@ function renderTeamDetails(team) {
   document.getElementById('pass-school-name').textContent = team.college_name || '—';
   document.getElementById('pass-mentor-name').textContent = team.mentor_name || '—';
 
+  // Sitting place for the team's theme (shown once the organisers have set it)
+  document.getElementById('pass-venue-row').classList.toggle('hidden', !team.venue);
+  document.getElementById('pass-venue').textContent = team.venue || '';
+  document.getElementById('pass-venue-theme').textContent = team.theme || '';
+
   document.getElementById('pass-members-list').innerHTML = membersListItems(team);
 }
 
@@ -466,13 +471,15 @@ function initAdminDashboard() {
 
 function switchAdminSection(secName) {
   const alinkTable = document.getElementById('alink-table');
+  const alinkThemes = document.getElementById('alink-themes');
   const alinkQR = document.getElementById('alink-qr');
 
   const secTable = document.getElementById('admin-sec-table');
+  const secThemes = document.getElementById('admin-sec-themes');
   const secQR = document.getElementById('admin-sec-qr');
 
-  [alinkTable, alinkQR].forEach(btn => btn && btn.classList.remove('active'));
-  [secTable, secQR].forEach(pane => {
+  [alinkTable, alinkThemes, alinkQR].forEach(btn => btn && btn.classList.remove('active'));
+  [secTable, secThemes, secQR].forEach(pane => {
     if (pane) {
       pane.classList.add('hidden');
       pane.classList.remove('active');
@@ -486,6 +493,11 @@ function switchAdminSection(secName) {
       secTable.classList.add('active');
     }
     loadTeamsTable();
+  } else if (secName === 'themes') {
+    alinkThemes.classList.add('active');
+    secThemes.classList.remove('hidden');
+    secThemes.classList.add('active');
+    loadThemes();
   } else if (secName === 'qr') {
     if (alinkQR) alinkQR.classList.add('active');
     if (secQR) {
@@ -652,6 +664,40 @@ async function toggleAttendance(id) {
     }
   } catch {
     showToast('Connection error', 'error');
+  }
+}
+
+// Teams grouped by theme, each card showing the theme's sitting place
+async function loadThemes() {
+  const grid = document.getElementById('themes-grid');
+  try {
+    const res = await fetch('/api/admin/themes', { headers: { Authorization: 'Bearer ' + adminToken } });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      grid.innerHTML = '<div class="qr-loading">Failed to load themes.</div>';
+      return;
+    }
+    const { themes } = await res.json();
+    grid.innerHTML = themes.map(g => `
+      <div class="theme-card glass-card">
+        <div class="theme-card-head">
+          <div>
+            <div class="theme-name">${escapeHtml(g.theme)}</div>
+            <div class="theme-venue${g.venue ? '' : ' is-unset'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> ${g.venue ? escapeHtml(g.venue) : 'Sitting place not set'}</div>
+          </div>
+          <div class="theme-count"><strong>${g.scanned}</strong>/${g.total} scanned</div>
+        </div>
+        <ul class="theme-team-list">
+          ${g.teams.map(t => `
+            <li>
+              <span class="mono theme-team-id">${escapeHtml(t.team_code || '')}</span>
+              <span class="theme-team-name">${escapeHtml(t.team_name)}</span>
+              <span class="status-pill-badge ${t.is_present ? 'pill-present' : 'pill-absent'}">${t.is_present ? 'Scanned' : 'Not Scanned'}</span>
+            </li>`).join('')}
+        </ul>
+      </div>`).join('');
+  } catch {
+    grid.innerHTML = '<div class="qr-loading">Connection error loading themes.</div>';
   }
 }
 

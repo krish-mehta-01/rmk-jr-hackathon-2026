@@ -122,6 +122,17 @@ async function setupSchema() {
     console.log(`[OK] Dropped unique index ${name} on teams.mobile_no`);
   }
 
+  // One sitting place per theme; every theme in teams gets a row (venue filled in by the organisers)
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS theme_venues (
+      theme VARCHAR(100) PRIMARY KEY,
+      venue VARCHAR(300) NULL
+    )
+  `);
+  await pool.execute(
+    "INSERT IGNORE INTO theme_venues (theme) SELECT DISTINCT category FROM teams WHERE category IS NOT NULL AND category <> ''"
+  );
+
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS admins (
       id INT AUTO_INCREMENT PRIMARY KEY,
