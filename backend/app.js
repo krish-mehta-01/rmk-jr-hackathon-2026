@@ -24,6 +24,9 @@ if (!/^\d{64}$/.test(PRESENCE_QR_CODE_64)) {
   process.exit(1);
 }
 
+// Public address encoded in the venue QR
+const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://rmkjuniorhackathon2026.onrender.com').replace(/\/+$/, '');
+
 // Timing-safe comparison against the venue QR code
 function verifyPresenceCode(input) {
   if (!input || typeof input !== 'string') return false;
@@ -182,11 +185,13 @@ app.post('/api/team/login', async (req, res) => {
 // Hackathon Day venue QR image (Admin only)
 app.get('/api/admin/qr-code', authAdmin, async (req, res) => {
   try {
+    // The QR holds a link to the site with the venue code after '#', so a phone's own camera app opens
+    // the portal (which then marks presence) instead of showing a bare number
     const QRCode = require('qrcode');
-    const qrImage = await QRCode.toDataURL(PRESENCE_QR_CODE_64, {
+    const qrImage = await QRCode.toDataURL(`${PUBLIC_URL}/#p=${PRESENCE_QR_CODE_64}`, {
       width: 480,
       margin: 2,
-      errorCorrectionLevel: 'H',
+      errorCorrectionLevel: 'M',
       color: { dark: '#0f172a', light: '#ffffff' }
     });
     res.json({ qr_code: qrImage });

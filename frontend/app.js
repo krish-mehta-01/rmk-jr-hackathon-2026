@@ -18,6 +18,8 @@ let permanentQRCodeData = null;
 // Camera / Scanner state for Student View
 let qrStream = null;
 let isScanning = false;
+// Venue code from a QR opened with the phone's own camera app (site link ending in #p=<code>)
+let pendingVenueCode = null;
 let autoScanTried = false;   // the camera opens by itself once per login; after "Close Camera" it stays closed
 
 // ─────────────────────────────────────────────────────────────
@@ -25,8 +27,21 @@ let autoScanTried = false;   // the camera opens by itself once per login; after
 // ─────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
+  takeVenueCodeFromLink();
   restoreSession();
 });
+
+// A QR opened with the phone's camera app lands here as /#p=<code>. Keep the code for this tab
+// (it survives a reload before login) and clear it from the address bar.
+function takeVenueCodeFromLink() {
+  if (IS_ADMIN_PAGE) return;
+  const match = location.hash.match(/p=(\d{64})/);
+  if (match) {
+    sessionStorage.setItem('rmk_pending_venue_code', match[1]);
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  pendingVenueCode = sessionStorage.getItem('rmk_pending_venue_code');
+}
 
 function setupEventListeners() {
   document.getElementById('form-team-login').addEventListener('submit', handleTeamLogin);
@@ -55,7 +70,7 @@ function restoreSession() {
     initTeamDashboard();
     showView('view-team');
     // A saved login may have expired: confirm it with the server before opening the camera
-    refreshTeamStatus().then(valid => { if (valid) autoOpenScanner(); });
+    refreshTeamStatus().then(valid => { if (valid) afterTeamLogin(); });
   } else {
     showView('view-auth');
   }
@@ -124,7 +139,7 @@ async function handleTeamLogin(e) {
 
     initTeamDashboard();
     showView('view-team');
-    autoOpenScanner();
+    afterTeamLogin();
 
   } catch {
     errorEl.textContent = 'Connection error. Please try again.';
@@ -284,6 +299,27 @@ async function refreshTeamStatus() {
 // ─────────────────────────────────────────────────────────────
 // Right after login the camera opens by itself, so the leader just points it at the venue QR. If the browser
 // blocks or the leader denies the camera, the "Scan QR Code" button is still there to try again.
+// Pulls the 64-digit venue code out of a scanned QR (a site link or the bare code)
+function venueCodeFrom(text) {
+  const match = String(text || '').match(/\d{64}/);
+  return match ? match[0] : null;
+}
+
+// Once a team leader is logged in: a code from an opened QR link marks presence directly,
+// otherwise the camera opens for scanning
+function afterTeamLogin() {
+  if (pendingVenueCode) {
+    const code = pendingVenueCode;
+    pendingVenueCode = null;
+    sessionStorage.removeItem('rmk_pending_venue_code');
+    if (!teamData.is_present) {
+      submitAttendance(code);
+      return;
+    }
+  }
+  autoOpenScanner();
+}
+
 function autoOpenScanner() {
   if (autoScanTried || isScanning || !teamData || teamData.is_present) return;
   autoScanTried = true;
@@ -373,7 +409,7 @@ function tickScanner() {
 
       if (code && code.data) {
         closeScanner();
-        submitAttendance(code.data.trim());
+        submitAttendance(venueCodeFrom(code.data) || code.data.trim());
         return;
       }
     }
