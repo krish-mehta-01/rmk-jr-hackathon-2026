@@ -667,27 +667,33 @@ async function toggleAttendance(id) {
   }
 }
 
-// Teams grouped by theme, each card showing the theme's sitting place
+// Themes the admin has opened; kept open when the tab reloads
+const expandedThemes = new Set();
+
+// Teams grouped by theme: one row per theme with its sitting place; the V arrow opens its teams
 async function loadThemes() {
-  const grid = document.getElementById('themes-grid');
+  const list = document.getElementById('themes-grid');
   try {
     const res = await fetch('/api/admin/themes', { headers: { Authorization: 'Bearer ' + adminToken } });
     if (sessionExpired(res)) return;
     if (!res.ok) {
-      grid.innerHTML = '<div class="qr-loading">Failed to load themes.</div>';
+      list.innerHTML = '<div class="qr-loading">Failed to load themes.</div>';
       return;
     }
     const { themes } = await res.json();
-    grid.innerHTML = themes.map(g => `
-      <div class="theme-card glass-card">
-        <div class="theme-card-head">
-          <div>
-            <div class="theme-name">${escapeHtml(g.theme)}</div>
-            <div class="theme-venue${g.venue ? '' : ' is-unset'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> ${g.venue ? escapeHtml(g.venue) : 'Sitting place not set'}</div>
-          </div>
-          <div class="theme-count"><strong>${g.scanned}</strong>/${g.total} scanned</div>
-        </div>
-        <ul class="theme-team-list">
+    list.innerHTML = `<div class="themes-panel glass-card">${themes.map(g => {
+      const open = expandedThemes.has(g.theme);
+      return `
+      <div class="theme-row${open ? ' is-open' : ''}">
+        <button type="button" class="theme-row-head" data-theme="${escapeHtml(g.theme)}" aria-expanded="${open}">
+          <span class="theme-row-main">
+            <span class="theme-name">${escapeHtml(g.theme)}</span>
+            <span class="theme-venue${g.venue ? '' : ' is-unset'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> ${g.venue ? escapeHtml(g.venue) : 'Sitting place not set'}</span>
+          </span>
+          <span class="theme-count"><strong>${g.scanned}</strong>/${g.total} scanned</span>
+          <span class="btn-view-details" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <ul class="theme-team-list${open ? '' : ' hidden'}">
           ${g.teams.map(t => `
             <li>
               <span class="mono theme-team-id">${escapeHtml(t.team_code || '')}</span>
@@ -695,11 +701,24 @@ async function loadThemes() {
               <span class="status-pill-badge ${t.is_present ? 'pill-present' : 'pill-absent'}">${t.is_present ? 'Scanned' : 'Not Scanned'}</span>
             </li>`).join('')}
         </ul>
-      </div>`).join('');
+      </div>`;
+    }).join('')}</div>`;
   } catch {
-    grid.innerHTML = '<div class="qr-loading">Connection error loading themes.</div>';
+    list.innerHTML = '<div class="qr-loading">Connection error loading themes.</div>';
   }
 }
+
+document.addEventListener('click', e => {
+  const head = e.target.closest('.theme-row-head');
+  if (!head) return;
+  const row = head.closest('.theme-row');
+  const open = !row.classList.contains('is-open');
+  row.classList.toggle('is-open', open);
+  row.querySelector('.theme-team-list').classList.toggle('hidden', !open);
+  head.setAttribute('aria-expanded', String(open));
+  if (open) expandedThemes.add(head.dataset.theme);
+  else expandedThemes.delete(head.dataset.theme);
+});
 
 async function exportExcel() {
   if (!adminToken) return;
