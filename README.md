@@ -52,8 +52,8 @@ Render free web service `rmkjuniorhackathon2026` (Singapore) on the rmkec.ac.in 
 - Service settings: root `backend`, build `npm ci`, start `node server.js`, health check `/api/health`.
 - Secrets are set as Render environment variables (same keys as `backend/.env`, plus `NODE_VERSION=22`). `.env` is never committed.
 - Free instances sleep after 15 minutes without visitors (the next visit then takes about a minute). To avoid that:
-  - from 27 Oct to 1 Nov 2026 (hackathon day), 6 AM to 9 PM IST, the server pings its own `/api/health` every 10 minutes (`backend/server.js`; change with the `KEEP_AWAKE_DATES_IST` env var, e.g. `2026-10-27..2026-11-02`, and `KEEP_AWAKE_HOURS_IST`, e.g. `5-23`, or turn it off with `KEEP_AWAKE=off`);
-  - on 29-31 Oct and 1 Nov the GitHub Action `.github/workflows/wake-render.yml` opens the site every hour from about 6 AM to 9 PM IST (GitHub often runs schedules late, so one morning run wasn't reliable; run it by hand from the repo's Actions tab if needed).
+  - from 10 Nov to 15 Nov 2026 (hackathon day), 6 AM to 9 PM IST, the server pings its own `/api/health` every 10 minutes (`backend/server.js`; change with the `KEEP_AWAKE_DATES_IST` env var, e.g. `2026-11-10..2026-11-16`, and `KEEP_AWAKE_HOURS_IST`, e.g. `5-23`, or turn it off with `KEEP_AWAKE=off`);
+  - on 10-15 Nov the GitHub Action `.github/workflows/wake-render.yml` opens the site every hour from about 6 AM to 9 PM IST (GitHub often runs schedules late, so one morning run wasn't reliable; run it by hand from the repo's Actions tab if needed).
   - The window keeps usage inside Render's 750 free instance-hours per month, which are shared with any other free Render services on the account.
 - Pushes to `main` sometimes deploy automatically and sometimes don't: after pushing, check the Render dashboard and use **Manual Deploy → Deploy latest commit** if no new deploy started.
 

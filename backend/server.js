@@ -5,12 +5,12 @@ const { testConnection } = require('./db');
 const PORT = process.env.PORT || 3000;
 
 // Render's free plan sleeps after 15 min without visits, and the next visit then takes ~1 min.
-// In the run-up to the hackathon (1 Nov 2026) the server visits its own public URL every 10 min
+// In the run-up to the hackathon (15 Nov 2026) the server visits its own public URL every 10 min
 // during the day (IST) to stay awake; outside that window it may sleep to save the account's free
 // instance hours. A GitHub Action wakes it each morning on the same dates.
-// Overrides: KEEP_AWAKE_DATES_IST="2026-10-27..2026-11-01", KEEP_AWAKE_HOURS_IST="6-21", KEEP_AWAKE=off.
+// Overrides: KEEP_AWAKE_DATES_IST="2026-11-10..2026-11-15", KEEP_AWAKE_HOURS_IST="6-21", KEEP_AWAKE=off.
 const KEEP_AWAKE_URL = process.env.RENDER_EXTERNAL_URL;
-const [AWAKE_FROM_DATE, AWAKE_TO_DATE] = (process.env.KEEP_AWAKE_DATES_IST || '2026-10-27..2026-11-01').split('..');
+const [AWAKE_FROM_DATE, AWAKE_TO_DATE] = (process.env.KEEP_AWAKE_DATES_IST || '2026-11-10..2026-11-15').split('..');
 const [AWAKE_FROM, AWAKE_TO] = (process.env.KEEP_AWAKE_HOURS_IST || '6-21').split('-').map(Number);
 const istDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' });
 const istHour = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', hourCycle: 'h23' });

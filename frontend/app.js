@@ -667,12 +667,48 @@ async function toggleAttendance(id) {
   }
 }
 
-// Themes the admin has opened; kept open when the tab reloads
+// ─────────────────────────────────────────────
+// THEMES & SITTING VENUES MANAGEMENT
+// ─────────────────────────────────────────────
+let rawThemesData = [];
+let currentThemeFilter = 'all';
+let currentThemeSearch = '';
 const expandedThemes = new Set();
 
-// Teams grouped by theme: one row per theme with its sitting place; the V arrow opens its teams
+function safeThemeDomId(themeName) {
+  return 'th-' + encodeURIComponent(themeName || 'theme').replace(/[^a-zA-Z0-9]/g, '_');
+}
+
+function updateThemeStats() {
+  const totalThemes = rawThemesData.length;
+  let assignedVenues = 0;
+  let totalTeams = 0;
+  let totalScanned = 0;
+
+  for (const g of rawThemesData) {
+    if (g.venue && g.venue.trim()) assignedVenues++;
+    totalTeams += (g.total || 0);
+    totalScanned += (g.scanned || 0);
+  }
+
+  const scannedRate = totalTeams > 0 ? Math.round((totalScanned / totalTeams) * 100) : 0;
+
+  const elTotal = document.getElementById('theme-stat-total');
+  const elVenues = document.getElementById('theme-stat-venues');
+  const elTeams = document.getElementById('theme-stat-teams');
+  const elScanned = document.getElementById('theme-stat-scanned');
+
+  if (elTotal) elTotal.textContent = totalThemes;
+  if (elVenues) elVenues.textContent = `${assignedVenues} / ${totalThemes}`;
+  if (elTeams) elTeams.textContent = totalTeams;
+  if (elScanned) elScanned.textContent = `${scannedRate}%`;
+}
+
 async function loadThemes() {
   const list = document.getElementById('themes-grid');
+  if (!list) return;
+  list.innerHTML = '<div class="qr-loading">Loading themes...</div>';
+
   try {
     const res = await fetch('/api/admin/themes', { headers: { Authorization: 'Bearer ' + adminToken } });
     if (sessionExpired(res)) return;
@@ -680,44 +716,346 @@ async function loadThemes() {
       list.innerHTML = '<div class="qr-loading">Failed to load themes.</div>';
       return;
     }
-    const { themes } = await res.json();
-    list.innerHTML = `<div class="themes-panel glass-card">${themes.map(g => {
-      const open = expandedThemes.has(g.theme);
-      return `
-      <div class="theme-row${open ? ' is-open' : ''}">
-        <button type="button" class="theme-row-head" data-theme="${escapeHtml(g.theme)}" aria-expanded="${open}">
-          <span class="theme-row-main">
-            <span class="theme-name">${escapeHtml(g.theme)}</span>
-            <span class="theme-venue${g.venue ? '' : ' is-unset'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> ${g.venue ? escapeHtml(g.venue) : 'Sitting place not set'}</span>
-          </span>
-          <span class="theme-count"><strong>${g.scanned}</strong>/${g.total} scanned</span>
-          <span class="btn-view-details" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
-        </button>
-        <ul class="theme-team-list${open ? '' : ' hidden'}">
-          ${g.teams.map(t => `
-            <li>
-              <span class="mono theme-team-id">${escapeHtml(t.team_code || '')}</span>
-              <span class="theme-team-name">${escapeHtml(t.team_name)}</span>
-              <span class="status-pill-badge ${t.is_present ? 'pill-present' : 'pill-absent'}">${t.is_present ? 'Scanned' : 'Not Scanned'}</span>
-            </li>`).join('')}
-        </ul>
-      </div>`;
-    }).join('')}</div>`;
-  } catch {
+    const data = await res.json();
+    rawThemesData = data.themes || [];
+    updateThemeStats();
+    renderThemes();
+  } catch (err) {
+    console.error('[ERROR] loadThemes:', err);
     list.innerHTML = '<div class="qr-loading">Connection error loading themes.</div>';
   }
 }
 
+function renderThemes() {
+  const container = document.getElementById('themes-grid');
+  if (!container) return;
+
+  const query = currentThemeSearch.toLowerCase().trim();
+  const filter = currentThemeFilter;
+
+  const filtered = rawThemesData.filter(g => {
+    const hasVenue = Boolean(g.venue && g.venue.trim());
+    
+    // Filter chip logic
+    if (filter === 'venue_set' && !hasVenue) return false;
+    if (filter === 'venue_missing' && hasVenue) return false;
+    if (filter === 'scanned' && (!g.scanned || g.scanned === 0)) return false;
+
+    // Search query logic
+    if (query) {
+      const matchTheme = (g.theme || '').toLowerCase().includes(query);
+      const matchVenue = (g.venue || '').toLowerCase().includes(query);
+      const matchTeam = (g.teams || []).some(t => 
+        (t.team_code || '').toLowerCase().includes(query) ||
+        (t.team_name || '').toLowerCase().includes(query) ||
+        (t.leader_name || '').toLowerCase().includes(query) ||
+        (t.college_name || '').toLowerCase().includes(query)
+      );
+      if (!matchTheme && !matchVenue && !matchTeam) return false;
+    }
+
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="theme-empty-box glass-card">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="theme-empty-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        <div class="theme-empty-title">No matching themes found</div>
+        <p class="theme-empty-desc">Try clearing your search query or selecting "All" themes.</p>
+        <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="resetThemeFilters()">Clear Filters</button>
+      </div>`;
+    updateToggleAllButton(false);
+    return;
+  }
+
+  // Auto-expand cards if searching to immediately reveal matched teams
+  if (query) {
+    filtered.forEach(g => expandedThemes.add(g.theme));
+  }
+
+  const allVisibleExpanded = filtered.every(g => expandedThemes.has(g.theme));
+  updateToggleAllButton(allVisibleExpanded);
+
+  container.innerHTML = filtered.map(g => {
+    const domId = safeThemeDomId(g.theme);
+    const isOpen = expandedThemes.has(g.theme);
+    const hasVenue = Boolean(g.venue && g.venue.trim());
+    const rate = g.total > 0 ? Math.round((g.scanned / g.total) * 100) : 0;
+
+    return `
+    <div class="theme-card glass-card ${hasVenue ? 'has-venue' : 'missing-venue'} ${isOpen ? 'is-open' : ''}" id="${domId}">
+      
+      <!-- Theme Card Header -->
+      <div class="theme-card-header">
+        <div class="theme-card-title-group">
+          <div class="theme-category-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>Theme Track</span>
+          </div>
+          <h3 class="theme-card-title">${escapeHtml(g.theme)}</h3>
+        </div>
+
+        <div class="theme-card-badges">
+          <span class="theme-metric-badge teams-count-badge">${g.total} ${g.total === 1 ? 'Team' : 'Teams'}</span>
+          <span class="theme-metric-badge scan-count-badge ${g.scanned > 0 ? 'scanned-active' : ''}">${g.scanned}/${g.total} Scanned</span>
+        </div>
+      </div>
+
+      <!-- Sitting Place / Venue Section -->
+      <div class="theme-venue-section">
+        <div class="theme-venue-row" id="venue-row-${domId}">
+          <div class="theme-venue-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Sitting Place:</span>
+          </div>
+          <div class="theme-venue-value ${hasVenue ? 'is-set' : 'is-unset'}">
+            ${hasVenue ? escapeHtml(g.venue) : 'Not assigned yet'}
+          </div>
+          <button type="button" class="btn-theme-venue-edit" data-theme="${escapeHtml(g.theme)}" title="${hasVenue ? 'Edit sitting place' : 'Assign sitting place'}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>${hasVenue ? 'Edit' : 'Assign'}</span>
+          </button>
+        </div>
+
+        <!-- Inline Venue Editor -->
+        <div class="theme-venue-editor hidden" id="venue-editor-${domId}">
+          <div class="theme-venue-editor-inner">
+            <input type="text" class="theme-venue-input" id="venue-input-${domId}" value="${escapeHtml(g.venue || '')}" placeholder="e.g. Main Block - Lab 304, 2nd Floor" autocomplete="off" />
+            <div class="theme-venue-editor-actions">
+              <button type="button" class="glass-btn glass-btn-primary btn-xs btn-venue-save" data-theme="${escapeHtml(g.theme)}">Save</button>
+              <button type="button" class="glass-btn glass-btn-secondary btn-xs btn-venue-cancel" data-theme="${escapeHtml(g.theme)}">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Progress -->
+      <div class="theme-progress-strip">
+        <div class="theme-progress-track">
+          <div class="theme-progress-fill" style="width: ${rate}%;"></div>
+        </div>
+        <span class="theme-progress-label">${rate}% Scanned</span>
+      </div>
+
+      <!-- Expand / Collapse Teams Button -->
+      <button type="button" class="theme-card-expand-bar" data-theme="${escapeHtml(g.theme)}" aria-expanded="${isOpen}">
+        <span class="expand-bar-left">
+          <svg class="chevron-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          <span class="expand-bar-title">${isOpen ? 'Hide' : 'Show'} Registered Teams (${g.total})</span>
+        </span>
+        <span class="expand-bar-summary">${g.scanned} Present · ${g.total - g.scanned} Pending</span>
+      </button>
+
+      <!-- Expandable Teams Roster -->
+      <div class="theme-teams-roster-box ${isOpen ? '' : 'hidden'}" id="roster-${domId}">
+        <div class="theme-roster-table-wrap">
+          <table class="theme-roster-table">
+            <thead>
+              <tr>
+                <th>Team ID</th>
+                <th>Team & Leader</th>
+                <th>School</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(g.teams || []).map(t => {
+                const isPresent = Boolean(t.is_present);
+                const scannedAt = t.check_in_time
+                  ? new Date(t.check_in_time).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
+                  : '';
+                return `
+                <tr>
+                  <td class="theme-td-code">
+                    <span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span>
+                  </td>
+                  <td class="theme-td-team">
+                    <div class="theme-roster-team-name">${escapeHtml(t.team_name || '—')}</div>
+                    ${t.leader_name ? `<div class="theme-roster-leader">Leader: ${escapeHtml(t.leader_name)}</div>` : ''}
+                  </td>
+                  <td class="theme-td-school">
+                    <span class="theme-roster-school">${escapeHtml(t.college_name || '—')}</span>
+                  </td>
+                  <td class="theme-td-status">
+                    <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">
+                      ${isPresent ? 'Scanned' : 'Not Scanned'}
+                    </span>
+                    ${scannedAt ? `<div class="theme-roster-scanned-time">${scannedAt}</div>` : ''}
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>`;
+  }).join('');
+}
+
+function handleThemeSearch() {
+  const input = document.getElementById('theme-search-input');
+  currentThemeSearch = input ? input.value : '';
+  renderThemes();
+}
+
+function setThemeFilter(filter, btn) {
+  currentThemeFilter = filter;
+  const tabs = document.querySelectorAll('.theme-filter-pill .filter-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderThemes();
+}
+
+function resetThemeFilters() {
+  currentThemeFilter = 'all';
+  currentThemeSearch = '';
+  const searchInput = document.getElementById('theme-search-input');
+  if (searchInput) searchInput.value = '';
+  const tabs = document.querySelectorAll('.theme-filter-pill .filter-tab');
+  tabs.forEach(t => {
+    if (t.dataset.themeFilter === 'all') t.classList.add('active');
+    else t.classList.remove('active');
+  });
+  renderThemes();
+}
+
+function updateToggleAllButton(allExpanded) {
+  const btnText = document.getElementById('btn-toggle-all-themes-text');
+  if (btnText) btnText.textContent = allExpanded ? 'Collapse All' : 'Expand All';
+}
+
+function toggleAllThemes() {
+  const visibleThemes = rawThemesData.map(g => g.theme);
+  const allExpanded = visibleThemes.every(th => expandedThemes.has(th));
+
+  if (allExpanded) {
+    visibleThemes.forEach(th => expandedThemes.delete(th));
+  } else {
+    visibleThemes.forEach(th => expandedThemes.add(th));
+  }
+  renderThemes();
+}
+
+function showVenueEditor(themeName) {
+  const domId = safeThemeDomId(themeName);
+  const row = document.getElementById('venue-row-' + domId);
+  const editor = document.getElementById('venue-editor-' + domId);
+  const input = document.getElementById('venue-input-' + domId);
+
+  if (row) row.classList.add('hidden');
+  if (editor) editor.classList.remove('hidden');
+  if (input) {
+    input.focus();
+    input.select();
+  }
+}
+
+function cancelVenueEditor(themeName) {
+  const domId = safeThemeDomId(themeName);
+  const row = document.getElementById('venue-row-' + domId);
+  const editor = document.getElementById('venue-editor-' + domId);
+  const input = document.getElementById('venue-input-' + domId);
+
+  // Restore previous value
+  const item = rawThemesData.find(g => g.theme === themeName);
+  if (input && item) input.value = item.venue || '';
+
+  if (editor) editor.classList.add('hidden');
+  if (row) row.classList.remove('hidden');
+}
+
+async function saveThemeVenue(themeName) {
+  const domId = safeThemeDomId(themeName);
+  const input = document.getElementById('venue-input-' + domId);
+  const newVal = input ? input.value.trim() : '';
+
+  try {
+    const res = await fetch('/api/admin/themes/venue', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({ theme: themeName, venue: newVal })
+    });
+
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      showToast('Failed to update sitting place', 'error');
+      return;
+    }
+
+    // Update in local data
+    const item = rawThemesData.find(g => g.theme === themeName);
+    if (item) item.venue = newVal || null;
+
+    updateThemeStats();
+    renderThemes();
+    showToast(newVal ? `Sitting place saved for ${themeName}` : `Sitting place cleared for ${themeName}`, 'success');
+  } catch (err) {
+    console.error('[ERROR] saveThemeVenue:', err);
+    showToast('Connection error updating sitting place', 'error');
+  }
+}
+
+// Global delegated event listeners for Themes tab interactions
 document.addEventListener('click', e => {
-  const head = e.target.closest('.theme-row-head');
-  if (!head) return;
-  const row = head.closest('.theme-row');
-  const open = !row.classList.contains('is-open');
-  row.classList.toggle('is-open', open);
-  row.querySelector('.theme-team-list').classList.toggle('hidden', !open);
-  head.setAttribute('aria-expanded', String(open));
-  if (open) expandedThemes.add(head.dataset.theme);
-  else expandedThemes.delete(head.dataset.theme);
+  // 1. Edit / Assign Venue button
+  const editBtn = e.target.closest('.btn-theme-venue-edit');
+  if (editBtn) {
+    const theme = editBtn.dataset.theme;
+    if (theme) showVenueEditor(theme);
+    return;
+  }
+
+  // 2. Save Venue button
+  const saveBtn = e.target.closest('.btn-venue-save');
+  if (saveBtn) {
+    const theme = saveBtn.dataset.theme;
+    if (theme) saveThemeVenue(theme);
+    return;
+  }
+
+  // 3. Cancel Venue button
+  const cancelBtn = e.target.closest('.btn-venue-cancel');
+  if (cancelBtn) {
+    const theme = cancelBtn.dataset.theme;
+    if (theme) cancelVenueEditor(theme);
+    return;
+  }
+
+  // 4. Expand / Collapse Theme card button
+  const expandBar = e.target.closest('.theme-card-expand-bar');
+  if (expandBar) {
+    const theme = expandBar.dataset.theme;
+    if (theme) {
+      if (expandedThemes.has(theme)) expandedThemes.delete(theme);
+      else expandedThemes.add(theme);
+      renderThemes();
+    }
+    return;
+  }
+});
+
+// Support Enter and Escape key in venue input
+document.addEventListener('keydown', e => {
+  if (!e.target || !e.target.classList.contains('theme-venue-input')) return;
+  const editor = e.target.closest('.theme-venue-editor');
+  if (!editor) return;
+  const saveBtn = editor.querySelector('.btn-venue-save');
+  const cancelBtn = editor.querySelector('.btn-venue-cancel');
+  const theme = saveBtn ? saveBtn.dataset.theme : null;
+  if (!theme) return;
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    saveThemeVenue(theme);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    cancelVenueEditor(theme);
+  }
 });
 
 async function exportExcel() {

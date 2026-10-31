@@ -306,7 +306,7 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
 app.get('/api/admin/themes', authAdmin, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      `SELECT t.team_code, t.team_name, t.leader_name, t.college_name, t.category, t.is_present, v.venue
+      `SELECT t.team_code, t.team_name, t.leader_name, t.college_name, t.category, t.is_present, t.check_in_time, v.venue
        FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
        ORDER BY t.category, t.team_code`
     );
@@ -322,13 +322,35 @@ app.get('/api/admin/themes', authAdmin, async (req, res) => {
         team_name: r.team_name,
         leader_name: r.leader_name,
         college_name: r.college_name,
-        is_present: Boolean(r.is_present)
+        is_present: Boolean(r.is_present),
+        check_in_time: r.check_in_time
       });
     }
     res.json({ themes: [...themes.values()] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update sitting place (venue) for a theme
+app.post('/api/admin/themes/venue', authAdmin, async (req, res) => {
+  const { theme, venue } = req.body || {};
+  if (!theme || typeof theme !== 'string' || !theme.trim()) {
+    return res.status(400).json({ error: 'Theme name is required' });
+  }
+  const cleanTheme = theme.trim();
+  const cleanVenue = venue && typeof venue === 'string' && venue.trim() ? venue.trim() : null;
+
+  try {
+    await pool.execute(
+      'INSERT INTO theme_venues (theme, venue) VALUES (?, ?) ON DUPLICATE KEY UPDATE venue = VALUES(venue)',
+      [cleanTheme, cleanVenue]
+    );
+    res.json({ ok: true, theme: cleanTheme, venue: cleanVenue });
+  } catch (err) {
+    console.error('[ERROR] Failed to update theme venue:', err);
+    res.status(500).json({ error: 'Failed to update theme sitting place' });
   }
 });
 
