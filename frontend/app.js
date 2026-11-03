@@ -103,7 +103,7 @@ async function handleTeamLogin(e) {
   const errorEl = document.getElementById('team-login-error');
   const btn = document.getElementById('team-login-btn');
 
-  // Team IDs are RMKJH2610 + two digits; leaders type only the digits ("5" means "05")
+  // Team IDs are RMKJH261 + three digits; leaders type only the digits ("5" or "49" means "049")
   const idDigits = document.getElementById('team-id-input').value.replace(/\D/g, '');
   const phone = document.getElementById('team-phone-input').value.replace(/\D/g, '').slice(-10);
 
@@ -122,7 +122,7 @@ async function handleTeamLogin(e) {
     const res = await fetch('/api/team/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ team_id: 'RMKJH2610' + idDigits.padStart(2, '0'), phone })
+      body: JSON.stringify({ team_id: 'RMKJH261' + idDigits.padStart(3, '0'), phone })
     });
 
     const data = await res.json();

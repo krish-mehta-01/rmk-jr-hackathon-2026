@@ -40,7 +40,7 @@ Rows are matched by the sheet's **TEAM ID** column; re-importing a newer sheet a
 
 ## Team leader login
 
-**Team ID + team leader phone number.** The Team ID box shows the fixed `RMKJH2610` prefix, so leaders type only the last two digits (`49` → `RMKJH261049`); the phone box shows `+91`. Some schools registered several teams under one phone number, so the Team ID picks the team and the phone number confirms it.
+**Team ID + team leader phone number.** The Team ID box shows the fixed `RMKJH261` prefix, so leaders type only the last three digits (`049` → `RMKJH261049`, `073` → `RMKJH261073`); the phone box shows `+91`. Some schools registered several teams under one phone number, so the Team ID picks the team and the phone number confirms it.
 
 ## Live site (Render)
 
