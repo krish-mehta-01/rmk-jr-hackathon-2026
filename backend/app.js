@@ -381,32 +381,18 @@ app.get('/api/admin/stats', authAdmin, async (req, res) => {
 app.get('/api/admin/export', authAdmin, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT team_code, team_name, project_title, leader_name, members, mentor_name, mobile_no, email, college_name, category, is_present, check_in_time FROM teams ORDER BY is_present DESC, check_in_time ASC, team_code ASC, id ASC'
+      `SELECT t.team_code, t.team_name, t.project_title, t.leader_name, t.members, t.mentor_name, t.mobile_no, t.email, t.college_name, t.category, t.is_present, t.check_in_time, v.venue
+       FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
+       ORDER BY t.is_present DESC, t.check_in_time ASC, t.team_code ASC, t.id ASC`
     );
 
-    const XLSX = require('xlsx');
-    const ws = XLSX.utils.json_to_sheet(rows.map(r => ({
-      'Team ID': r.team_code || '',
-      'Team Name': r.team_name,
-      'Idea / Project Title': r.project_title || '',
-      'Team Leader': r.leader_name,
-      'Team Members': r.members || '',
-      'Mentor Name': r.mentor_name || '',
-      'Contact Mobile': r.mobile_no,
-      'Leader Email': r.email || '',
-      'School Name': r.college_name || '',
-      'Theme': r.category || '',
-      'Status': r.is_present ? 'Scanned' : 'Not Scanned',
-      'Scanned Time': r.check_in_time ? new Date(r.check_in_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : ''
-    })));
+    const { buildPresenceExcel } = require('./excel-formatter');
+    const wb = await buildPresenceExcel(rows);
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Presence');
-
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    res.setHeader('Content-Disposition', `attachment; filename=RMK_Jr_Hackathon_2026_Presence_${Date.now()}.xlsx`);
+    res.setHeader('Content-Disposition', 'attachment; filename="RMK_Jr_Hackathon_2026_Presence_Roster.xlsx"');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.send(buffer);
+    await wb.xlsx.write(res);
+    res.end();
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Export failed' });

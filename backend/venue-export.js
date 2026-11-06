@@ -41,7 +41,7 @@ function getSafeSheetName(theme, index) {
 
 async function generateVenueExcel(pool, outputPath) {
   const [rows] = await pool.execute(
-    `SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.category, v.venue
+    `SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.category, t.is_present, t.check_in_time, v.venue
      FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
      ORDER BY t.category, t.team_code`
   );
@@ -56,71 +56,15 @@ async function generateVenueExcel(pool, outputPath) {
     groups.get(theme).teams.push(r);
   }
 
-  const wb = XLSX.utils.book_new();
-
-  // 1. Summary Sheet
-  const summaryData = [];
-  let sl = 1;
-  let totalTeams = 0;
-  for (const [theme, info] of groups) {
-    totalTeams += info.teams.length;
-    summaryData.push({
-      'Sl. No.': sl++,
-      'Theme': theme,
-      'Venue': info.venue,
-      'Number of Teams': info.teams.length,
-      'Lab Coordinator Signature': ''
-    });
-  }
-  summaryData.push({
-    'Sl. No.': '',
-    'Theme': 'TOTAL',
-    'Venue': '',
-    'Number of Teams': totalTeams,
-    'Lab Coordinator Signature': ''
-  });
-
-  const wsSummary = XLSX.utils.json_to_sheet(summaryData);
-  wsSummary['!cols'] = [
-    { wch: 8 },
-    { wch: 38 },
-    { wch: 40 },
-    { wch: 18 },
-    { wch: 30 }
-  ];
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
-
-  // 2. Individual Theme Sheets
-  let themeIdx = 1;
-  for (const [theme, info] of groups) {
-    const sheetName = getSafeSheetName(theme, themeIdx++);
-    const themeData = info.teams.map((t, idx) => ({
-      'Sl. No.': idx + 1,
-      'Junior Hackathon ID': t.team_code || '',
-      'Team Leader Name': t.leader_name || '',
-      'Team Name': t.team_name || '',
-      'Title': t.project_title || '',
-      'School Name': t.college_name || ''
-    }));
-
-    const wsTheme = XLSX.utils.json_to_sheet(themeData);
-    wsTheme['!cols'] = [
-      { wch: 8 },
-      { wch: 22 },
-      { wch: 25 },
-      { wch: 25 },
-      { wch: 45 },
-      { wch: 35 }
-    ];
-    XLSX.utils.book_append_sheet(wb, wsTheme, sheetName);
-  }
+  const { buildVenueWiseWorkbook } = require('./excel-formatter');
+  const wb = await buildVenueWiseWorkbook(groups);
 
   const dir = path.dirname(outputPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  XLSX.writeFile(wb, outputPath);
+  await wb.xlsx.writeFile(outputPath);
   return outputPath;
 }
 
