@@ -24,18 +24,18 @@ const { pool, testConnection } = require('./db');
 const EXCEL_PATH = 'C:/Users/krish/.gemini/antigravity/brain/85886fa9-8576-486f-bb61-edd05d989cbf/.user_uploaded/media_1793970474248_1f91d49c.xlsx';
 
 const THEME_VENUE_MAPPING = {
-  'Renewable/Sustainable Energy': 'CO WORK SPACE (RJ BLOCK)',
-  'Agriculture': 'SV BLOCK SEMINAR HALL 3',
-  'Healthcare': 'RJ BLOCK SECOND FLOOR SEMINAR HALL',
-  'Education': 'SV BLOCK SEMINAR HALL 1',
-  'Robotics': 'NEW BLOCK SEMINAR HALL',
-  'Smart Automation': 'RJ BLOCK FIRST FLOOR SEMINAR HALL',
-  'Smart Vehicles': 'RJ BLOCK SECOND FLOOR SEMINAR HALL',
-  'Traditional Games of Indian Ethos': 'IDEA LAB / AR&VR LAB (RJ BLOCK)',
-  'Virtual Reality Experience': 'IDEA LAB / AR&VR LAB (RJ BLOCK)',
-  'Clean and Green Environment': 'SV BLOCK SEMINAR HALL 2',
-  'Indian Heritage and Digital Creativity': 'CORPORATE CENTRE (RJ BLOCK)',
-  'AI for Disater Management': 'NEW BLOCK SEMINAR HALL'
+  'Renewable/Sustainable Energy': 'CO WORK SPACE (RJ Block)',
+  'Agriculture': 'SEMINAR HALL 3 (SV Block)',
+  'Healthcare': 'SECOND FLOOR SEMINAR HALL (RJ Block)',
+  'Education': 'SEMINAR HALL 1 (SV Block)',
+  'Robotics': 'SEMINAR HALL (New Block)',
+  'Smart Automation': 'FIRST FLOOR SEMINAR HALL (RJ Block)',
+  'Smart Vehicles': 'SECOND FLOOR SEMINAR HALL (RJ Block)',
+  'Traditional Games of Indian Ethos': 'IDEA LAB / AR&VR LAB (RJ Block)',
+  'Virtual Reality Experience': 'IDEA LAB / AR&VR LAB (RJ Block)',
+  'Clean and Green Environment': 'SEMINAR HALL 2 (SV Block)',
+  'Indian Heritage and Digital Creativity': 'CORPORATE CENTRE (RJ Block)',
+  'AI for Disater Management': 'SEMINAR HALL (New Block)'
 };
 
 function cleanMobile(raw) {
