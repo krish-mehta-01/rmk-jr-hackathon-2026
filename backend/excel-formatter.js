@@ -12,8 +12,8 @@
  *    - Table Headers: Deep Emerald Green (#166534)
  *    - Data Rows: Alternating Pure White (#FFFFFF) & Soft Mint Tint (#F0FDF4)
  *    - Status: Vibrant Forest Green (#22C55E)
- * 4. Crisp, Professional Borders: Elegant, subtle slate gray (#E2E8F0 / #CBD5E1)
- *    giving sharp readability without garish or distracting colored gridlines.
+ * 4. Crisp, Classic Black Borders: Clean thin black borders (#000000) matching
+ *    the official institutional template specifications.
  * 5. Typography: Text colors are STRICTLY Pure Black (#000000) or Pure White (#FFFFFF) ONLY.
  * 6. Generous column widths, auto-filters, and freeze panes.
  */
@@ -36,27 +36,23 @@ const PALETTE = {
   rowEven: 'FFFFFF',        // Pure White
   rowOdd: 'F0FDF4',         // Very Soft Mint Green Tint
   rowText: '000000',        // Pure Black
-  border: 'E2E8F0',         // Crisp subtle slate gray border (executive standard)
-  borderMedium: 'CBD5E1',   // Medium slate border for ribbon/totals
+  border: '000000',         // Clean thin black border (matching institutional standard)
+  borderMedium: '000000',   // Black border for ribbon/totals
   scannedBg: '22C55E',      // Green Status Pill
   scannedText: 'FFFFFF',    // Pure White
   pendingBg: 'F1F5F9',      // Neutral Pending Pill
   pendingText: '000000'     // Pure Black
 };
 
-const BORDER_CELL = {
+const BORDER_BLACK = {
   top: { style: 'thin', color: { argb: PALETTE.border } },
   left: { style: 'thin', color: { argb: PALETTE.border } },
   bottom: { style: 'thin', color: { argb: PALETTE.border } },
   right: { style: 'thin', color: { argb: PALETTE.border } }
 };
 
-const BORDER_RIBBON = {
-  top: { style: 'thin', color: { argb: PALETTE.borderMedium } },
-  left: { style: 'thin', color: { argb: PALETTE.borderMedium } },
-  bottom: { style: 'thin', color: { argb: PALETTE.borderMedium } },
-  right: { style: 'thin', color: { argb: PALETTE.borderMedium } }
-};
+const BORDER_CELL = BORDER_BLACK;
+const BORDER_RIBBON = BORDER_BLACK;
 
 /**
  * Builds the Master Presence & Registration Roster workbook
@@ -147,7 +143,7 @@ async function buildPresenceExcel(rows) {
   // Enable AutoFilter on row 5
   ws.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: totalCols } };
 
-  // Row 6+: Data Rows (Pure Black text on alternating shades of green with subtle gray border)
+  // Row 6+: Data Rows (Pure Black text on alternating shades of green with clean black border)
   rows.forEach((r, rowIdx) => {
     const rNum = rowIdx + 6;
     const isEven = (rowIdx % 2 === 0);
@@ -440,7 +436,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
 
     wsTheme.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: themeCols.length } };
 
-    // Row 6+: Teams Rows (Pure Black Text on alternating green shades with subtle gray border)
+    // Row 6+: Teams Rows (Pure Black Text on alternating green shades with clean black border)
     info.teams.forEach((t, tIdx) => {
       const rNum = tIdx + 6;
       const row = wsTheme.getRow(rNum);
