@@ -1,12 +1,16 @@
+const dns = require('dns');
+if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. Started by server.js (local, Render) and
 // exported to Vercel as a serverless function by api/index.js.
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { pool } = require('./db');
+const { generateVenueExcel, findVenueDocx, findVenueExcel, findVenuePdf } = require('./venue-export');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
@@ -157,7 +161,8 @@ app.post('/api/admin/login', async (req, res) => {
 app.post('/api/team/login', async (req, res) => {
   try {
     const teamCode = String(req.body.team_id || '').trim().toUpperCase().replace(/\s+/g, '');
-    const phone = String(req.body.phone || '').replace(/[^0-9]/g, '').slice(-10);
+    let phone = String(req.body.phone || '').replace(/[^0-9]/g, '').slice(-10);
+    if (phone.length === 9) phone = '0' + phone;
     if (!teamCode || phone.length !== 10) {
       return res.status(400).json({ error: 'Enter your Team ID and the 10-digit team leader phone number.' });
     }
@@ -405,6 +410,78 @@ app.get('/api/admin/export', authAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Export failed' });
+  }
+});
+
+
+// Download / generate venue-wise segregated Excel (.xlsx)
+app.get('/api/admin/export/venue-excel', authAdmin, async (req, res) => {
+  try {
+    let filePath = findVenueExcel();
+    if (!filePath) {
+      const target = path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx');
+      await generateVenueExcel(pool, target);
+      filePath = target;
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] venue-excel download failed:', err);
+        res.status(500).json({ error: 'Failed to download venue Excel' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/venue-excel error:', err);
+    res.status(500).json({ error: 'Failed to generate venue Excel' });
+  }
+});
+
+// Download / generate venue-wise segregated Word document (.docx)
+app.get('/api/admin/export/venue-doc', authAdmin, async (req, res) => {
+  try {
+    let filePath = findVenueDocx();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_venue_docs.py');
+      if (fs.existsSync(genScript)) {
+        const { spawnSync } = require('child_process');
+        spawnSync('python', [genScript], { stdio: 'ignore' });
+        filePath = findVenueDocx();
+      }
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Venue document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] venue-doc download failed:', err);
+        res.status(500).json({ error: 'Failed to download venue Word document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/venue-doc error:', err);
+    res.status(500).json({ error: 'Failed to generate venue Word document' });
+  }
+});
+
+
+// Download venue-wise segregated PDF document (.pdf)
+app.get('/api/admin/export/venue-pdf', authAdmin, async (req, res) => {
+  try {
+    const filePath = findVenuePdf();
+    if (!filePath) {
+      return res.status(404).json({ error: 'Venue PDF document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] venue-pdf download failed:', err);
+        res.status(500).json({ error: 'Failed to download venue PDF document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/venue-pdf error:', err);
+    res.status(500).json({ error: 'Failed to generate venue PDF document' });
   }
 });
 

@@ -1085,6 +1085,148 @@ async function exportExcel() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// VENUE-WISE DOWNLOAD HANDLERS (ADMIN AUTHENTICATED)
+// ─────────────────────────────────────────────────────────────
+window.adminAuth = window.adminAuth || {
+  get token() { return adminToken; }
+};
+
+async function exportVenueDoc() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-export-venue-doc');
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+    showToast('Preparing Word document...', 'info');
+    const res = await fetch('/api/admin/export/venue-doc', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Failed to download venue Word document', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Venue-wise Word document downloaded', 'success');
+  } catch (err) {
+    console.error('exportVenueDoc error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+}
+
+async function exportVenueExcel() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-export-venue-excel');
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+    showToast('Preparing Excel workbook...', 'info');
+    const res = await fetch('/api/admin/export/venue-excel', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Failed to download venue Excel workbook', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Venue-wise Excel workbook downloaded', 'success');
+  } catch (err) {
+    console.error('exportVenueExcel error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+}
+
+
+
+async function exportVenuePdf() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-export-venue-pdf');
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+    showToast('Preparing PDF document...', 'info');
+    const res = await fetch('/api/admin/export/venue-pdf', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Failed to download venue PDF document', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Venue-wise PDF document downloaded', 'success');
+  } catch (err) {
+    console.error('exportVenuePdf error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+}
+window.exportVenuePdf = exportVenuePdf;
+
+window.exportVenueDoc = exportVenueDoc;
+window.exportVenueExcel = exportVenueExcel;
+
+// ─────────────────────────────────────────────────────────────
 // PERMANENT HACKATHON DAY QR CODE
 // ─────────────────────────────────────────────────────────────
 async function loadPermanentVenueQR() {
