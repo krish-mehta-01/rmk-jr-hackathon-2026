@@ -7,14 +7,15 @@
  *    RMK Junior Hackathon 2026 Logo (Right).
  * 2. Zero Overlap: Header rows have 56pt total height, ensuring logos (48px high)
  *    never touch, overflow, or clip into Row 3 or venue text.
- * 3. Green Family Palette:
- *    - Theme / Venue Ribbon: Light Mint Green (#DCFCE7) with crisp borders
+ * 3. Green Family Palette for cells:
+ *    - Theme / Venue Ribbon: Light Mint Green (#DCFCE7)
  *    - Table Headers: Deep Emerald Green (#166534)
  *    - Data Rows: Alternating Pure White (#FFFFFF) & Soft Mint Tint (#F0FDF4)
  *    - Status: Vibrant Forest Green (#22C55E)
- *    - Grid Borders: Soft Mint (#A7F3D0)
- * 4. Typography: Text colors are STRICTLY Pure Black (#000000) or Pure White (#FFFFFF) ONLY.
- * 5. Generous column widths, auto-filters, and freeze panes.
+ * 4. Crisp, Professional Borders: Elegant, subtle slate gray (#E2E8F0 / #CBD5E1)
+ *    giving sharp readability without garish or distracting colored gridlines.
+ * 5. Typography: Text colors are STRICTLY Pure Black (#000000) or Pure White (#FFFFFF) ONLY.
+ * 6. Generous column widths, auto-filters, and freeze panes.
  */
 
 const ExcelJS = require('exceljs');
@@ -24,7 +25,7 @@ const fs = require('fs');
 const LOGO_LEFT_PATH = path.join(__dirname, '..', 'frontend', 'assets', 'rmk_group_logo.png');
 const LOGO_RIGHT_PATH = path.join(__dirname, '..', 'frontend', 'assets', 'rmk_jr_hackathon_2026_logo.png');
 
-const GREEN_PALETTE = {
+const PALETTE = {
   headerBg: 'FFFFFF',       // Pure White header area for maximum logo clarity
   headerTextDark: '000000', // Pure Black
   headerTextGreen: '14532D',// Deep Forest Green
@@ -35,26 +36,26 @@ const GREEN_PALETTE = {
   rowEven: 'FFFFFF',        // Pure White
   rowOdd: 'F0FDF4',         // Very Soft Mint Green Tint
   rowText: '000000',        // Pure Black
-  border: 'A7F3D0',         // Soft Mint Border
-  borderDark: '166534',     // Emerald Border for ribbon
+  border: 'E2E8F0',         // Crisp subtle slate gray border (executive standard)
+  borderMedium: 'CBD5E1',   // Medium slate border for ribbon/totals
   scannedBg: '22C55E',      // Green Status Pill
   scannedText: 'FFFFFF',    // Pure White
   pendingBg: 'F1F5F9',      // Neutral Pending Pill
   pendingText: '000000'     // Pure Black
 };
 
-const BORDER_GREEN = {
-  top: { style: 'thin', color: { argb: GREEN_PALETTE.border } },
-  left: { style: 'thin', color: { argb: GREEN_PALETTE.border } },
-  bottom: { style: 'thin', color: { argb: GREEN_PALETTE.border } },
-  right: { style: 'thin', color: { argb: GREEN_PALETTE.border } }
+const BORDER_CELL = {
+  top: { style: 'thin', color: { argb: PALETTE.border } },
+  left: { style: 'thin', color: { argb: PALETTE.border } },
+  bottom: { style: 'thin', color: { argb: PALETTE.border } },
+  right: { style: 'thin', color: { argb: PALETTE.border } }
 };
 
 const BORDER_RIBBON = {
-  top: { style: 'medium', color: { argb: GREEN_PALETTE.borderDark } },
-  left: { style: 'thin', color: { argb: GREEN_PALETTE.borderDark } },
-  bottom: { style: 'medium', color: { argb: GREEN_PALETTE.borderDark } },
-  right: { style: 'thin', color: { argb: GREEN_PALETTE.borderDark } }
+  top: { style: 'thin', color: { argb: PALETTE.borderMedium } },
+  left: { style: 'thin', color: { argb: PALETTE.borderMedium } },
+  bottom: { style: 'thin', color: { argb: PALETTE.borderMedium } },
+  right: { style: 'thin', color: { argb: PALETTE.borderMedium } }
 };
 
 /**
@@ -101,8 +102,8 @@ async function buildPresenceExcel(rows) {
   ws.mergeCells(1, 1, 1, totalCols);
   const titleCell1 = ws.getCell('A1');
   titleCell1.value = 'R.M.K. GROUP OF INSTITUTIONS';
-  titleCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: GREEN_PALETTE.headerTextGreen } };
-  titleCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.headerBg } };
+  titleCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
+  titleCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
   titleCell1.alignment = { horizontal: 'center', vertical: 'bottom' };
   ws.getRow(1).height = 30;
 
@@ -110,8 +111,8 @@ async function buildPresenceExcel(rows) {
   ws.mergeCells(2, 1, 2, totalCols);
   const titleCell2 = ws.getCell('A2');
   titleCell2.value = 'JUNIOR HACKATHON 2026';
-  titleCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: GREEN_PALETTE.headerTextDark } };
-  titleCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.headerBg } };
+  titleCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
+  titleCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
   titleCell2.alignment = { horizontal: 'center', vertical: 'top' };
   ws.getRow(2).height = 26;
 
@@ -121,8 +122,8 @@ async function buildPresenceExcel(rows) {
   ws.mergeCells(3, 1, 3, totalCols);
   const subCell = ws.getCell('A3');
   subCell.value = `MASTER REGISTRATION & ATTENDANCE ROSTER  •  Total Teams: ${rows.length}  •  Scanned: ${scannedCount}  •  Exported: ${nowStr} IST`;
-  subCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: GREEN_PALETTE.ribbonText } };
-  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.ribbonBg } };
+  subCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
   subCell.alignment = { horizontal: 'center', vertical: 'middle' };
   subCell.border = BORDER_RIBBON;
   ws.getRow(3).height = 24;
@@ -136,21 +137,21 @@ async function buildPresenceExcel(rows) {
   columns.forEach((col, idx) => {
     const cell = headerRow.getCell(idx + 1);
     cell.value = col.header;
-    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: GREEN_PALETTE.tblHeaderText } };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.tblHeaderBg } };
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
     cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 12 || idx === 13) ? 'center' : 'left', vertical: 'middle' };
-    cell.border = BORDER_GREEN;
+    cell.border = BORDER_CELL;
     ws.getColumn(idx + 1).width = col.width;
   });
 
   // Enable AutoFilter on row 5
   ws.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: totalCols } };
 
-  // Row 6+: Data Rows (Pure Black text on alternating shades of green)
+  // Row 6+: Data Rows (Pure Black text on alternating shades of green with subtle gray border)
   rows.forEach((r, rowIdx) => {
     const rNum = rowIdx + 6;
     const isEven = (rowIdx % 2 === 0);
-    const rowBg = isEven ? GREEN_PALETTE.rowEven : GREEN_PALETTE.rowOdd;
+    const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
     const dRow = ws.getRow(rNum);
     dRow.height = 22;
 
@@ -177,25 +178,25 @@ async function buildPresenceExcel(rows) {
     values.forEach((val, colIdx) => {
       const cell = dRow.getCell(colIdx + 1);
       cell.value = val;
-      cell.border = BORDER_GREEN;
+      cell.border = BORDER_CELL;
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
-      cell.font = { name: 'Calibri', size: 10, color: { argb: GREEN_PALETTE.rowText } };
+      cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
 
       if (colIdx === 0) {
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
       } else if (colIdx === 1) { // Team ID
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: GREEN_PALETTE.rowText } };
+        cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
       } else if (colIdx === 7 || colIdx === 13) {
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
       } else if (colIdx === 12) { // Attendance Status
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         if (isPresent) {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.scannedBg } };
-          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: GREEN_PALETTE.scannedText } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.scannedBg } };
+          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.scannedText } };
         } else {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.pendingBg } };
-          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: GREEN_PALETTE.pendingText } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.pendingBg } };
+          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.pendingText } };
         }
       } else {
         cell.alignment = { horizontal: 'left', vertical: 'middle' };
@@ -258,16 +259,16 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
   wsSummary.mergeCells(1, 1, 1, sumCols.length);
   const sumTitle1 = wsSummary.getCell('A1');
   sumTitle1.value = 'R.M.K. GROUP OF INSTITUTIONS';
-  sumTitle1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: GREEN_PALETTE.headerTextGreen } };
-  sumTitle1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.headerBg } };
+  sumTitle1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
+  sumTitle1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
   sumTitle1.alignment = { horizontal: 'center', vertical: 'bottom' };
   wsSummary.getRow(1).height = 30;
 
   wsSummary.mergeCells(2, 1, 2, sumCols.length);
   const sumTitle2 = wsSummary.getCell('A2');
   sumTitle2.value = 'JUNIOR HACKATHON 2026';
-  sumTitle2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: GREEN_PALETTE.headerTextDark } };
-  sumTitle2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.headerBg } };
+  sumTitle2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
+  sumTitle2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
   sumTitle2.alignment = { horizontal: 'center', vertical: 'top' };
   wsSummary.getRow(2).height = 26;
 
@@ -282,8 +283,8 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
   wsSummary.mergeCells(3, 1, 3, sumCols.length);
   const sumSub = wsSummary.getCell('A3');
   sumSub.value = `VENUE ALLOCATION & ROOM SUMMARY  •  ${teamsGroupedByTheme.size} Themes  •  ${totalAllTeams} Registered Teams`;
-  sumSub.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: GREEN_PALETTE.ribbonText } };
-  sumSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.ribbonBg } };
+  sumSub.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+  sumSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
   sumSub.alignment = { horizontal: 'center', vertical: 'middle' };
   sumSub.border = BORDER_RIBBON;
   wsSummary.getRow(3).height = 24;
@@ -297,10 +298,10 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
   sumCols.forEach((col, idx) => {
     const c = sumHeaderRow.getCell(idx + 1);
     c.value = col.header;
-    c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: GREEN_PALETTE.tblHeaderText } };
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.tblHeaderBg } };
+    c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
     c.alignment = { horizontal: (idx === 0 || idx >= 3) ? 'center' : 'left', vertical: 'middle' };
-    c.border = BORDER_GREEN;
+    c.border = BORDER_CELL;
     wsSummary.getColumn(idx + 1).width = col.width;
   });
 
@@ -310,7 +311,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     const row = wsSummary.getRow(rNum);
     row.height = 24;
     const isEven = (sl % 2 === 1);
-    const rowBg = isEven ? GREEN_PALETTE.rowEven : GREEN_PALETTE.rowOdd;
+    const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
 
     const tCount = info.teams.length;
     const sCount = info.teams.filter(t => t.is_present).length;
@@ -320,11 +321,11 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     vals.forEach((v, idx) => {
       const cell = row.getCell(idx + 1);
       cell.value = v;
-      cell.border = BORDER_GREEN;
+      cell.border = BORDER_CELL;
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
-      cell.font = { name: 'Calibri', size: 10, color: { argb: GREEN_PALETTE.rowText } };
+      cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
       cell.alignment = { horizontal: (idx === 0 || idx >= 3) ? 'center' : 'left', vertical: 'middle' };
-      if (idx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: GREEN_PALETTE.rowText } };
+      if (idx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
     });
     sl++;
   }
@@ -337,8 +338,8 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     const cell = totalRow.getCell(idx + 1);
     cell.value = v;
     cell.border = BORDER_RIBBON;
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.ribbonBg } };
-    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: GREEN_PALETTE.ribbonText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.ribbonText } };
     cell.alignment = { horizontal: (idx === 0 || idx >= 3) ? 'center' : 'left', vertical: 'middle' };
   });
 
@@ -398,16 +399,16 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     wsTheme.mergeCells(1, 1, 1, themeCols.length);
     const tCell1 = wsTheme.getCell('A1');
     tCell1.value = 'R.M.K. GROUP OF INSTITUTIONS';
-    tCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: GREEN_PALETTE.headerTextGreen } };
-    tCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.headerBg } };
+    tCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
+    tCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
     tCell1.alignment = { horizontal: 'center', vertical: 'bottom' };
     wsTheme.getRow(1).height = 30;
 
     wsTheme.mergeCells(2, 1, 2, themeCols.length);
     const tCell2 = wsTheme.getCell('A2');
     tCell2.value = 'JUNIOR HACKATHON 2026';
-    tCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: GREEN_PALETTE.headerTextDark } };
-    tCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.headerBg } };
+    tCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
+    tCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
     tCell2.alignment = { horizontal: 'center', vertical: 'top' };
     wsTheme.getRow(2).height = 26;
 
@@ -415,8 +416,8 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     wsTheme.mergeCells(3, 1, 3, themeCols.length);
     const subTCell = wsTheme.getCell('A3');
     subTCell.value = `THEME: ${theme.toUpperCase()}      |      VENUE: ${info.venue.toUpperCase()}      |      Teams: ${info.teams.length}`;
-    subTCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: GREEN_PALETTE.ribbonText } };
-    subTCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.ribbonBg } };
+    subTCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+    subTCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
     subTCell.alignment = { horizontal: 'center', vertical: 'middle' };
     subTCell.border = BORDER_RIBBON;
     wsTheme.getRow(3).height = 24;
@@ -430,22 +431,22 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     themeCols.forEach((col, idx) => {
       const c = tHeadRow.getCell(idx + 1);
       c.value = col.header;
-      c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: GREEN_PALETTE.tblHeaderText } };
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.tblHeaderBg } };
+      c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
       c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 6 || idx === 7) ? 'center' : 'left', vertical: 'middle' };
-      c.border = BORDER_GREEN;
+      c.border = BORDER_CELL;
       wsTheme.getColumn(idx + 1).width = col.width;
     });
 
     wsTheme.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: themeCols.length } };
 
-    // Row 6+: Teams Rows (Pure Black Text on alternating green shades)
+    // Row 6+: Teams Rows (Pure Black Text on alternating green shades with subtle gray border)
     info.teams.forEach((t, tIdx) => {
       const rNum = tIdx + 6;
       const row = wsTheme.getRow(rNum);
       row.height = 22;
       const isEven = (tIdx % 2 === 0);
-      const rowBg = isEven ? GREEN_PALETTE.rowEven : GREEN_PALETTE.rowOdd;
+      const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
       const isPresent = Boolean(t.is_present);
 
       const vals = [
@@ -462,23 +463,23 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
       vals.forEach((v, cIdx) => {
         const cell = row.getCell(cIdx + 1);
         cell.value = v;
-        cell.border = BORDER_GREEN;
+        cell.border = BORDER_CELL;
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
-        cell.font = { name: 'Calibri', size: 10, color: { argb: GREEN_PALETTE.rowText } };
+        cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
 
         if (cIdx === 0) {
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
         } else if (cIdx === 1) { // Team ID
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
-          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: GREEN_PALETTE.rowText } };
+          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
         } else if (cIdx === 6) { // Attendance
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           if (isPresent) {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.scannedBg } };
-            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: GREEN_PALETTE.scannedText } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.scannedBg } };
+            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.scannedText } };
           } else {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN_PALETTE.pendingBg } };
-            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: GREEN_PALETTE.pendingText } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.pendingBg } };
+            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.pendingText } };
           }
         } else {
           cell.alignment = { horizontal: 'left', vertical: 'middle' };
