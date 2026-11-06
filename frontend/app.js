@@ -900,12 +900,86 @@ function handleThemeSearch() {
   renderThemes();
 }
 
-function setThemeFilter(filter, btn) {
-  currentThemeFilter = filter;
+function closeDropdowns() {
+  document.querySelectorAll('.custom-dropdown').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.remove('show'));
+  const exportBtn = document.getElementById('btn-venue-export-dropdown');
+  if (exportBtn) exportBtn.setAttribute('aria-expanded', 'false');
+  const filterBtn = document.getElementById('btn-theme-filter-dropdown');
+  if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
+}
+
+function toggleVenueExportDropdown(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const dropdown = document.getElementById('dropdown-venue-export');
+  const menu = document.getElementById('menu-venue-export');
+  const btn = document.getElementById('btn-venue-export-dropdown');
+  const wasOpen = dropdown ? dropdown.classList.contains('open') : false;
+  closeDropdowns();
+  if (dropdown && !wasOpen) {
+    dropdown.classList.add('open');
+    if (menu) menu.classList.add('show');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function toggleThemeFilterDropdown(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const dropdown = document.getElementById('dropdown-theme-filter');
+  const menu = document.getElementById('menu-theme-filter');
+  const btn = document.getElementById('btn-theme-filter-dropdown');
+  const wasOpen = dropdown ? dropdown.classList.contains('open') : false;
+  closeDropdowns();
+  if (dropdown && !wasOpen) {
+    dropdown.classList.add('open');
+    if (menu) menu.classList.add('show');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function selectThemeFilter(filterKey, label) {
+  currentThemeFilter = filterKey;
+  const filterLabels = {
+    all: 'All',
+    venue_set: 'Venue Set',
+    venue_missing: 'Venue Missing',
+    scanned: 'Scanned > 0'
+  };
+  const displayLabel = label || filterLabels[filterKey] || 'All';
+
+  // Update button label to "Filter: <label>"
+  const btnLabel = document.getElementById('theme-filter-btn-label');
+  if (btnLabel) {
+    btnLabel.textContent = `Filter: ${displayLabel}`;
+  }
+
+  // Update .active class on dropdown items
+  const items = document.querySelectorAll('#menu-theme-filter .dropdown-item');
+  items.forEach(item => {
+    if (item.dataset.filter === filterKey) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // Backward-compatibility with pill tabs if any exist
   const tabs = document.querySelectorAll('.theme-filter-pill .filter-tab');
-  tabs.forEach(t => t.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  tabs.forEach(t => {
+    if (t.dataset.themeFilter === filterKey) t.classList.add('active');
+    else t.classList.remove('active');
+  });
+
+  closeDropdowns();
   renderThemes();
+}
+
+function setThemeFilter(filter, btn) {
+  selectThemeFilter(filter);
 }
 
 function resetThemeFilters() {
@@ -1353,3 +1427,21 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+// Wire document click to close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.custom-dropdown')) {
+    closeDropdowns();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeDropdowns();
+  }
+});
+
+window.toggleVenueExportDropdown = toggleVenueExportDropdown;
+window.toggleThemeFilterDropdown = toggleThemeFilterDropdown;
+window.selectThemeFilter = selectThemeFilter;
+window.closeDropdowns = closeDropdowns;

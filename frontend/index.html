@@ -229,7 +229,7 @@
                 </button>
                 <button type="button" class="laptop-nav-item" id="alink-themes" onclick="switchAdminSection('themes')">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <span>Themes</span>
+                  <span>Venue</span>
                 </button>
                 <button type="button" class="laptop-nav-item" id="alink-qr" onclick="switchAdminSection('qr')">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
@@ -326,79 +326,8 @@
 
             <!-- Pane: Teams by theme, with each theme's sitting place -->
             <div id="admin-sec-themes" class="admin-tab-pane hidden">
-              
-              <!-- Venue-Wise Export Action Bar -->
-              <div class="venue-roster-card">
-                <div class="venue-roster-header">
-                  <div>
-                    <h3 class="venue-roster-title">Venue Allocation Rosters</h3>
-                    <p class="venue-roster-subtitle">Download master team lists segregated by presentation hall for lab coordinators and venue in-charges.</p>
-                  </div>
-                  <div class="venue-roster-badge">262 Teams / 12 Venues</div>
-                </div>
-                <div class="venue-roster-actions">
-                  <button type="button" class="btn-roster-export btn-roster-pdf" id="btn-export-venue-pdf" onclick="exportVenuePdf()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <path d="M9 15h6"/>
-                      <path d="M12 12v6"/>
-                    </svg>
-                    <span>Download PDF</span>
-                    <span class="file-tag tag-pdf">PDF</span>
-                  </button>
-
-                  <button type="button" class="btn-roster-export btn-roster-docx" id="btn-export-venue-doc" onclick="exportVenueDoc()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="16" y1="13" x2="8" y2="13"/>
-                      <line x1="16" y1="17" x2="8" y2="17"/>
-                    </svg>
-                    <span>Download Word</span>
-                    <span class="file-tag tag-docx">DOCX</span>
-                  </button>
-
-                  <button type="button" class="btn-roster-export btn-roster-xlsx" id="btn-export-venue-excel" onclick="exportVenueExcel()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="8" y1="13" x2="16" y2="17"/>
-                      <line x1="16" y1="13" x2="8" y2="17"/>
-                    </svg>
-                    <span>Download Excel</span>
-                    <span class="file-tag tag-xlsx">XLSX</span>
-                  </button>
-                </div>
-              </div>
-
-
-              
-              <!-- Bento Stats Cards for Themes -->
-              <div class="laptop-stats-grid theme-stats-grid">
-                <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">TOTAL THEMES</span>
-                  <div class="stat-number" id="theme-stat-total">0</div>
-                </div>
-
-                <div class="glass-card stat-bento-card stat-green">
-                  <span class="stat-tag">VENUES ASSIGNED</span>
-                  <div class="stat-number" id="theme-stat-venues">0 / 0</div>
-                </div>
-
-                <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">TOTAL TEAMS</span>
-                  <div class="stat-number" id="theme-stat-teams">0</div>
-                </div>
-
-                <div class="glass-card stat-bento-card stat-amber">
-                  <span class="stat-tag">SCANNED ATTENDANCE</span>
-                  <div class="stat-number" id="theme-stat-scanned">0%</div>
-                </div>
-              </div>
-
-              <!-- Theme Action & Filter Header -->
-              <div class="glass-card theme-control-card">
+              <!-- Unified Compact Venue & Themes Control Bar -->
+              <div class="glass-card theme-control-card theme-top-bar">
                 <div class="table-action-header theme-action-header">
                   
                   <div class="table-search-pill theme-search-pill">
@@ -406,11 +335,27 @@
                     <input type="text" id="theme-search-input" placeholder="Search by theme, sitting place, team or school..." oninput="handleThemeSearch()" />
                   </div>
 
-                  <div class="table-filter-pill theme-filter-pill">
-                    <button type="button" class="filter-tab active" data-theme-filter="all" onclick="setThemeFilter('all', this)">All</button>
-                    <button type="button" class="filter-tab" data-theme-filter="venue_set" onclick="setThemeFilter('venue_set', this)">Venue Set</button>
-                    <button type="button" class="filter-tab" data-theme-filter="venue_missing" onclick="setThemeFilter('venue_missing', this)">Venue Missing</button>
-                    <button type="button" class="filter-tab" data-theme-filter="scanned" onclick="setThemeFilter('scanned', this)">Scanned &gt; 0</button>
+                  <!-- Theme Filter Dropdown -->
+                  <div class="custom-dropdown" id="dropdown-theme-filter">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm dropdown-trigger" id="btn-theme-filter-dropdown" onclick="toggleThemeFilterDropdown(event)" aria-haspopup="true" aria-expanded="false">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                      <span id="theme-filter-btn-label">Filter: All</span>
+                      <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="custom-dropdown-menu" id="menu-theme-filter" role="menu">
+                      <button type="button" class="dropdown-item active" data-filter="all" onclick="selectThemeFilter('all', 'All')">
+                        <span>All Themes</span>
+                      </button>
+                      <button type="button" class="dropdown-item" data-filter="venue_set" onclick="selectThemeFilter('venue_set', 'Venue Set')">
+                        <span>Venue Set</span>
+                      </button>
+                      <button type="button" class="dropdown-item" data-filter="venue_missing" onclick="selectThemeFilter('venue_missing', 'Venue Missing')">
+                        <span>Venue Missing</span>
+                      </button>
+                      <button type="button" class="dropdown-item" data-filter="scanned" onclick="selectThemeFilter('scanned', 'Scanned > 0')">
+                        <span>Scanned &gt; 0</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div class="table-btn-cluster">
@@ -418,15 +363,57 @@
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
                       <span id="btn-toggle-all-themes-text">Expand All</span>
                     </button>
+
                     <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadThemes()">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                      Refresh
+                      <span>Refresh</span>
                     </button>
+
+                    <!-- Export Rosters Dropdown -->
+                    <div class="custom-dropdown" id="dropdown-venue-export">
+                      <button type="button" class="glass-btn glass-btn-primary btn-sm dropdown-trigger" id="btn-venue-export-dropdown" onclick="toggleVenueExportDropdown(event)" aria-haspopup="true" aria-expanded="false">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>Export Rosters</span>
+                        <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <div class="custom-dropdown-menu custom-dropdown-menu-right" id="menu-venue-export" role="menu">
+                        <button type="button" class="dropdown-item" id="btn-export-venue-pdf" onclick="closeDropdowns(); exportVenuePdf();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <path d="M9 15h6"/>
+                            <path d="M12 12v6"/>
+                          </svg>
+                          <span class="dropdown-item-label">Download PDF</span>
+                          <span class="file-tag tag-pdf">PDF</span>
+                        </button>
+                        <button type="button" class="dropdown-item" id="btn-export-venue-doc" onclick="closeDropdowns(); exportVenueDoc();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                          </svg>
+                          <span class="dropdown-item-label">Download Word</span>
+                          <span class="file-tag tag-docx">DOCX</span>
+                        </button>
+                        <button type="button" class="dropdown-item" id="btn-export-venue-excel" onclick="closeDropdowns(); exportVenueExcel();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="8" y1="13" x2="16" y2="17"/>
+                            <line x1="16" y1="13" x2="8" y2="17"/>
+                          </svg>
+                          <span class="dropdown-item-label">Download Excel</span>
+                          <span class="file-tag tag-xlsx">XLSX</span>
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
 
-              <!-- Dynamic Themes Grid Container -->
               <div id="themes-grid" class="themes-bento-grid">
                 <div class="qr-loading">Loading themes...</div>
               </div>
@@ -463,8 +450,7 @@
                   <!-- Standee Controls & Info -->
                   <div class="standee-details-col">
                     <h3>Hackathon Day Venue Standee</h3>
-                    <p>Display or print this QR code at the venue. Teams scan this code from their phones to mark presence.</p>
-
+                    
                     <div class="standee-btn-cluster">
                       <button type="button" class="glass-btn glass-btn-primary" onclick="downloadQRCode()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
