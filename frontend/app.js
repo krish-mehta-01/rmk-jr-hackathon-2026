@@ -394,7 +394,7 @@ function afterTeamLogin() {
       return;
     }
   }
-  autoOpenScanner();
+  // No auto camera popup: user is logged in, can view pass or click Scan QR manually
 }
 
 function autoOpenScanner() {
@@ -926,12 +926,11 @@ function renderThemes() {
         <div class="theme-roster-table-wrap">
           <table class="theme-roster-table">
             <colgroup>
-              <col style="width: 17%;">
-              <col style="width: 22%;">
+              <col style="width: 18%;">
+              <col style="width: 24%;">
               <col style="width: 26%;">
               <col style="width: 18%;">
-              <col style="width: 9%;">
-              <col style="width: 8%;">
+              <col style="width: 14%;">
             </colgroup>
             <thead>
               <tr>
@@ -939,8 +938,7 @@ function renderThemes() {
                 <th>Project Title</th>
                 <th>Leader & Members</th>
                 <th>School Name</th>
-                <th style="text-align: center;">Status</th>
-                <th style="text-align: center;">Action</th>
+                <th style="text-align: center;">Attendance</th>
               </tr>
             </thead>
             <tbody>
@@ -967,16 +965,16 @@ function renderThemes() {
                   <td class="theme-td-school">
                     <span class="theme-roster-school">${escapeHtml(t.college_name || '—')}</span>
                   </td>
-                  <td class="theme-td-status" style="text-align: center;">
-                    <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">
-                      ${modeLabel}
-                    </span>
-                    ${scannedAt ? `<div class="theme-roster-scanned-time">${scannedAt}</div>` : ''}
-                  </td>
-                  <td class="theme-td-actions" style="text-align: center;">
-                    <button type="button" class="glass-btn glass-btn-secondary btn-xs btn-venue-toggle-attend" onclick="toggleAttendanceFromVenue(${t.id}, event)">
-                      ${isPresent ? 'Unmark' : 'Mark'}
-                    </button>
+                  <td class="theme-td-attendance">
+                    <div class="theme-roster-attend-cell">
+                      <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">
+                        ${modeLabel}
+                      </span>
+                      ${scannedAt ? `<div class="theme-roster-scanned-time">${scannedAt}</div>` : ''}
+                      <button type="button" class="glass-btn glass-btn-secondary btn-xs btn-venue-toggle-attend" onclick="toggleAttendanceFromVenue(${t.id}, event)">
+                        ${isPresent ? 'Unmark' : 'Mark'}
+                      </button>
+                    </div>
                   </td>
                 </tr>`;
               }).join('')}

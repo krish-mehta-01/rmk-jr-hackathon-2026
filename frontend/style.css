@@ -3243,6 +3243,40 @@ h4 {
   margin-bottom: 7px;
 }
 
+
+.theme-td-attendance {
+  text-align: center;
+  vertical-align: top !important;
+}
+
+.theme-roster-attend-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.theme-roster-attend-cell .status-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.theme-roster-attend-cell .btn-venue-toggle-attend {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  padding: 5px 14px !important;
+  border-radius: 6px !important;
+  white-space: nowrap;
+}
+
 .btn-venue-toggle-attend {
   font-size: 12px !important;
   font-weight: 700 !important;
@@ -3413,11 +3447,17 @@ h4 {
     margin-bottom: 8px !important;
   }
 
-  .theme-td-actions {
+  .theme-td-attendance {
     margin-top: 10px !important;
     padding-top: 10px !important;
     border-top: 1px solid #f1f5f9 !important;
-    text-align: right !important;
+  }
+
+  .theme-roster-attend-cell {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
   }
 
   .pass-map-card {

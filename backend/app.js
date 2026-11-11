@@ -1,6 +1,6 @@
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
-// Express app: API routes plus the static frontend. (Build: v20261111_r7_more_height_space_no_scroll_members) Started by server.js (local, Render) and
+// Express app: API routes plus the static frontend. (Build: v20261111_r8_attendance_cell_no_auto_camera)
 // exported to Vercel as a serverless function by api/index.js.
 const express = require('express');
 const cors = require('cors');
