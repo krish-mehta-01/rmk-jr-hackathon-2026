@@ -252,6 +252,12 @@ function initTeamDashboard() {
 function renderVenueMap(team) {
   const mapCard = document.getElementById('pass-venue-map-card');
   if (!mapCard) return;
+
+  // Show map ONLY after they scan
+  if (!team || !team.is_present) {
+    mapCard.classList.add('hidden');
+    return;
+  }
   mapCard.classList.remove('hidden');
 
   const venue = ((team && team.venue) ? team.venue : '').toUpperCase();
@@ -333,6 +339,10 @@ function renderPassStatus(isPresent, checkInTime) {
   scanActionWrap.classList.toggle('hidden', Boolean(isPresent));
   successBox.classList.toggle('hidden', !isPresent);
   detailsBox.classList.toggle('hidden', !isPresent);
+  const mapCard = document.getElementById('pass-venue-map-card');
+  if (mapCard) {
+    mapCard.classList.toggle('hidden', !isPresent);
+  }
 
   if (isPresent) {
     timeSub.textContent = checkInTime
@@ -513,6 +523,7 @@ async function submitAttendance(qrCodeValue) {
 
     renderTeamDetails(teamData);
     renderPassStatus(true, teamData.check_in_time);
+    renderVenueMap(teamData);
     document.getElementById('view-team').scrollTo({ top: 0, behavior: 'smooth' });
 
   } catch {
