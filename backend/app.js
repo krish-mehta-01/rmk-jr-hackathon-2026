@@ -238,8 +238,8 @@ app.post('/api/team/mark-attendance', authTeam, async (req, res) => {
     const verificationToken = crypto.createHmac('sha256', PRESENCE_QR_CODE_64).update(String(team.id)).digest('hex');
 
     await pool.execute(
-      'UPDATE teams SET is_present = TRUE, check_in_time = ?, qr_verification_token = ? WHERE id = ? AND (is_present = FALSE OR is_present IS NULL)',
-      [checkInTime, verificationToken, teamDbId]
+      'UPDATE teams SET is_present = TRUE, check_in_time = ?, qr_verification_token = ?, marked_by = ? WHERE id = ? AND (is_present = FALSE OR is_present IS NULL)',
+      [checkInTime, verificationToken, "QR Scan", teamDbId]
     );
 
     const codeHash = crypto.createHash('sha256').update(qr_value.trim()).digest('hex');
@@ -293,7 +293,7 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
     else if (present === 'false') where += ' AND (is_present = FALSE OR is_present IS NULL)';
 
     const [rows] = await pool.execute(
-      'SELECT id, team_code, team_name, leader_name, mobile_no, college_name, project_title, members, mentor_name, is_present, check_in_time FROM teams' +
+      'SELECT id, team_code, team_name, leader_name, mobile_no, college_name, project_title, members, mentor_name, is_present, check_in_time, marked_by FROM teams' +
         where +
         ` ORDER BY is_present DESC, check_in_time DESC, team_code ASC, id ASC LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
       params
@@ -311,7 +311,7 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
 app.get('/api/admin/themes', authAdmin, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      `SELECT t.team_code, t.team_name, t.leader_name, t.college_name, t.category, t.is_present, t.check_in_time, v.venue
+      `SELECT t.id, t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.members, t.mentor_name, t.category, t.is_present, t.check_in_time, t.marked_by, v.venue
        FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
        ORDER BY t.category, t.team_code`
     );
@@ -323,12 +323,18 @@ app.get('/api/admin/themes', authAdmin, async (req, res) => {
       group.total++;
       if (r.is_present) group.scanned++;
       group.teams.push({
+        id: r.id,
         team_code: r.team_code,
         team_name: r.team_name,
         leader_name: r.leader_name,
+        mobile_no: r.mobile_no,
         college_name: r.college_name,
+        project_title: r.project_title,
+        members: r.members,
+        mentor_name: r.mentor_name,
         is_present: Boolean(r.is_present),
-        check_in_time: r.check_in_time
+        check_in_time: r.check_in_time,
+        marked_by: r.marked_by
       });
     }
     res.json({ themes: [...themes.values()] });
@@ -381,7 +387,7 @@ app.get('/api/admin/stats', authAdmin, async (req, res) => {
 app.get('/api/admin/export', authAdmin, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      `SELECT t.team_code, t.team_name, t.project_title, t.leader_name, t.members, t.mentor_name, t.mobile_no, t.email, t.college_name, t.category, t.is_present, t.check_in_time, v.venue
+      `SELECT t.team_code, t.team_name, t.project_title, t.leader_name, t.members, t.mentor_name, t.mobile_no, t.email, t.college_name, t.category, t.is_present, t.check_in_time, t.marked_by, v.venue
        FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
        ORDER BY t.is_present DESC, t.check_in_time ASC, t.team_code ASC, t.id ASC`
     );
@@ -480,11 +486,11 @@ app.post('/api/admin/teams/:id/toggle-attendance', authAdmin, async (req, res) =
 
     const newStatus = !team[0].is_present;
     await pool.execute(
-      'UPDATE teams SET is_present = ?, check_in_time = ? WHERE id = ?',
-      [newStatus, newStatus ? new Date() : null, id]
+      'UPDATE teams SET is_present = ?, check_in_time = ?, marked_by = ? WHERE id = ?',
+      [newStatus, newStatus ? new Date() : null, newStatus ? "Admin" : null, id]
     );
 
-    res.json({ success: true, id, is_present: newStatus, status: newStatus ? 'Scanned' : 'Not Scanned' });
+    res.json({ success: true, id, is_present: newStatus, marked_by: newStatus ? "Admin" : null, status: newStatus ? 'Scanned' : 'Not Scanned' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error toggling presence' });

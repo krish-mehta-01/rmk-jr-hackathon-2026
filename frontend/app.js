@@ -35,12 +35,31 @@ window.addEventListener('DOMContentLoaded', () => {
 // (it survives a reload before login) and clear it from the address bar.
 function takeVenueCodeFromLink() {
   if (IS_ADMIN_PAGE) return;
-  const match = location.hash.match(/p=(\d{64})/);
-  if (match) {
-    sessionStorage.setItem('rmk_pending_venue_code', match[1]);
-    history.replaceState(null, '', location.pathname + location.search);
+  let code = null;
+  const hashMatch = location.hash.match(/[#&]?(?:p|venue_qr)=(\d{64})/i);
+  if (hashMatch) {
+    code = hashMatch[1];
+  } else {
+    const searchMatch = location.search.match(/[?&]?(?:p|venue_qr)=(\d{64})/i);
+    if (searchMatch) code = searchMatch[1];
+  }
+
+  if (code) {
+    sessionStorage.setItem('rmk_pending_venue_code', code);
+    history.replaceState(null, '', location.pathname);
   }
   pendingVenueCode = sessionStorage.getItem('rmk_pending_venue_code');
+  updateQrNoticeBanner();
+}
+
+function updateQrNoticeBanner() {
+  const banner = document.getElementById('venue-qr-notice-banner');
+  if (!banner) return;
+  if (pendingVenueCode) {
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
 }
 
 function setupEventListeners() {
@@ -227,6 +246,49 @@ function initTeamDashboard() {
 
   renderTeamDetails(teamData);
   renderPassStatus(teamData.is_present, teamData.check_in_time);
+  renderVenueMap(teamData);
+}
+
+function renderVenueMap(team) {
+  const mapCard = document.getElementById('pass-venue-map-card');
+  if (!mapCard) return;
+  mapCard.classList.remove('hidden');
+
+  const venue = ((team && team.venue) ? team.venue : '').toUpperCase();
+  let blockName = '';
+  let activeBlockId = '';
+
+  if (venue.includes('RJ BLOCK')) {
+    blockName = 'RJ Block (Main Block)';
+    activeBlockId = 'dir-block-rj';
+  } else if (venue.includes('SV BLOCK')) {
+    blockName = 'SV Block (Auditorium)';
+    activeBlockId = 'dir-block-sv';
+  } else if (venue.includes('NEW BLOCK')) {
+    blockName = 'New Block (3rd Floor)';
+    activeBlockId = 'dir-block-new';
+  }
+
+  const badge = document.getElementById('pass-map-block-name');
+  if (badge) {
+    badge.textContent = blockName ? `Allocated Block: ${blockName}` : 'RMK Engineering College Campus';
+  }
+
+  document.querySelectorAll('.pass-block-card').forEach(c => c.classList.remove('block-highlight'));
+  if (activeBlockId) {
+    const activeEl = document.getElementById(activeBlockId);
+    if (activeEl) activeEl.classList.add('block-highlight');
+  }
+}
+
+function openMapModal() {
+  const modal = document.getElementById('map-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeMapModal() {
+  const modal = document.getElementById('map-modal');
+  if (modal) modal.classList.add('hidden');
 }
 
 function renderTeamDetails(team) {
@@ -601,7 +663,7 @@ function renderTeamsRows(teams) {
         <td data-label="Mentor">${escapeHtml(t.mentor_name || '—')}</td>
         <td data-label="School">${escapeHtml(t.college_name || '—')}</td>
         <td data-label="Status">
-          <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">${isPresent ? 'Scanned' : 'Not Scanned'}</span>
+          <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">${isPresent ? (t.marked_by === 'Admin' ? 'Present (Admin)' : 'Scanned (QR)') : 'Not Scanned'}</span>
         </td>
         <td data-label="" class="table-actions-cell">
           <button type="button" class="btn-view-details" data-details-id="${id}" aria-expanded="${isOpen}" aria-label="${isOpen ? 'Hide details' : 'View details'}" title="${isOpen ? 'Hide details' : 'View details'}">
@@ -617,6 +679,7 @@ function renderTeamsRows(teams) {
             <div><dt>Team Members</dt><dd>${membersListItems(t, false) ? `<ol class="members-ol">${membersListItems(t, false)}</ol>` : '—'}</dd></div>
             <div><dt>Leader Contact</dt><dd class="mono">${escapeHtml(t.mobile_no || '—')}</dd></div>
             <div><dt>Scanned Time</dt><dd>${scannedAt}</dd></div>
+            <div><dt>Attendance Mode</dt><dd>${isPresent ? (t.marked_by || 'QR Scan') : '—'}</dd></div>
           </dl>
           <button type="button" class="glass-btn-table-action ${isPresent ? 'btn-action-marked' : 'btn-action-unmarked'}" data-team-id="${id}">
             ${isPresent ? 'Mark Not Scanned' : 'Mark Scanned'}
@@ -853,10 +916,12 @@ function renderThemes() {
           <table class="theme-roster-table">
             <thead>
               <tr>
-                <th>Team ID</th>
-                <th>Team & Leader</th>
-                <th>School</th>
-                <th>Status</th>
+                <th style="min-width: 140px;">Team ID & Name</th>
+                <th style="min-width: 200px;">Project Title</th>
+                <th style="min-width: 220px;">Leader & Members</th>
+                <th style="min-width: 180px;">School Name</th>
+                <th style="min-width: 130px; text-align: center;">Status</th>
+                <th style="min-width: 100px; text-align: center;">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -865,23 +930,34 @@ function renderThemes() {
                 const scannedAt = t.check_in_time
                   ? new Date(t.check_in_time).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
                   : '';
+                const modeLabel = isPresent ? (t.marked_by === 'Admin' ? 'Present (Admin)' : 'Scanned (QR)') : 'Not Scanned';
+                const membersStr = t.members ? escapeHtml(t.members) : '—';
                 return `
-                <tr>
+                <tr class="theme-roster-row ${isPresent ? 'is-present-row' : ''}">
                   <td class="theme-td-code">
                     <span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span>
-                  </td>
-                  <td class="theme-td-team">
                     <div class="theme-roster-team-name">${escapeHtml(t.team_name || '—')}</div>
-                    ${t.leader_name ? `<div class="theme-roster-leader">Leader: ${escapeHtml(t.leader_name)}</div>` : ''}
+                  </td>
+                  <td class="theme-td-idea">
+                    <div class="theme-roster-project-title">${escapeHtml(t.project_title || '—')}</div>
+                  </td>
+                  <td class="theme-td-members">
+                    <div class="theme-roster-leader"><strong>Leader:</strong> ${escapeHtml(t.leader_name || '—')} ${t.mobile_no ? `(${escapeHtml(t.mobile_no)})` : ''}</div>
+                    <div class="theme-roster-member-names"><strong>Members:</strong> ${membersStr}</div>
                   </td>
                   <td class="theme-td-school">
                     <span class="theme-roster-school">${escapeHtml(t.college_name || '—')}</span>
                   </td>
-                  <td class="theme-td-status">
+                  <td class="theme-td-status" style="text-align: center;">
                     <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">
-                      ${isPresent ? 'Scanned' : 'Not Scanned'}
+                      ${modeLabel}
                     </span>
                     ${scannedAt ? `<div class="theme-roster-scanned-time">${scannedAt}</div>` : ''}
+                  </td>
+                  <td class="theme-td-actions" style="text-align: center;">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-xs btn-venue-toggle-attend" onclick="toggleAttendanceFromVenue(${t.id}, event)">
+                      ${isPresent ? 'Unmark' : 'Mark'}
+                    </button>
                   </td>
                 </tr>`;
               }).join('')}
@@ -1445,3 +1521,23 @@ window.toggleVenueExportDropdown = toggleVenueExportDropdown;
 window.toggleThemeFilterDropdown = toggleThemeFilterDropdown;
 window.selectThemeFilter = selectThemeFilter;
 window.closeDropdowns = closeDropdowns;
+
+async function toggleAttendanceFromVenue(id, event) {
+  if (event) event.stopPropagation();
+  try {
+    const res = await fetch(`/api/admin/teams/${id}/toggle-attendance`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Failed to update attendance');
+      return;
+    }
+    // Refresh themes data to reflect immediately in venue statistics and team rows
+    await loadThemes();
+  } catch (err) {
+    console.error('Error toggling attendance from venue:', err);
+    alert('Failed to update attendance due to connection error.');
+  }
+}

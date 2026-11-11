@@ -2973,3 +2973,397 @@ h4 {
   font-size: 12px;
   margin-left: auto;
 }
+
+
+/* ════════════════════════════════════════════════════════════════
+   VENUE QR NOTICE BANNER (STUDENT AUTH SCREEN)
+   ════════════════════════════════════════════════════════════════ */
+.venue-qr-scanned-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.venue-qr-scanned-notice svg {
+  flex-shrink: 0;
+}
+
+.qr-notice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.qr-notice-text strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.qr-notice-text span {
+  font-size: 12px;
+  color: #047857;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CAMPUS VENUE MAP CARD (STUDENT PASS VIEW)
+   ════════════════════════════════════════════════════════════════ */
+.pass-map-card {
+  margin-top: 20px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.pass-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.pass-map-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pass-map-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.pass-map-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.pass-map-target-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius-pill);
+}
+
+.pass-map-preview-wrapper {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pass-map-preview-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.pass-map-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.pass-map-overlay-hint {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.pass-map-blocks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.pass-block-card {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.pass-block-card.block-highlight {
+  background: #ecfdf5;
+  border-color: #059669;
+  box-shadow: 0 0 0 1.5px #059669;
+}
+
+.block-card-title {
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.pass-block-card.block-highlight .block-card-title {
+  color: #047857;
+}
+
+.block-card-desc {
+  color: #475569;
+  line-height: 1.45;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FULLSCREEN MAP MODAL
+   ════════════════════════════════════════════════════════════════ */
+.map-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.map-modal.hidden {
+  display: none !important;
+}
+
+.map-modal-content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.map-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.7);
+  color: #ffffff;
+  border: none;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.15s ease;
+}
+
+.map-modal-close:hover {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.map-modal-img {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  display: block;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DETAILED THEME TEAMS TABLE (ADMIN VENUE TAB)
+   ════════════════════════════════════════════════════════════════ */
+.theme-roster-row:hover {
+  background: #f1f5f9;
+}
+
+.theme-roster-row.is-present-row {
+  background: #fcfdfa;
+}
+
+.theme-roster-project-title {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.theme-roster-leader {
+  font-size: 11.5px;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.theme-roster-member-names {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.btn-venue-toggle-attend {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: var(--radius-pill) !important;
+  white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS (<640px) FOR VENUE FEATURE
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .theme-top-bar {
+    padding: 12px !important;
+  }
+
+  .theme-action-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .theme-search-pill {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .table-btn-cluster {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+  }
+
+  .table-btn-cluster > button {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-width: 110px !important;
+    justify-content: center !important;
+  }
+
+  .table-btn-cluster > .custom-dropdown {
+    flex: 1 1 100% !important;
+  }
+
+  .table-btn-cluster > .custom-dropdown > .dropdown-trigger {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .custom-dropdown-menu.custom-dropdown-menu-right {
+    right: 0 !important;
+    left: auto !important;
+    max-width: calc(100vw - 32px) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .theme-card {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+
+  .theme-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .theme-card-badges {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .theme-venue-section {
+    padding: 8px 10px !important;
+  }
+
+  .theme-venue-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .theme-venue-value {
+    width: 100% !important;
+    word-break: break-word !important;
+    font-size: 13px !important;
+  }
+
+  .btn-theme-venue-edit {
+    align-self: flex-start !important;
+    margin-top: 2px !important;
+  }
+
+  .theme-venue-editor-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .theme-venue-input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .theme-venue-editor-actions {
+    justify-content: flex-end !important;
+  }
+
+  .theme-roster-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-top: 6px !important;
+  }
+
+  .theme-roster-table {
+    min-width: 680px !important;
+  }
+
+  .pass-map-card {
+    padding: 14px !important;
+  }
+
+  .pass-map-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .pass-map-blocks-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
