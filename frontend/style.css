@@ -3367,3 +3367,30 @@ h4 {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+.standee-url-link {
+  margin: 6px 0 10px 0;
+  text-align: center;
+}
+
+.standee-url-link a {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #047857;
+  text-decoration: none;
+  background: #ecfdf5;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid #a7f3d0;
+  display: inline-block;
+  word-break: break-all;
+  transition: all 0.15s ease;
+}
+
+.standee-url-link a:hover {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}

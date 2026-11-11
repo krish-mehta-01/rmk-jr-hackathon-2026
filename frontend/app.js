@@ -1446,7 +1446,9 @@ function printQRCode() {
           .logos img { height: 50px; object-fit: contain; }
           .pipe { width: 2px; height: 36px; background: #10b981; }
           h1 { margin: 0 0 24px 0; font-size: 26px; font-weight: 900; }
-          .qr img { width: 300px; height: 300px; margin: 0 auto 24px auto; display: block; }
+          .qr img { width: 300px; height: 300px; margin: 0 auto 16px auto; display: block; }
+          .url { margin: 0 auto 20px auto; font-family: monospace; font-size: 15px; font-weight: 700; }
+          .url a { color: #047857; text-decoration: none; background: #ecfdf5; padding: 6px 16px; border-radius: 999px; border: 1.5px solid #a7f3d0; display: inline-block; }
           p { margin: 0; font-size: 14px; font-weight: 600; color: #475569; }
         </style>
       </head>
@@ -1459,6 +1461,7 @@ function printQRCode() {
           </div>
           <h1>RMK Junior Hackathon 2026</h1>
           <div class="qr"><img src="${permanentQRCodeData}" /></div>
+          <div class="url"><a href="https://rmkjuniorhackathon2026.onrender.com/" target="_blank">https://rmkjuniorhackathon2026.onrender.com/</a></div>
           <p>Scan this QR code from your team login to mark your team's presence.</p>
         </div>
       </body>
