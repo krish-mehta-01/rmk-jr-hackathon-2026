@@ -389,15 +389,16 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     });
 
     const themeCols = [
-      { header: 'Sl. No.', width: 9 },
-      { header: 'Junior Hackathon ID', width: 22 },
-      { header: 'Team Leader Name', width: 26 },
-      { header: 'Team Name', width: 28 },
-      { header: 'Title of Your Project', width: 44 },
-      { header: 'School Name', width: 38 },
+      { header: 'Sl. No.', width: 8 },
+      { header: 'Junior Hackathon ID', width: 20 },
+      { header: 'Team Leader Name', width: 24 },
+      { header: 'Team Members', width: 34 },
+      { header: 'Team Name', width: 26 },
+      { header: 'Title of Your Project', width: 38 },
+      { header: 'School Name', width: 34 },
       { header: 'Attendance Status', width: 18 },
       { header: 'Marked By', width: 16 },
-      { header: 'Coordinator Signature', width: 26 }
+      { header: 'Coordinator Signature', width: 24 }
     ];
 
     // Row 1 & 2: Header on Clean White (logos flank this area)
@@ -438,7 +439,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
       c.value = col.header;
       c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
       c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
-      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 6 || idx === 7 || idx === 8) ? 'center' : 'left', vertical: 'middle' };
+      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 8 || idx === 9) ? 'center' : 'left', vertical: 'middle' };
       c.border = BORDER_CELL;
       wsTheme.getColumn(idx + 1).width = col.width;
     });
@@ -459,6 +460,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
         tIdx + 1,
         t.team_code || '—',
         t.leader_name || '—',
+        t.members || '—',
         t.team_name || '—',
         t.project_title || '—',
         t.college_name || '—',
@@ -479,7 +481,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
         } else if (cIdx === 1) { // Team ID
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-        } else if (cIdx === 6) { // Attendance
+        } else if (cIdx === 7) { // Attendance
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           if (isPresent) {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.scannedBg } };
@@ -488,11 +490,13 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.pendingBg } };
             cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.pendingText } };
           }
-        } else if (cIdx === 7) { // Marked By
+        } else if (cIdx === 8) { // Marked By
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           if (isPresent) {
             cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
           }
+        } else if (cIdx === 9) { // Signature
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
         } else {
           cell.alignment = { horizontal: 'left', vertical: 'middle' };
         }

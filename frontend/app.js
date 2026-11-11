@@ -925,14 +925,22 @@ function renderThemes() {
       <div class="theme-teams-roster-box ${isOpen ? '' : 'hidden'}" id="roster-${domId}">
         <div class="theme-roster-table-wrap">
           <table class="theme-roster-table">
+            <colgroup>
+              <col style="width: 17%;">
+              <col style="width: 22%;">
+              <col style="width: 26%;">
+              <col style="width: 18%;">
+              <col style="width: 9%;">
+              <col style="width: 8%;">
+            </colgroup>
             <thead>
               <tr>
-                <th style="min-width: 140px;">Team ID & Name</th>
-                <th style="min-width: 200px;">Project Title</th>
-                <th style="min-width: 220px;">Leader & Members</th>
-                <th style="min-width: 180px;">School Name</th>
-                <th style="min-width: 130px; text-align: center;">Status</th>
-                <th style="min-width: 100px; text-align: center;">Action</th>
+                <th>Team ID & Name</th>
+                <th>Project Title</th>
+                <th>Leader & Members</th>
+                <th>School Name</th>
+                <th style="text-align: center;">Status</th>
+                <th style="text-align: center;">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -946,7 +954,7 @@ function renderThemes() {
                 return `
                 <tr class="theme-roster-row ${isPresent ? 'is-present-row' : ''}">
                   <td class="theme-td-code">
-                    <span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span>
+                    <div class="theme-roster-team-id-badge"><span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span></div>
                     <div class="theme-roster-team-name">${escapeHtml(t.team_name || '—')}</div>
                   </td>
                   <td class="theme-td-idea">
@@ -1461,7 +1469,10 @@ function printQRCode() {
           </div>
           <h1>RMK Junior Hackathon 2026</h1>
           <div class="qr"><img src="${permanentQRCodeData}" /></div>
-          <div class="url"><a href="https://rmkjuniorhackathon2026.onrender.com/" target="_blank">https://rmkjuniorhackathon2026.onrender.com/</a></div>
+          <div class="portal-link-box" style="margin: 14px auto 18px auto; padding: 10px 18px; border: 2px solid #047857; border-radius: 10px; background: #f0fdf4; display: inline-block; text-align: center;">
+            <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #065f46; margin-bottom: 4px;">Website / Attendance Portal</div>
+            <div style="font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: 800; color: #047857;">https://rmkjuniorhackathon2026.onrender.com/</div>
+          </div>
           <p>Scan this QR code from your team login to mark your team's presence.</p>
         </div>
       </body>
