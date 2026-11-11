@@ -1445,33 +1445,107 @@ function printQRCode() {
       <head>
         <title>RMK Jr. Hackathon 2026 Standee</title>
         <style>
-          @page { size: A4 portrait; margin: 15mm; }
-          body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #ffffff; color: #0f172a; }
-          .card { text-align: center; border: 2.5px solid #0f172a; border-radius: 20px; padding: 40px 30px; max-width: 480px; width: 100%; box-sizing: border-box; }
-          .logos { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 24px; }
-          .logos img { height: 50px; object-fit: contain; }
-          .pipe { width: 2px; height: 36px; background: #10b981; }
-          h1 { margin: 0 0 24px 0; font-size: 26px; font-weight: 900; }
-          .qr img { width: 300px; height: 300px; margin: 0 auto 16px auto; display: block; }
-          .url { margin: 0 auto 20px auto; font-family: monospace; font-size: 15px; font-weight: 700; }
-          .url a { color: #047857; text-decoration: none; background: #ecfdf5; padding: 6px 16px; border-radius: 999px; border: 1.5px solid #a7f3d0; display: inline-block; }
-          p { margin: 0; font-size: 14px; font-weight: 600; color: #475569; }
+          @page { size: A4 portrait; margin: 12mm; }
+          * { box-sizing: border-box; }
+          body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #ffffff;
+            color: #0f172a;
+          }
+          .card {
+            text-align: center;
+            border: 2.5px solid #0f172a;
+            border-radius: 24px;
+            padding: 44px 36px 40px 36px;
+            max-width: 580px;
+            width: 100%;
+            box-sizing: border-box;
+            background: #ffffff;
+          }
+          .logos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 24px;
+          }
+          .logos img { height: 52px; object-fit: contain; }
+          .pipe { width: 2px; height: 38px; background: #10b981; }
+          h1 {
+            margin: 0 0 24px 0;
+            font-size: 27px;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            color: #0f172a;
+          }
+          .qr {
+            margin: 0 auto 18px auto;
+          }
+          .qr img {
+            width: 320px;
+            height: 320px;
+            margin: 0 auto;
+            display: block;
+          }
+          .portal-link-box {
+            margin: 16px auto 18px auto;
+            padding: 12px 24px;
+            border: 2px solid #059669;
+            border-radius: 12px;
+            background: #f0fdf4;
+            display: inline-block;
+            max-width: 90%;
+            box-sizing: border-box;
+            text-align: center;
+          }
+          .portal-link-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #065f46;
+            margin-bottom: 5px;
+            display: block;
+          }
+          .portal-link-url {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            font-size: 15.5px;
+            font-weight: 800;
+            color: #047857;
+            letter-spacing: -0.01em;
+            word-break: break-all;
+            display: block;
+          }
+          .instruction {
+            margin: 0;
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #475569;
+            line-height: 1.5;
+            max-width: 440px;
+            margin: 0 auto;
+          }
         </style>
       </head>
       <body>
         <div class="card">
           <div class="logos">
-            <img src="/assets/rmk_group_logo.png" />
+            <img src="/assets/rmk_group_logo.png" alt="RMK Group" />
             <div class="pipe"></div>
-            <img src="/assets/rmk_jr_hackathon_2026_logo.png" />
+            <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" />
           </div>
           <h1>RMK Junior Hackathon 2026</h1>
-          <div class="qr"><img src="${permanentQRCodeData}" /></div>
-          <div class="portal-link-box" style="margin: 14px auto 18px auto; padding: 10px 18px; border: 2px solid #047857; border-radius: 10px; background: #f0fdf4; display: inline-block; text-align: center;">
-            <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #065f46; margin-bottom: 4px;">Website / Attendance Portal</div>
-            <div style="font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: 800; color: #047857;">https://rmkjuniorhackathon2026.onrender.com/</div>
+          <div class="qr"><img src="${permanentQRCodeData}" alt="Hackathon Presence QR Code" /></div>
+          <div class="portal-link-box">
+            <span class="portal-link-label">Website / Attendance Portal</span>
+            <span class="portal-link-url">rmkjuniorhackathon2026.onrender.com</span>
           </div>
-          <p>Scan this QR code from your team login to mark your team's presence.</p>
+          <p class="instruction">Scan with any phone camera or log in to the portal above to mark team presence.</p>
         </div>
       </body>
     </html>
