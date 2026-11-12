@@ -10955,3 +10955,56 @@ All your project transcripts are safely organized in your master folder:
 
 > all updated??
 
+### 🤖 Antigravity · 11 Nov 2026, 19:47 IST
+
+**Yes, everything is 100% updated, verified, and in sync!**
+
+---
+
+### Verification Summary
+
+1. **Transcript File (`rmk-jr-hackathon.md`)**:
+   * **Updated & Synced**: All conversation history from Oct 17 up to this exact moment (including the recent TiDB and Render discussions) is recorded under **Section 9**.
+   * **Locations Synced**:
+     * [`KrishMehta/transcripts/rmk-jr-hackathon.md`](file:///c:/Users/krish/Documents/Personal/Projects/KrishMehta/transcripts/rmk-jr-hackathon.md) (in your master transcripts folder)
+     * [`.cache/krishmehta-notes/preview2/rmk-jr-hackathon.md`](file:///C:/Users/krish/.cache/krishmehta-notes/preview2/rmk-jr-hackathon.md) (your notes preview)
+     * [`rmk-jr-hackathon.md`](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/rmk-jr-hackathon.md) (committed to GitHub repo)
+
+2. **Live Production on Render**:
+   * **URL**: https://rmkjuniorhackathon2026.onrender.com/
+   * **Health Endpoint**: `HTTP 200 OK` (`{"ok": true, "commit": "1488c6d"}`)
+   * **Standee QR & Link**: Displays clean `rmkjuniorhackathon2026.onrender.com` on a single line with no `https://` prefix, and the printable A4 card fits with zero border overlap.
+   * **Admin Venue Roster**: Unified **Attendance** column with vertically stacked Status badge and `Mark` / `Unmark` button (no horizontal scrolling, no column overlap, comfortable vertical height).
+   * **Phone Camera Scan**: Normal phone camera scan redirects directly to the portal, asks for Team ID and Phone number, and marks attendance immediately with **no auto-camera popups**.
+
+3. **TiDB Cloud Database**:
+   * All **282 teams** loaded and verified (`RMKJH261001` through `RMKJH261282`).
+   * Attendance mode tracking active (`QR Scan` vs `Admin`).
+
+4. **All Deliverables Updated**:
+   * [**`RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx`**](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx) (includes *Team Members* column)
+   * [**`RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx`**](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx) (includes *Team Members* column)
+   * [**`RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf`**](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf) (Word COM-converted with 7 columns)
+   * [**`RMK_Junior_Hackathon_2026_Presence_Roster.xlsx`**](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Presence_Roster.xlsx) (includes *Marked By / Mode* column)
+
+### 🧑 Krish · 12 Nov 2026, 07:43 IST
+
+> Panel No.	Theme / Team Allocation	Venue
+> 1	Renewable / Sustainable Energy – Team 1–19	Idea Lab I
+> 2	Agriculture – Team 1–22	RJ Block, Second Floor Seminar Hall-A
+> 3	Agriculture – Team 23–43	RJ Block, Second Floor Seminar Hall-B
+> 4	Health Care – Team 1–19	Co-Work Space (RJ Block)
+> 5	Education – Team 1–20	Corporate Centre (RJ Block)-D
+> 6	Robotics – Team 1–21	SV Block Seminar Hall 3
+> 7	Smart Automation – Team 1–20	RJ Block, First Floor Seminar Hall-A
+> 8	Smart Automation – Team 21–40	RJ Block, First Floor Seminar Hall-B
+> 9	Smart Vehicles – Team 1–19	Idea Lab II
+> 10	Traditional Games of Indian Ethos – Team 1–10; Indian Heritage and Digital Creativity – Team 1–9	Corporate Centre (RJ Block)-A
+> 11	Smart Automation – Team 41–52; Virtual Reality Experience – Team 1–9	Corporate Centre (RJ Block)-C
+> 12	Clean and Green Environment – Team 1–21	Corporate Centre (RJ Block)-B
+> 13	AI for Disaster – Team 1–20	SV Block Seminar Hall 1
+> 14	AI for Disaster – Team 21–39	SV Block Seminar Hall 2
+> 15	Renewable / Sustainable Energy – Team 20–24; Health Care – Team 20–25; Smart Vehicles – Team 20–25	Corporate Centre (RJ Block)-E
+> 
+> _[Attachment: image/png]_
+
