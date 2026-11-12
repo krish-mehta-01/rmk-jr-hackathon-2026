@@ -11259,3 +11259,30 @@ All files are saved, committed to GitHub, and available for download directly fr
    - No cluttered text boxes, floor breakdowns, or room lists.
 4. **Deployed**:
    - Pushed commit 888d18a to GitHub main for auto-deploy on Render.
+### 🧑 Krish · 12 Nov 2026, 13:58 IST
+
+> reverse??
+> [Attachment: Screenshot of bottom-left corner with reversed/colliding arrow]
+
+### 🧑 Krish · 12 Nov 2026, 14:03 IST
+
+> add proper rmk grenery
+
+---
+
+### 🤖 Antigravity · 12 Nov 2026, 14:07 IST
+
+#### Lush Green RMK Campus Navigation Map (100% Forward Arrows & Botanical Grounds)
+1. **Signature RMK Greenery (rontend/assets/campus_venue_map.jpg)**:
+   - Manicured botanical lawns, sculpted ornamental hedges, floral borders, and royal palms lining the entrance boulevard and avenues.
+   - Dense tropical canopy backdrop matching the genuine 60-acre green campus.
+2. **Strictly Forward Directional Navigation**:
+   - Fixed the bottom-left reverse arrow bug.
+   - All arrows flow strictly forward from Main Gate:
+     - Branch 1: Straight UP (↑) into RJ Block central portico.
+     - Branch 2: Smooth turn LEFT (←), curve UP (↑) along the western avenue, and turn RIGHT (→) directly into SV Block entrance.
+3. **Accurate RMK Architecture**:
+   - Symmetrical collegiate RJ Block with central pedimented portico.
+   - Modern silver-grey Srinivasa Block (SV Block) with horizontal blue reflective glass band.
+4. **Deployed**:
+   - Pushed commit 83f4c2b to GitHub main for auto-deploy on Render.
