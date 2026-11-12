@@ -1,4 +1,4 @@
-// Build: v20261112_r3_updated_map - Updated 15-Panel Campus Map & Floor Directory
+// Build: v20261112_r4_clean_campus_map - Clean 3D Map (RJ Block & SV Block Only, New Block Removed)
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)

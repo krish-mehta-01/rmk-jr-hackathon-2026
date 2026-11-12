@@ -270,9 +270,6 @@ function renderVenueMap(team) {
   } else if (venue.includes('SV BLOCK')) {
     blockName = 'SV Block (Auditorium)';
     activeBlockId = 'dir-block-sv';
-  } else if (venue.includes('NEW BLOCK')) {
-    blockName = 'New Block (Dining & Refreshments)';
-    activeBlockId = 'dir-block-new';
   }
 
   const badge = document.getElementById('pass-map-block-name');
