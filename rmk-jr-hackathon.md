@@ -11151,3 +11151,50 @@ All files are saved, committed to GitHub, and available for download directly fr
 > Corporate Centre-E (RJ Block)
 > First Floor Seminar Hall-A (RJ Block) etc etc
 
+### 🤖 Antigravity · 12 Nov 2026, 12:45 IST
+
+#### 1. Admin Venue Tab: Venue-Wise 15 Rooms Grouping
+- Grouped the admin Venue view into **15 distinct evaluation venue rooms** as the default view, with a toggle for **Theme-Wise (12 Tracks)**.
+- Standardized all 15 room names into clean **<Hall Name> (<Block Name>)** format:
+  1. Idea Lab I (RJ Block) (Panel 1)
+  2. Second Floor Seminar Hall-A (RJ Block) (Panel 2)
+  3. Second Floor Seminar Hall-B (RJ Block) (Panel 3)
+  4. Co-Work Space (RJ Block) (Panel 4)
+  5. Corporate Centre-D (RJ Block) (Panel 5)
+  6. Seminar Hall 3 (SV Block) (Panel 6)
+  7. First Floor Seminar Hall-A (RJ Block) (Panel 7)
+  8. First Floor Seminar Hall-B (RJ Block) (Panel 8)
+  9. Idea Lab II (RJ Block) (Panel 9)
+  10. Corporate Centre-A (RJ Block) (Panel 10)
+  11. Corporate Centre-C (RJ Block) (Panel 11)
+  12. Corporate Centre-B (RJ Block) (Panel 12)
+  13. Seminar Hall 1 (SV Block) (Panel 13)
+  14. Seminar Hall 2 (SV Block) (Panel 14)
+  15. Corporate Centre-E (RJ Block) (Panel 15)
+
+---
+
+### 🧑 Krish · 12 Nov 2026, 12:52 IST
+
+> we need to update map image too, send new one in chat
+
+---
+
+### 🤖 Antigravity · 12 Nov 2026, 13:05 IST
+
+#### Updated Campus Venue Map & Floor Directory (15 Evaluation Panels)
+1. **Redesigned & Upscaled High-Resolution Map (rontend/assets/campus_venue_map.jpg)**:
+   - **SV Block (Auditorium)**:
+     - *Ground Floor*: Central Registration Desk & Helpdesk (Check-in, QR ID Verification, Badges & Kits).
+     - *First Floor*: Seminar Hall 1 (Panel 13: AI for Disaster 1–20), Seminar Hall 2 (Panel 14: AI for Disaster 21–39), Seminar Hall 3 (Panel 6: Robotics 1–21).
+   - **RJ Block (Main Block - 12 Evaluation Panels)**:
+     - *First Floor*: Idea Lab I (Panel 01: Renewable Energy), Idea Lab II (Panel 09: Smart Vehicles), Co-Work Space (Panel 04: Health Care), First Floor Seminar Hall-A (Panel 07: Smart Auto 1–20), First Floor Seminar Hall-B (Panel 08: Smart Auto 21–40).
+     - *Second Floor*: Second Floor Seminar Hall-A (Panel 02: Agriculture 1–22), Second Floor Seminar Hall-B (Panel 03: Agriculture 23–43), Corporate Centre-A (Panel 10), Corporate Centre-B (Panel 12), Corporate Centre-C (Panel 11), Corporate Centre-D (Panel 05), Corporate Centre-E (Panel 15).
+   - **New Block**:
+     - *Third Floor*: Dining Hall & Refreshments / Food Court & Participant Rest Area.
+   - **Bottom Master Reference Directory**:
+     - Added an elegant, high-contrast, 3-column reference directory table mapping all **15 Panels, 282 Teams, and 12 Themes** directly to their rooms and floors.
+2. **Frontend UI Floor Directory Updated (rontend/index.html & rontend/app.js)**:
+   - Quick venue cards beneath the map preview updated to reflect the 15-panel room breakdown.
+3. **Committed & Deployed**:
+   - Pushed commit 68b68cf to GitHub main for auto-deploy on Render.
