@@ -191,6 +191,8 @@ async function testConnection() {
     console.log('[OK] Connected to TiDB Cloud');
     await setupSchema();
     await syncAdmin();
+    const { initJurySystem } = require('./jury-db');
+    await initJurySystem();
     console.log('[OK] TiDB schema verified and ready');
     return true;
   } catch (err) {

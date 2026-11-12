@@ -45,7 +45,28 @@ Rows are matched by the sheet's **TEAM ID** column; re-importing a newer sheet a
 ## Live site (Render)
 
 - Team leaders: https://rmkjuniorhackathon2026.onrender.com
-- Admins: https://rmkjuniorhackathon2026.onrender.com/rmkjrhackathon2026-adminlogin
+- Main Admins: https://rmkjuniorhackathon2026.onrender.com/rmkjrhackathon2026-adminlogin
+- Jury Admin: https://rmkjuniorhackathon2026.onrender.com/rmkjrhackathon2026-jury-admin
+- Judges: https://rmkjuniorhackathon2026.onrender.com/rmkjrhackathon2026-jurylogin
+
+## Jury Management & Project Evaluation Portal
+
+The portal supports 15 independent judging panels with two judges per panel (Internal and External):
+
+- **Jury Administrator Route**: `/rmkjrhackathon2026-jury-admin`
+  - Credentials in `backend/.env` (`JURY_ADMIN_USERNAME`, `JURY_ADMIN_PASSWORD`).
+  - Manage all 15 panels and 30 judge accounts.
+  - Reset passwords to default convention (`PanelX-IN` / `PanelX-EX`).
+  - Toggle judge account statuses (Enable / Disable).
+  - Monitor live evaluations and combined scores (`Internal + External`).
+
+- **Judge Portal Route**: `/rmkjrhackathon2026-jurylogin`
+  - Accounts provisioned: `P1-IN` to `P15-IN` (Internal) and `P1-EX` to `P15-EX` (External).
+  - Default initial passwords: `Panel1-IN`, `Panel1-EX` through `Panel15-EX`.
+  - Mandatory password change on first login.
+  - Dedicated registration form (Internal asks for College/Institution; External asks for Company).
+  - Independent project evaluation sheets, draft autosave, and locked final submission.
+  - Final Combined Score = Internal Judge Total + External Judge Total (displayed as Pending until both judges submit).
 
 Render free web service `rmkjuniorhackathon2026` (Singapore) on the rmkec.ac.in Render account, built from the `main` branch of the private GitHub repo `krish-mehta-01/rmk-jr-hackathon-2026`.
 
