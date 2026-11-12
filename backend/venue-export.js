@@ -2,18 +2,18 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_THEME_VENUES = {
-  'Renewable/Sustainable Energy': 'CO WORK SPACE (RJ Block)',
-  'Agriculture': 'SEMINAR HALL 3 (SV Block)',
-  'Healthcare': 'SECOND FLOOR SEMINAR HALL (RJ Block)',
-  'Education': 'SEMINAR HALL 1 (SV Block)',
-  'Robotics': 'SEMINAR HALL (New Block)',
-  'Smart Automation': 'FIRST FLOOR SEMINAR HALL (RJ Block)',
-  'Smart Vehicles': 'SECOND FLOOR SEMINAR HALL (RJ Block)',
-  'Traditional Games of Indian Ethos': 'IDEA LAB / AR&VR LAB (RJ Block)',
-  'Virtual Reality Experience': 'IDEA LAB / AR&VR LAB (RJ Block)',
-  'Clean and Green Environment': 'SEMINAR HALL 2 (SV Block)',
-  'Indian Heritage and Digital Creativity': 'CORPORATE CENTRE (RJ Block)',
-  'AI for Disater Management': 'SEMINAR HALL (New Block)'
+  'Renewable/Sustainable Energy': 'Idea Lab I (RJ Block)',
+  'Agriculture': 'Second Floor Seminar Hall-A (RJ Block)',
+  'Healthcare': 'Co-Work Space (RJ Block)',
+  'Education': 'Ground Floor - A (VR Block)',
+  'Robotics': 'Seminar Hall 3 (SV Block)',
+  'Smart Automation': 'First Floor Seminar Hall-A (RJ Block)',
+  'Smart Vehicles': 'Idea Lab II (RJ Block)',
+  'Traditional Games of Indian Ethos': 'Ground Floor - B (VR Block)',
+  'Virtual Reality Experience': 'First Floor - A (VR Block)',
+  'Clean and Green Environment': 'First Floor - B (VR Block)',
+  'Indian Heritage and Digital Creativity': 'Ground Floor - B (VR Block)',
+  'AI for Disater Management': 'Seminar Hall 1 (SV Block)'
 };
 
 async function generateVenueExcel(pool, outputPath) {

@@ -231,19 +231,29 @@
             </div>
           </div>
 
-          <!-- Quick Venue Floor Directory -->
+          <!-- Quick Venue Floor Directory (RJ Block, SV Block & VR Block) -->
           <div class="pass-map-blocks-grid">
-            <div class="pass-block-card" id="dir-block-sv">
-              <div class="block-card-title">SV Block (Auditorium)</div>
-              <div class="block-card-desc"><strong>Ground Floor:</strong> Registration Counter<br><strong>First Floor:</strong> Seminar Hall 1, 2, 3</div>
-            </div>
             <div class="pass-block-card" id="dir-block-rj">
-              <div class="block-card-title">RJ Block (Main Block)</div>
-              <div class="block-card-desc"><strong>First Floor:</strong> Seminar Hall I, CoWorkSpace<br><strong>Second Floor:</strong> Seminar Hall II, Corporate Centre, Idea Labs</div>
+              <div class="block-card-title">RJ Block — 7 Panels</div>
+              <div class="block-card-desc">
+                <strong>First Floor:</strong> Idea Lab I (P01), Idea Lab II (P09), Co-Work Space (P04), Seminar Hall-A (P07), Seminar Hall-B (P08)<br>
+                <strong>Second Floor:</strong> Seminar Hall-A (P02), Seminar Hall-B (P03)
+              </div>
             </div>
-            <div class="pass-block-card" id="dir-block-new">
-              <div class="block-card-title">New Block</div>
-              <div class="block-card-desc"><strong>Third Floor:</strong> Seminar Hall</div>
+            <div class="pass-block-card" id="dir-block-sv">
+              <div class="block-card-title">SV Block — 3 Panels</div>
+              <div class="block-card-desc">
+                <strong>Ground Floor:</strong> Registration & Check-In Desk<br>
+                <strong>First Floor:</strong> Seminar Hall 1 (P13), Seminar Hall 2 (P14), Seminar Hall 3 (P06)
+              </div>
+            </div>
+            <div class="pass-block-card" id="dir-block-vr">
+              <div class="block-card-title">VR Block — 5 Panels</div>
+              <div class="block-card-desc">
+                <strong>Ground Floor:</strong> Ground Floor - A (P05), Ground Floor - B (P10)<br>
+                <strong>First Floor:</strong> First Floor - A (P11), First Floor - B (P12)<br>
+                <strong>Second Floor:</strong> Second Floor (P15)
+              </div>
             </div>
           </div>
         </div>
@@ -354,6 +364,14 @@
 
                 <div class="table-scroll-container">
                   <table class="glass-data-table">
+                    <colgroup>
+                      <col style="width: 25%;">
+                      <col style="width: 18%;">
+                      <col style="width: 14%;">
+                      <col style="width: 25%;">
+                      <col style="width: 13%;">
+                      <col style="width: 5%;">
+                    </colgroup>
                     <thead>
                       <tr>
                         <th>Team</th>
@@ -382,10 +400,15 @@
                   
                   <div class="table-search-pill theme-search-pill">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="theme-search-input" placeholder="Search by theme, sitting place, team or school..." oninput="handleThemeSearch()" />
+                    <input type="text" id="theme-search-input" placeholder="Search by venue, theme, team or school..." oninput="handleThemeSearch()" />
                   </div>
 
                   <div class="table-btn-cluster">
+                    <div class="venue-mode-pill">
+                      <button type="button" class="filter-tab active" id="btn-mode-venue" onclick="setVenueDisplayMode('venue')">15 Venues</button>
+                      <button type="button" class="filter-tab" id="btn-mode-theme" onclick="setVenueDisplayMode('theme')">12 Themes</button>
+                    </div>
+
                     <button type="button" class="glass-btn glass-btn-secondary btn-sm" id="btn-toggle-all-themes" onclick="toggleAllThemes()">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
                       <span id="btn-toggle-all-themes-text">Expand All</span>
