@@ -305,10 +305,23 @@ function renderTeamDetails(team) {
   document.getElementById('pass-school-name').textContent = team.college_name || '—';
   document.getElementById('pass-mentor-name').textContent = team.mentor_name || '—';
 
-  // Sitting place for the team's theme (shown once the organisers have set it)
-  document.getElementById('pass-venue-row').classList.toggle('hidden', !team.venue);
-  document.getElementById('pass-venue').textContent = team.venue || '';
-  document.getElementById('pass-venue-theme').textContent = team.theme || '';
+  // Sitting place and Panel for the team
+  const venueRow = document.getElementById('pass-venue-row');
+  if (venueRow) {
+    venueRow.classList.toggle('hidden', !team.venue && !team.panel_no);
+    const venueEl = document.getElementById('pass-venue');
+    if (venueEl) {
+      if (team.panel_no) {
+        venueEl.innerHTML = `<span class="panel-badge-pill">Panel ${team.panel_no}</span> <span>${escapeHtml(team.venue || '')}</span>`;
+      } else {
+        venueEl.textContent = team.venue || '';
+      }
+    }
+    const themeEl = document.getElementById('pass-venue-theme');
+    if (themeEl) {
+      themeEl.textContent = team.theme ? `Theme: ${team.theme}` : '';
+    }
+  }
 
   document.getElementById('pass-members-list').innerHTML = membersListItems(team);
 }
@@ -686,6 +699,7 @@ function renderTeamsRows(teams) {
         <td colspan="6">
           <div class="team-detail-body">
           <dl class="team-detail-grid">
+            <div><dt>Panel & Venue</dt><dd><strong>${t.panel_no ? `Panel ${t.panel_no}` : '—'}</strong> · ${escapeHtml(t.venue || '—')}</dd></div>
             <div><dt>Idea Title</dt><dd>${escapeHtml(t.project_title || '—')}</dd></div>
             <div><dt>Team Members</dt><dd>${membersListItems(t, false) ? `<ol class="members-ol">${membersListItems(t, false)}</ol>` : '—'}</dd></div>
             <div><dt>Leader Contact</dt><dd class="mono">${escapeHtml(t.mobile_no || '—')}</dd></div>
@@ -952,8 +966,12 @@ function renderThemes() {
                 return `
                 <tr class="theme-roster-row ${isPresent ? 'is-present-row' : ''}">
                   <td class="theme-td-code">
-                    <div class="theme-roster-team-id-badge"><span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span></div>
+                    <div class="theme-roster-team-id-badge">
+                      <span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span>
+                      ${t.panel_no ? `<span class="panel-tag-sm" title="${escapeHtml(t.venue || '')}">Panel ${t.panel_no}</span>` : ''}
+                    </div>
                     <div class="theme-roster-team-name">${escapeHtml(t.team_name || '—')}</div>
+                    ${t.venue ? `<div class="theme-roster-venue-hint">📍 ${escapeHtml(t.venue)}</div>` : ''}
                   </td>
                   <td class="theme-td-idea">
                     <div class="theme-roster-project-title">${escapeHtml(t.project_title || '—')}</div>

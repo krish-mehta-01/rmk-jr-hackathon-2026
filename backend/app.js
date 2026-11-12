@@ -1,3 +1,4 @@
+// Build: v20261112_r1_15panels - 15-Panel Jury Venue Allocation
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
@@ -72,6 +73,7 @@ const scanLimiter = createLimiter(5, 60 * 1000);
 function teamPassView(team) {
   return {
     id: team.id,
+    team_code: team.team_code,
     team_name: team.team_name,
     leader_name: team.leader_name,
     college_name: team.college_name,
@@ -79,6 +81,7 @@ function teamPassView(team) {
     members: team.members,
     mentor_name: team.mentor_name,
     theme: team.category,
+    panel_no: team.panel_no || null,
     venue: team.venue || null,
     is_present: Boolean(team.is_present),
     check_in_time: team.check_in_time
@@ -86,8 +89,8 @@ function teamPassView(team) {
 }
 
 // venue = the sitting place for the team's theme (theme_venues table)
-const TEAM_PASS_COLUMNS = 'id, team_name, leader_name, college_name, project_title, members, mentor_name, category, '
-  + '(SELECT venue FROM theme_venues v WHERE v.theme = teams.category) AS venue, is_present, check_in_time';
+const TEAM_PASS_COLUMNS = 'id, team_code, team_name, leader_name, college_name, project_title, members, mentor_name, category, panel_no, '
+  + 'COALESCE(venue, (SELECT venue FROM theme_venues v WHERE v.theme = teams.category)) AS venue, is_present, check_in_time';
 
 // On Render/Vercel the app sits behind a proxy; use the client IP it forwards
 if (process.env.RENDER || process.env.VERCEL) app.set('trust proxy', true);
@@ -293,7 +296,7 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
     else if (present === 'false') where += ' AND (is_present = FALSE OR is_present IS NULL)';
 
     const [rows] = await pool.execute(
-      'SELECT id, team_code, team_name, leader_name, mobile_no, college_name, project_title, members, mentor_name, is_present, check_in_time, marked_by FROM teams' +
+      'SELECT id, team_code, team_name, leader_name, mobile_no, college_name, project_title, members, mentor_name, category, panel_no, venue, is_present, check_in_time, marked_by FROM teams' +
         where +
         ` ORDER BY is_present DESC, check_in_time DESC, team_code ASC, id ASC LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
       params
@@ -311,7 +314,7 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
 app.get('/api/admin/themes', authAdmin, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      `SELECT t.id, t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.members, t.mentor_name, t.category, t.is_present, t.check_in_time, t.marked_by, v.venue
+      `SELECT t.id, t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.members, t.mentor_name, t.category, t.is_present, t.check_in_time, t.marked_by, t.panel_no, COALESCE(t.venue, v.venue) AS venue
        FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
        ORDER BY t.category, t.team_code`
     );
@@ -332,6 +335,8 @@ app.get('/api/admin/themes', authAdmin, async (req, res) => {
         project_title: r.project_title,
         members: r.members,
         mentor_name: r.mentor_name,
+        panel_no: r.panel_no,
+        venue: r.venue,
         is_present: Boolean(r.is_present),
         check_in_time: r.check_in_time,
         marked_by: r.marked_by
@@ -387,7 +392,7 @@ app.get('/api/admin/stats', authAdmin, async (req, res) => {
 app.get('/api/admin/export', authAdmin, async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      `SELECT t.team_code, t.team_name, t.project_title, t.leader_name, t.members, t.mentor_name, t.mobile_no, t.email, t.college_name, t.category, t.is_present, t.check_in_time, t.marked_by, v.venue
+      `SELECT t.team_code, t.team_name, t.project_title, t.leader_name, t.members, t.mentor_name, t.mobile_no, t.email, t.college_name, t.category, t.is_present, t.check_in_time, t.marked_by, t.panel_no, COALESCE(t.venue, v.venue) AS venue
        FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
        ORDER BY t.is_present DESC, t.check_in_time ASC, t.team_code ASC, t.id ASC`
     );

@@ -81,12 +81,13 @@ async function buildPresenceExcel(rows) {
     { key: 'team_name', header: 'Team Name', width: 28 },
     { key: 'project_title', header: 'Idea / Project Title', width: 44 },
     { key: 'leader_name', header: 'Team Leader', width: 24 },
-    { key: 'members', header: 'Team Members', width: 32 },
+    { key: 'members', header: 'Team Members', width: 34 },
     { key: 'mentor_name', header: 'Mentor Name', width: 22 },
     { key: 'mobile_no', header: 'Contact Mobile', width: 18 },
     { key: 'email', header: 'Leader Email', width: 32 },
     { key: 'college_name', header: 'School Name', width: 40 },
     { key: 'category', header: 'Theme Track', width: 30 },
+    { key: 'panel_no', header: 'Panel No.', width: 14 },
     { key: 'venue', header: 'Allocated Venue', width: 36 },
     { key: 'status', header: 'Attendance Status', width: 19 },
     { key: 'marked_by', header: 'Marked By / Mode', width: 20 },
@@ -104,7 +105,7 @@ async function buildPresenceExcel(rows) {
   titleCell1.alignment = { horizontal: 'center', vertical: 'bottom' };
   ws.getRow(1).height = 30;
 
-  // Row 2: Event Title on Crisp White
+  // Row 2: Event Subtitle on Crisp White
   ws.mergeCells(2, 1, 2, totalCols);
   const titleCell2 = ws.getCell('A2');
   titleCell2.value = 'JUNIOR HACKATHON 2026';
@@ -113,22 +114,25 @@ async function buildPresenceExcel(rows) {
   titleCell2.alignment = { horizontal: 'center', vertical: 'top' };
   ws.getRow(2).height = 26;
 
-  // Row 3: Ribbon Banner (Light Mint Green with Pure Black text)
-  const nowStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
-  const scannedCount = rows.filter(r => r.is_present).length;
+  // Count attendance stats
+  const totalTeams = rows.length;
+  const scannedTeams = rows.filter(r => r.is_present).length;
+  const attendancePct = totalTeams > 0 ? Math.round((scannedTeams / totalTeams) * 100) : 0;
+
+  // Row 3: Event Context Ribbon
   ws.mergeCells(3, 1, 3, totalCols);
-  const subCell = ws.getCell('A3');
-  subCell.value = `MASTER REGISTRATION & ATTENDANCE ROSTER  •  Total Teams: ${rows.length}  •  Scanned: ${scannedCount}  •  Exported: ${nowStr} IST`;
-  subCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
-  subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
-  subCell.alignment = { horizontal: 'center', vertical: 'middle' };
-  subCell.border = BORDER_RIBBON;
+  const ribbonCell = ws.getCell('A3');
+  ribbonCell.value = `MASTER PRESENCE & REGISTRATION ROSTER  •  ${totalTeams} Total Teams  •  ${scannedTeams} Scanned (${attendancePct}%)  •  15 Evaluation Panels`;
+  ribbonCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+  ribbonCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
+  ribbonCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  ribbonCell.border = BORDER_RIBBON;
   ws.getRow(3).height = 24;
 
-  // Row 4: Spacer row
+  // Row 4: Spacer
   ws.getRow(4).height = 6;
 
-  // Row 5: Column Headers Row with Deep Emerald Green fill & Pure White text
+  // Row 5: Column Headers Row
   const headerRow = ws.getRow(5);
   headerRow.height = 28;
   columns.forEach((col, idx) => {
@@ -136,15 +140,18 @@ async function buildPresenceExcel(rows) {
     cell.value = col.header;
     cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
-    cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 12 || idx === 13 || idx === 14) ? 'center' : 'left', vertical: 'middle' };
+    cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 11 || idx === 13 || idx === 14 || idx === 15) ? 'center' : 'left', vertical: 'middle' };
     cell.border = BORDER_CELL;
     ws.getColumn(idx + 1).width = col.width;
   });
 
-  // Enable AutoFilter on row 5
-  ws.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: totalCols } };
+  // Enable AutoFilter
+  ws.autoFilter = {
+    from: { row: 5, column: 1 },
+    to: { row: 5, column: totalCols }
+  };
 
-  // Row 6+: Data Rows (Pure Black text on alternating shades of green with clean black border)
+  // Row 6+: Data Rows
   rows.forEach((r, rowIdx) => {
     const rNum = rowIdx + 6;
     const isEven = (rowIdx % 2 === 0);
@@ -168,6 +175,7 @@ async function buildPresenceExcel(rows) {
       r.email || '—',
       r.college_name || '—',
       r.category || '—',
+      r.panel_no ? `Panel ${r.panel_no}` : '—',
       r.venue || 'TBD',
       isPresent ? 'Scanned' : 'Not Scanned',
       markedByStr,
@@ -186,14 +194,17 @@ async function buildPresenceExcel(rows) {
       } else if (colIdx === 1) { // Team ID
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-      } else if (colIdx === 7 || colIdx === 14) {
+      } else if (colIdx === 7 || colIdx === 15) {
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-      } else if (colIdx === 13) { // Marked By / Mode
+      } else if (colIdx === 11) { // Panel No
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
+      } else if (colIdx === 14) { // Marked By / Mode
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         if (isPresent) {
           cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
         }
-      } else if (colIdx === 12) { // Attendance Status
+      } else if (colIdx === 13) { // Attendance Status
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         if (isPresent) {
           cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.scannedBg } };
@@ -226,9 +237,9 @@ async function buildPresenceExcel(rows) {
 }
 
 /**
- * Builds the Multi-Sheet Venue-Wise Segregated Workbook
+ * Builds the Multi-Sheet 15-Panel Jury & Venue Workbook
  */
-async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
+async function buildVenueWiseWorkbook(panelsMap) {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'RMK Jr. Hackathon Organizers';
   wb.created = new Date();
@@ -243,7 +254,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // SHEET 1: SUMMARY SHEET
+  // SHEET 1: SUMMARY SHEET (15 PANELS)
   // ─────────────────────────────────────────────────────────────
   const wsSummary = wb.addWorksheet('Summary', {
     views: [{ state: 'frozen', ySplit: 5, showGridLines: true }]
@@ -251,12 +262,13 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
 
   const sumCols = [
     { header: 'Sl. No.', width: 9 },
-    { header: 'Theme Track', width: 36 },
-    { header: 'Allocated Presentation Venue', width: 42 },
+    { header: 'Panel No.', width: 14 },
+    { header: 'Allocated Presentation Venue', width: 44 },
+    { header: 'Themes / Domain Allocation', width: 46 },
     { header: 'Registered Teams', width: 20 },
     { header: 'Scanned (Present)', width: 20 },
     { header: 'Attendance %', width: 18 },
-    { header: 'Lab Coordinator Signature', width: 32 }
+    { header: 'Jury / Coordinator Signature', width: 32 }
   ];
 
   // Row 1 & 2: Header on Clean White
@@ -278,7 +290,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
 
   let totalAllTeams = 0;
   let totalAllScanned = 0;
-  for (const info of teamsGroupedByTheme.values()) {
+  for (const info of panelsMap.values()) {
     totalAllTeams += info.teams.length;
     totalAllScanned += info.teams.filter(t => t.is_present).length;
   }
@@ -286,7 +298,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
   // Row 3: Ribbon Banner
   wsSummary.mergeCells(3, 1, 3, sumCols.length);
   const sumSub = wsSummary.getCell('A3');
-  sumSub.value = `VENUE ALLOCATION & ROOM SUMMARY  •  ${teamsGroupedByTheme.size} Themes  •  ${totalAllTeams} Registered Teams`;
+  sumSub.value = `15-PANEL JURY VENUE ALLOCATION SUMMARY  •  15 Evaluation Panels  •  ${totalAllTeams} Registered Teams`;
   sumSub.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
   sumSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
   sumSub.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -304,13 +316,13 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     c.value = col.header;
     c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
     c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
-    c.alignment = { horizontal: (idx === 0 || idx >= 3) ? 'center' : 'left', vertical: 'middle' };
+    c.alignment = { horizontal: (idx === 0 || idx === 1 || idx >= 4) ? 'center' : 'left', vertical: 'middle' };
     c.border = BORDER_CELL;
     wsSummary.getColumn(idx + 1).width = col.width;
   });
 
   let sl = 1;
-  for (const [theme, info] of teamsGroupedByTheme) {
+  for (const [panelNo, info] of panelsMap) {
     const rNum = sl + 5;
     const row = wsSummary.getRow(rNum);
     row.height = 24;
@@ -320,15 +332,16 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
     const tCount = info.teams.length;
     const sCount = info.teams.filter(t => t.is_present).length;
     const pct = tCount > 0 ? Math.round((sCount / tCount) * 100) + '%' : '0%';
+    const themesStr = [...(info.themes || [])].join(', ');
 
-    const vals = [sl, theme, info.venue, tCount, sCount, pct, ''];
+    const vals = [sl, `Panel ${panelNo}`, info.venue, themesStr, tCount, sCount, pct, ''];
     vals.forEach((v, idx) => {
       const cell = row.getCell(idx + 1);
       cell.value = v;
       cell.border = BORDER_CELL;
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
       cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
-      cell.alignment = { horizontal: (idx === 0 || idx >= 3) ? 'center' : 'left', vertical: 'middle' };
+      cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx >= 4) ? 'center' : 'left', vertical: 'middle' };
       if (idx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
     });
     sl++;
@@ -337,14 +350,14 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
   // Total Summary Row
   const totalRow = wsSummary.getRow(sl + 5);
   totalRow.height = 26;
-  const totVals = ['', 'TOTAL', '', totalAllTeams, totalAllScanned, totalAllTeams > 0 ? Math.round((totalAllScanned / totalAllTeams) * 100) + '%' : '0%', ''];
+  const totVals = ['', 'TOTAL', '', '', totalAllTeams, totalAllScanned, totalAllTeams > 0 ? Math.round((totalAllScanned / totalAllTeams) * 100) + '%' : '0%', ''];
   totVals.forEach((v, idx) => {
     const cell = totalRow.getCell(idx + 1);
     cell.value = v;
     cell.border = BORDER_RIBBON;
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
     cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.ribbonText } };
-    cell.alignment = { horizontal: (idx === 0 || idx >= 3) ? 'center' : 'left', vertical: 'middle' };
+    cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx >= 4) ? 'center' : 'left', vertical: 'middle' };
   });
 
   // Embed Logos on Summary Sheet (Rows 1 & 2)
@@ -362,94 +375,79 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // SHEETS 2..N: INDIVIDUAL THEME & VENUE SHEETS
+  // SHEETS 2..16: INDIVIDUAL PANEL SHEETS (Panel 1 to Panel 15)
   // ─────────────────────────────────────────────────────────────
-  const SHEET_NAME_MAP = {
-    'Renewable/Sustainable Energy': 'Renewable Energy',
-    'Agriculture': 'Agriculture',
-    'Healthcare': 'Healthcare',
-    'Education': 'Education',
-    'Robotics': 'Robotics',
-    'Smart Automation': 'Smart Automation',
-    'Smart Vehicles': 'Smart Vehicles',
-    'Traditional Games of Indian Ethos': 'Traditional Games',
-    'Virtual Reality Experience': 'Virtual Reality',
-    'Clean and Green Environment': 'Clean & Green Env',
-    'Indian Heritage and Digital Creativity': 'Indian Heritage',
-    'AI for Disater Management': 'AI Disaster Mgmt'
-  };
+  for (const [panelNo, info] of panelsMap) {
+    const safeSheetName = `Panel ${panelNo}`;
+    const themesStr = [...(info.themes || [])].join(', ');
 
-  let themeIndex = 1;
-  for (const [theme, info] of teamsGroupedByTheme) {
-    const rawName = SHEET_NAME_MAP[theme] || theme.slice(0, 25);
-    const safeSheetName = rawName.replace(/[\\/?*:[\]]/g, ' ').trim() || `Theme_${themeIndex}`;
-
-    const wsTheme = wb.addWorksheet(safeSheetName, {
+    const wsPanel = wb.addWorksheet(safeSheetName, {
       views: [{ state: 'frozen', ySplit: 5, showGridLines: true }]
     });
 
-    const themeCols = [
+    const panelCols = [
       { header: 'Sl. No.', width: 8 },
       { header: 'Junior Hackathon ID', width: 20 },
       { header: 'Team Leader Name', width: 24 },
       { header: 'Team Members', width: 34 },
       { header: 'Team Name', width: 26 },
       { header: 'Title of Your Project', width: 38 },
+      { header: 'Theme Track', width: 28 },
       { header: 'School Name', width: 34 },
       { header: 'Attendance Status', width: 18 },
       { header: 'Marked By', width: 16 },
-      { header: 'Coordinator Signature', width: 24 }
+      { header: 'Jury / Coordinator Signature', width: 26 }
     ];
 
     // Row 1 & 2: Header on Clean White (logos flank this area)
-    wsTheme.mergeCells(1, 1, 1, themeCols.length);
-    const tCell1 = wsTheme.getCell('A1');
+    wsPanel.mergeCells(1, 1, 1, panelCols.length);
+    const tCell1 = wsPanel.getCell('A1');
     tCell1.value = 'R.M.K. GROUP OF INSTITUTIONS';
     tCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
     tCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
     tCell1.alignment = { horizontal: 'center', vertical: 'bottom' };
-    wsTheme.getRow(1).height = 30;
+    wsPanel.getRow(1).height = 30;
 
-    wsTheme.mergeCells(2, 1, 2, themeCols.length);
-    const tCell2 = wsTheme.getCell('A2');
+    wsPanel.mergeCells(2, 1, 2, panelCols.length);
+    const tCell2 = wsPanel.getCell('A2');
     tCell2.value = 'JUNIOR HACKATHON 2026';
     tCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
     tCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
     tCell2.alignment = { horizontal: 'center', vertical: 'top' };
-    wsTheme.getRow(2).height = 26;
+    wsPanel.getRow(2).height = 26;
 
     // Row 3: Theme & Venue Ribbon Banner (Light Mint Green with Pure Black text)
-    wsTheme.mergeCells(3, 1, 3, themeCols.length);
-    const subTCell = wsTheme.getCell('A3');
-    subTCell.value = `THEME: ${theme.toUpperCase()}      |      VENUE: ${info.venue.toUpperCase()}      |      Teams: ${info.teams.length}`;
+    wsPanel.mergeCells(3, 1, 3, panelCols.length);
+    const subTCell = wsPanel.getCell('A3');
+    subTCell.value = `PANEL ${panelNo}      |      VENUE: ${info.venue.toUpperCase()}      |      THEMES: ${themesStr.toUpperCase()}      |      Teams: ${info.teams.length}`;
     subTCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
     subTCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
     subTCell.alignment = { horizontal: 'center', vertical: 'middle' };
     subTCell.border = BORDER_RIBBON;
-    wsTheme.getRow(3).height = 24;
+    wsPanel.getRow(3).height = 24;
 
     // Row 4: Spacer
-    wsTheme.getRow(4).height = 6;
+    wsPanel.getRow(4).height = 6;
 
     // Row 5: Column Headers Row
-    const tHeadRow = wsTheme.getRow(5);
+    const tHeadRow = wsPanel.getRow(5);
     tHeadRow.height = 28;
-    themeCols.forEach((col, idx) => {
+    panelCols.forEach((col, idx) => {
       const c = tHeadRow.getCell(idx + 1);
       c.value = col.header;
       c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
       c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
-      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 8 || idx === 9) ? 'center' : 'left', vertical: 'middle' };
+      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 8 || idx === 9 || idx === 10) ? 'center' : 'left', vertical: 'middle' };
       c.border = BORDER_CELL;
-      wsTheme.getColumn(idx + 1).width = col.width;
+      wsPanel.getColumn(idx + 1).width = col.width;
     });
 
-    wsTheme.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: themeCols.length } };
+    wsPanel.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: panelCols.length } };
 
     // Row 6+: Teams Rows (Pure Black Text on alternating green shades with clean black border)
     info.teams.forEach((t, tIdx) => {
       const rNum = tIdx + 6;
-      const row = wsTheme.getRow(rNum);
+      const row = wsPanel.getRow(rNum);
       row.height = 22;
       const isEven = (tIdx % 2 === 0);
       const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
@@ -463,6 +461,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
         t.members || '—',
         t.team_name || '—',
         t.project_title || '—',
+        t.category || '—',
         t.college_name || '—',
         isPresent ? 'Scanned' : 'Not Scanned',
         markedByVal,
@@ -481,7 +480,7 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
         } else if (cIdx === 1) { // Team ID
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-        } else if (cIdx === 7) { // Attendance
+        } else if (cIdx === 8) { // Attendance
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           if (isPresent) {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.scannedBg } };
@@ -490,12 +489,12 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.pendingBg } };
             cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.pendingText } };
           }
-        } else if (cIdx === 8) { // Marked By
+        } else if (cIdx === 9) { // Marked By
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           if (isPresent) {
             cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
           }
-        } else if (cIdx === 9) { // Signature
+        } else if (cIdx === 10) { // Signature
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
         } else {
           cell.alignment = { horizontal: 'left', vertical: 'middle' };
@@ -503,21 +502,19 @@ async function buildVenueWiseWorkbook(teamsGroupedByTheme) {
       });
     });
 
-    // Embed Logos on each theme sheet (Rows 1 & 2 - Clean White Area, never overlaps Row 3)
+    // Embed Logos on each panel sheet (Rows 1 & 2 - Clean White Area, never overlaps Row 3)
     if (logoLeftId !== null) {
-      wsTheme.addImage(logoLeftId, {
+      wsPanel.addImage(logoLeftId, {
         tl: { col: 0.1, row: 0.1 },
         ext: { width: 130, height: 50 }
       });
     }
     if (logoRightId !== null) {
-      wsTheme.addImage(logoRightId, {
-        tl: { col: themeCols.length - 1.5, row: 0.1 },
+      wsPanel.addImage(logoRightId, {
+        tl: { col: panelCols.length - 1.5, row: 0.1 },
         ext: { width: 155, height: 50 }
       });
     }
-
-    themeIndex++;
   }
 
   return wb;

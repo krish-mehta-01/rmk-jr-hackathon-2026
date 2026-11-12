@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const XLSX = require('xlsx');
 
 const DEFAULT_THEME_VENUES = {
   'Renewable/Sustainable Energy': 'CO WORK SPACE (RJ Block)',
@@ -17,47 +16,31 @@ const DEFAULT_THEME_VENUES = {
   'AI for Disater Management': 'SEMINAR HALL (New Block)'
 };
 
-const SHEET_NAME_MAP = {
-  'Renewable/Sustainable Energy': 'Renewable Energy',
-  'Agriculture': 'Agriculture',
-  'Healthcare': 'Healthcare',
-  'Education': 'Education',
-  'Robotics': 'Robotics',
-  'Smart Automation': 'Smart Automation',
-  'Smart Vehicles': 'Smart Vehicles',
-  'Traditional Games of Indian Ethos': 'Traditional Games',
-  'Virtual Reality Experience': 'Virtual Reality',
-  'Clean and Green Environment': 'Clean & Green Env',
-  'Indian Heritage and Digital Creativity': 'Indian Heritage',
-  'AI for Disater Management': 'AI Disaster Mgmt'
-};
-
-function getSafeSheetName(theme, index) {
-  if (SHEET_NAME_MAP[theme]) return SHEET_NAME_MAP[theme];
-  let safe = String(theme || `Theme_${index}`).replace(/[\\/?*:[\]]/g, ' ').trim();
-  if (safe.length > 28) safe = safe.slice(0, 28).trim();
-  return safe || `Theme_${index}`;
-}
-
 async function generateVenueExcel(pool, outputPath) {
   const [rows] = await pool.execute(
-    `SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.category, t.members, t.mentor_name, t.is_present, t.check_in_time, t.marked_by, t.qr_verification_token, v.venue
-     FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
-     ORDER BY t.category, t.team_code`
+    `SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.category, t.members, t.mentor_name, t.is_present, t.check_in_time, t.marked_by, t.qr_verification_token, t.panel_no, t.venue
+     FROM teams t
+     ORDER BY t.panel_no ASC, t.category ASC, t.team_code ASC`
   );
 
-  const groups = new Map();
+  const panels = new Map();
+  for (let p = 1; p <= 15; p++) {
+    panels.set(p, { panel_no: p, venue: '', themes: new Set(), teams: [] });
+  }
+
   for (const r of rows) {
-    const theme = r.category || 'Unassigned';
-    const venue = r.venue || DEFAULT_THEME_VENUES[theme] || 'TBD';
-    if (!groups.has(theme)) {
-      groups.set(theme, { theme, venue, teams: [] });
+    const p = r.panel_no || 1;
+    if (!panels.has(p)) {
+      panels.set(p, { panel_no: p, venue: r.venue || 'TBD', themes: new Set(), teams: [] });
     }
-    groups.get(theme).teams.push(r);
+    const pan = panels.get(p);
+    if (r.venue) pan.venue = r.venue;
+    if (r.category) pan.themes.add(r.category);
+    pan.teams.push(r);
   }
 
   const { buildVenueWiseWorkbook } = require('./excel-formatter');
-  const wb = await buildVenueWiseWorkbook(groups);
+  const wb = await buildVenueWiseWorkbook(panels);
 
   const dir = path.dirname(outputPath);
   if (!fs.existsSync(dir)) {
@@ -74,7 +57,7 @@ function findVenueDocx() {
     path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx'),
     path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx'),
     path.join(__dirname, '..', 'frontend', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx'),
-    'C:/Users/krish/.gemini/antigravity/brain/85886fa9-8576-486f-bb61-edd05d989cbf/.user_uploaded/media_1793970474220_c155a53f.docx'
+    'C:/Users/krish/.gemini/antigravity/brain/85886fa9-8576-486f-bb61-edd05d989cbf/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx'
   ];
 
   for (const p of candidatePaths) {
@@ -93,7 +76,8 @@ function findVenueExcel() {
     path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx'),
     path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx'),
     path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx'),
-    path.join(__dirname, '..', 'frontend', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx')
+    path.join(__dirname, '..', 'frontend', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx'),
+    'C:/Users/krish/.gemini/antigravity/brain/85886fa9-8576-486f-bb61-edd05d989cbf/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx'
   ];
 
   for (const p of candidatePaths) {
@@ -112,7 +96,8 @@ function findVenuePdf() {
     path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf'),
     path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf'),
     path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf'),
-    path.join(__dirname, '..', 'frontend', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf')
+    path.join(__dirname, '..', 'frontend', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf'),
+    'C:/Users/krish/.gemini/antigravity/brain/85886fa9-8576-486f-bb61-edd05d989cbf/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf'
   ];
 
   for (const p of candidatePaths) {
