@@ -1,4 +1,4 @@
-// Build: v20261112_r15_real_aerial_layout_schematic_map - Campus map faithful to real aerial layout: Green RJ Block, Red SV & Auditorium, Orange VR Block, White road left loop
+// Build: v20261112_r16_3d_campus_map_and_dynamic_export_roster - 3D isometric campus map, dynamic live DB exports, updated VR Block PDF & Word rosters
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
@@ -459,17 +459,13 @@ app.get('/api/admin/export', authAdmin, async (req, res) => {
 });
 
 
-// Download / generate venue-wise segregated Excel (.xlsx)
+// Download / generate venue-wise segregated Excel (.xlsx) - ALWAYS generated dynamically from DB
 app.get('/api/admin/export/venue-excel', authAdmin, async (req, res) => {
   try {
-    let filePath = findVenueExcel();
-    if (!filePath) {
-      const target = path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx');
-      await generateVenueExcel(pool, target);
-      filePath = target;
-    }
+    const target = path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx');
+    await generateVenueExcel(pool, target);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.download(filePath, 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx', (err) => {
+    res.download(target, 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx', (err) => {
       if (err && !res.headersSent) {
         console.error('[ERROR] venue-excel download failed:', err);
         res.status(500).json({ error: 'Failed to download venue Excel' });
