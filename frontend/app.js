@@ -271,7 +271,7 @@ function renderVenueMap(team) {
     blockName = 'SV Block (Auditorium)';
     activeBlockId = 'dir-block-sv';
   } else if (venue.includes('NEW BLOCK')) {
-    blockName = 'New Block (3rd Floor)';
+    blockName = 'New Block (Dining & Refreshments)';
     activeBlockId = 'dir-block-new';
   }
 

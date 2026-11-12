@@ -1,4 +1,4 @@
-// Build: v20261112_r2_venuewise_admin - Venue-Wise Admin Split & Clean Names
+// Build: v20261112_r3_updated_map - Updated 15-Panel Campus Map & Floor Directory
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
