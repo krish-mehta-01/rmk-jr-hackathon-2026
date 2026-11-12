@@ -11286,3 +11286,32 @@ All files are saved, committed to GitHub, and available for download directly fr
    - Modern silver-grey Srinivasa Block (SV Block) with horizontal blue reflective glass band.
 4. **Deployed**:
    - Pushed commit 83f4c2b to GitHub main for auto-deploy on Render.
+### 🧑 Krish · 12 Nov 2026, 14:11 IST
+
+> auditorium is in ground floor of sv block and way is from side only for that and for first floow way is from front and what is that arrow at gate, shit mistake
+
+### 🧑 Krish · 12 Nov 2026, 14:11 IST
+
+> dont need this, also dont mention main block
+> [Attachment: Screenshot of top banner 'Event Venue Map - Venue Layout & Participant Flow']
+
+---
+
+### 🤖 Antigravity · 12 Nov 2026, 14:26 IST
+
+#### Precise Venue Flow Map (SV Block Entrances, Single Gate Arrow, No 'Main Block' Label)
+1. **Accurate SV Block Entrances (`frontend/assets/campus_venue_map.jpg`)**:
+   - **Auditorium (Ground Floor)**: Arrow from western road enters strictly from the **LEFT SIDE**, labeled `Auditorium (Ground Floor)`.
+   - **First Floor (Seminar Halls)**: Arrow branches into the **FRONT ENTRANCE**, labeled `First Floor (Seminar Halls)`.
+2. **Simplified Block Labeling**:
+   - Foreground building labeled strictly as **`RJ Block`** (no '(Main Block)').
+   - Rear building labeled cleanly as **`SV Block`**.
+3. **Fixed Main Gate Navigation**:
+   - Removed stray arrows on exterior highway and gate pillars.
+   - Exactly **ONE** clean forward red arrow entering through the central gate archway.
+4. **Top Banner Removed**:
+   - Eliminated the top banner ribbon completely; top is framed naturally by campus greenery and sky.
+5. **Frontend UI Synchronized**:
+   - Updated `frontend/index.html` and `frontend/app.js` to remove '(Main Block)' and clarify SV Block side/front entrances.
+6. **Deployed**:
+   - Pushed commit `07c75f6` to GitHub main for auto-deploy on Render.
