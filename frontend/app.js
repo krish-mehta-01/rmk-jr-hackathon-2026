@@ -265,10 +265,10 @@ function renderVenueMap(team) {
   let activeBlockId = '';
 
   if (venue.includes('RJ BLOCK')) {
-    blockName = 'RJ Block (Main Block)';
+    blockName = 'RJ Block';
     activeBlockId = 'dir-block-rj';
   } else if (venue.includes('SV BLOCK')) {
-    blockName = 'SV Block (Auditorium)';
+    blockName = 'SV Block';
     activeBlockId = 'dir-block-sv';
   }
 

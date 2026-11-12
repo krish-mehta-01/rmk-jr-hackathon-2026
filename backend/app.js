@@ -1,4 +1,4 @@
-// Build: v20261112_r6_lush_green_map - Lush RMK Greenery & Correct Forward Arrows
+// Build: v20261112_r7_accurate_entrances - Accurate Entrances (Auditorium Side Way, First Floor Front Way, No Main Block Label)
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
