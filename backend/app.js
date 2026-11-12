@@ -502,6 +502,10 @@ app.post('/api/admin/teams/:id/toggle-attendance', authAdmin, async (req, res) =
   }
 });
 
+// Jury Management & Evaluation Routes
+const juryRoutes = require('./jury-routes');
+app.use('/api', juryRoutes);
+
 // Uptime check (no DB) for keep-awake pings; also shows which commit Render is running
 app.get('/api/health', (req, res) => res.json({ ok: true, commit: (process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7) }));
 

@@ -8,8 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <script>
-    // The admin login lives at its own URL; mark it before anything renders
-    if (location.pathname.replace(/\/+$/, '') === '/rmkjrhackathon2026-adminlogin') document.documentElement.classList.add('admin-page');
+    // URL-based view flags before anything renders
+    const p = location.pathname.replace(/\/+$/, '');
+    if (p === '/rmkjrhackathon2026-adminlogin') document.documentElement.classList.add('admin-page');
+    else if (p === '/rmkjrhackathon2026-jury-admin') document.documentElement.classList.add('jury-admin-page');
+    else if (p === '/rmkjrhackathon2026-jurylogin') document.documentElement.classList.add('jury-page');
   </script>
   <script src="/assets/jsQR.js"></script>
   <link rel="stylesheet" href="/style.css?v=20261115_r1" />
@@ -500,6 +503,552 @@
       </div>
     </div>
 
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  4. JURY ADMIN AUTHENTICATION               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-jury-admin-login" class="app-view hidden">
+      <div class="auth-center-shell">
+        <div class="glass-card auth-glass-box">
+          <div class="auth-brand-head">
+            <div class="auth-logos-capsule">
+              <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="rmk-group-banner-logo" />
+              <div class="logo-vertical-divider"></div>
+              <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="rmk-hackathon-banner-logo" />
+            </div>
+            <div class="auth-title-block">
+              <h2 class="auth-event-title">RMK Junior Hackathon 2026</h2>
+              <p class="auth-portal-sub">Jury Administrator Portal</p>
+            </div>
+          </div>
+
+          <form id="form-jury-admin-login" class="glass-form">
+            <div class="form-group">
+              <label for="jury-admin-username">Administrator Username</label>
+              <input type="text" id="jury-admin-username" placeholder="Username" required autocomplete="username" />
+            </div>
+
+            <div class="form-group">
+              <label for="jury-admin-password">Administrator Password</label>
+              <input type="password" id="jury-admin-password" placeholder="Password" required autocomplete="current-password" />
+            </div>
+
+            <div id="jury-admin-login-error" class="glass-alert-error hidden" role="alert"></div>
+
+            <button type="submit" class="glass-btn glass-btn-primary" id="btn-jury-admin-login">
+              <span class="btn-text">Sign in to Jury Management</span>
+              <div class="btn-spinner hidden"></div>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  5. JURY ADMINISTRATOR PORTAL               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-jury-admin" class="app-view hidden">
+      <div class="macos-window-shell">
+        <div class="laptop-bento-layout">
+          
+          <!-- Jury Admin Sidebar -->
+          <aside class="laptop-sidebar glass-card-dark">
+            <div class="sidebar-top">
+              <div class="laptop-brand">
+                <div class="admin-sidebar-logos-card">
+                  <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="laptop-brand-logo" />
+                  <div class="sidebar-logo-divider"></div>
+                  <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="laptop-hackathon-logo" />
+                </div>
+              </div>
+
+              <div class="sidebar-portal-badge">Jury Administration</div>
+
+              <nav class="laptop-nav">
+                <button type="button" class="laptop-nav-item active" id="jlink-panels" onclick="switchJuryAdminSection('panels')">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span>Panels & Judges</span>
+                </button>
+                <button type="button" class="laptop-nav-item" id="jlink-evals" onclick="switchJuryAdminSection('evals')">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <span>Evaluation Monitoring</span>
+                </button>
+              </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+              <button type="button" class="glass-logout-pill" onclick="logoutJuryAdmin()" aria-label="Logout" title="Logout">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          </aside>
+
+          <!-- Main Content Area -->
+          <main class="laptop-main-content">
+            
+            <!-- Pane 1: Panels & Judges Management -->
+            <div id="jury-admin-sec-panels" class="admin-tab-pane active">
+              
+              <!-- Bento Stats Cards -->
+              <div class="laptop-stats-grid">
+                <div class="glass-card stat-bento-card">
+                  <span class="stat-tag">TOTAL PANELS</span>
+                  <div class="stat-number" id="jstat-panels">15</div>
+                </div>
+
+                <div class="glass-card stat-bento-card">
+                  <span class="stat-tag">JUDGE ACCOUNTS</span>
+                  <div class="stat-number" id="jstat-judges">30</div>
+                </div>
+
+                <div class="glass-card stat-bento-card stat-green">
+                  <span class="stat-tag">REGISTERED</span>
+                  <div class="stat-number" id="jstat-registered">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card stat-amber">
+                  <span class="stat-tag">PENDING REGISTRATION</span>
+                  <div class="stat-number" id="jstat-pending">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card">
+                  <span class="stat-tag">ACTIVE ACCOUNTS</span>
+                  <div class="stat-number" id="jstat-active">30</div>
+                </div>
+
+                <div class="glass-card stat-bento-card stat-green">
+                  <span class="stat-tag">EVALUATIONS DONE</span>
+                  <div class="stat-number" id="jstat-evals">0</div>
+                </div>
+              </div>
+
+              <!-- Control Header -->
+              <div class="glass-card theme-control-card">
+                <div class="table-action-header">
+                  <div class="table-search-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="jury-admin-search-input" placeholder="Search by panel, judge, organization..." oninput="handleJuryAdminSearch()" />
+                  </div>
+
+                  <div class="table-filter-pill">
+                    <button type="button" class="filter-tab active" data-jfilter="all" onclick="setJuryAdminFilter('all', this)">All</button>
+                    <button type="button" class="filter-tab" data-jfilter="registered" onclick="setJuryAdminFilter('registered', this)">Registered</button>
+                    <button type="button" class="filter-tab" data-jfilter="pending" onclick="setJuryAdminFilter('pending', this)">Pending</button>
+                  </div>
+
+                  <div class="table-btn-cluster">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJuryAdminPanels(); loadJuryAdminStats();">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panels 15 Cards Grid -->
+              <div id="jury-panels-grid" class="jury-panels-grid">
+                <div class="qr-loading">Loading judging panels...</div>
+              </div>
+
+            </div>
+
+            <!-- Pane 2: Evaluation Monitoring -->
+            <div id="jury-admin-sec-evals" class="admin-tab-pane hidden">
+              <div class="glass-card laptop-table-card">
+                <div class="table-action-header">
+                  <div class="table-search-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="jury-evals-search-input" placeholder="Search by team, project, panel..." oninput="handleJuryEvalsSearch()" />
+                  </div>
+
+                  <div class="table-btn-cluster">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJuryAdminEvaluations();">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+
+                <div class="table-scroll-container">
+                  <table class="glass-data-table">
+                    <thead>
+                      <tr>
+                        <th>Panel</th>
+                        <th>Team & Project</th>
+                        <th>Internal Score</th>
+                        <th>External Score</th>
+                        <th>Final Combined Score</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="jury-evals-table-body">
+                      <tr><td colspan="7" class="text-center loading-cell">Loading evaluations...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </main>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  6. JUDGE AUTHENTICATION                    -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-jury-login" class="app-view hidden">
+      <div class="auth-center-shell">
+        <div class="glass-card auth-glass-box">
+          <div class="auth-brand-head">
+            <div class="auth-logos-capsule">
+              <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="rmk-group-banner-logo" />
+              <div class="logo-vertical-divider"></div>
+              <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="rmk-hackathon-banner-logo" />
+            </div>
+            <div class="auth-title-block">
+              <h2 class="auth-event-title">RMK Junior Hackathon 2026</h2>
+              <p class="auth-portal-sub">Jury Evaluation Portal</p>
+            </div>
+          </div>
+
+          <form id="form-judge-login" class="glass-form">
+            <div class="form-group">
+              <label for="judge-username">Judge Account Identifier</label>
+              <input type="text" id="judge-username" placeholder="e.g. P1-IN, P1-EX" required autocomplete="username" />
+            </div>
+
+            <div class="form-group">
+              <label for="judge-password">Account Password</label>
+              <input type="password" id="judge-password" placeholder="Password" required autocomplete="current-password" />
+            </div>
+
+            <div id="judge-login-error" class="glass-alert-error hidden" role="alert"></div>
+
+            <button type="submit" class="glass-btn glass-btn-primary" id="btn-judge-login">
+              <span class="btn-text">Sign in to Evaluation Portal</span>
+              <div class="btn-spinner hidden"></div>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  7. JUDGE PROFILE REGISTRATION              -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-jury-register" class="app-view hidden">
+      <header class="app-topbar">
+        <div class="app-topbar-inner">
+          <div class="topbar-logos">
+            <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="topbar-logo-rmk" />
+            <div class="topbar-logo-divider"></div>
+            <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="topbar-logo-hackathon" />
+          </div>
+          <button type="button" class="topbar-logout" onclick="logoutJudge()" aria-label="Logout" title="Logout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="team-pass-shell">
+        <div class="glass-card jury-register-card">
+          <div class="register-header-strip">
+            <div class="register-panel-tag" id="reg-badge-panel">Panel P1</div>
+            <h1 class="register-title" id="reg-title">Judge Profile Registration</h1>
+            <p class="register-subtitle">Please complete your official credentials before beginning project evaluations.</p>
+          </div>
+
+          <!-- Step 1: Input Form -->
+          <div id="reg-step-form">
+            <form id="form-judge-register" class="glass-form">
+              <div class="form-group">
+                <label for="reg-fullname">Full Name</label>
+                <input type="text" id="reg-fullname" placeholder="Enter full name" required />
+              </div>
+
+              <div class="form-group">
+                <label for="reg-phone">Phone Number</label>
+                <div class="input-prefix-group">
+                  <span class="input-prefix">+91</span>
+                  <input type="tel" id="reg-phone" placeholder="10-digit mobile number" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="reg-email">Official Email Address</label>
+                <input type="email" id="reg-email" placeholder="name@domain.com" required />
+              </div>
+
+              <div class="form-group">
+                <label for="reg-designation">Designation</label>
+                <input type="text" id="reg-designation" placeholder="e.g. Associate Professor / Senior Engineer" required />
+              </div>
+
+              <!-- Internal Judge Field -->
+              <div class="form-group" id="reg-group-institution">
+                <label for="reg-institution">College / Institution Name</label>
+                <input type="text" id="reg-institution" placeholder="College or University name" />
+              </div>
+
+              <!-- External Judge Field -->
+              <div class="form-group hidden" id="reg-group-company">
+                <label for="reg-company">Company / Organization Name</label>
+                <input type="text" id="reg-company" placeholder="Company or Enterprise name" />
+              </div>
+
+              <div id="reg-error" class="glass-alert-error hidden" role="alert"></div>
+
+              <button type="button" class="glass-btn glass-btn-primary" onclick="reviewJudgeRegistration()">
+                <span>Review Profile Details</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Step 2: Confirmation / Review Screen -->
+          <div id="reg-step-review" class="hidden">
+            <div class="review-details-card">
+              <h3 class="review-heading">Review Profile Details</h3>
+              <dl class="pass-details-list">
+                <div class="pass-detail-row">
+                  <dt>Full Name</dt>
+                  <dd id="rev-fullname">—</dd>
+                </div>
+                <div class="pass-detail-row">
+                  <dt>Phone Number</dt>
+                  <dd id="rev-phone">—</dd>
+                </div>
+                <div class="pass-detail-row">
+                  <dt>Email</dt>
+                  <dd id="rev-email">—</dd>
+                </div>
+                <div class="pass-detail-row">
+                  <dt>Designation</dt>
+                  <dd id="rev-designation">—</dd>
+                </div>
+                <div class="pass-detail-row">
+                  <dt id="rev-org-label">Institution</dt>
+                  <dd id="rev-org-val">—</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="review-btn-row">
+              <button type="button" class="glass-btn glass-btn-secondary" onclick="editJudgeRegistration()">
+                Edit Information
+              </button>
+              <button type="button" class="glass-btn glass-btn-primary" id="btn-confirm-register" onclick="submitJudgeRegistration()">
+                <span class="btn-text">Confirm & Submit Registration</span>
+                <div class="btn-spinner hidden"></div>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  8. JUDGE DASHBOARD                         -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-jury-dashboard" class="app-view hidden">
+      <header class="app-topbar">
+        <div class="app-topbar-inner">
+          <div class="topbar-logos">
+            <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="topbar-logo-rmk" />
+            <div class="topbar-logo-divider"></div>
+            <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="topbar-logo-hackathon" />
+          </div>
+          <div class="topbar-judge-meta">
+            <span class="topbar-badge badge-panel" id="jdash-topbar-panel">Panel P1</span>
+            <span class="topbar-badge badge-type" id="jdash-topbar-type">Internal Judge</span>
+            <button type="button" class="topbar-logout" onclick="logoutJudge()" aria-label="Logout" title="Logout">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="jury-dashboard-shell">
+        
+        <!-- Judge Profile Card -->
+        <div class="glass-card judge-profile-card">
+          <div class="judge-profile-left">
+            <div class="judge-avatar-capsule" id="jdash-avatar">J</div>
+            <div class="judge-profile-meta">
+              <div class="judge-profile-badges">
+                <span class="status-pill-badge pill-present" id="jdash-badge-panel">Panel P1</span>
+                <span class="status-pill-badge pill-blue" id="jdash-badge-type">Internal Judge</span>
+              </div>
+              <h2 class="judge-name-title" id="jdash-name">Judge Name</h2>
+              <p class="judge-title-sub" id="jdash-sub">Designation • Organization</p>
+            </div>
+          </div>
+          <div class="judge-profile-contacts">
+            <div class="contact-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span id="jdash-email">—</span></div>
+            <div class="contact-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span id="jdash-phone">—</span></div>
+          </div>
+        </div>
+
+        <!-- Evaluation Overview Bento Grid -->
+        <div class="laptop-stats-grid">
+          <div class="glass-card stat-bento-card">
+            <span class="stat-tag">ASSIGNED PROJECTS</span>
+            <div class="stat-number" id="jdash-stat-total">0</div>
+          </div>
+
+          <div class="glass-card stat-bento-card stat-green">
+            <span class="stat-tag">COMPLETED</span>
+            <div class="stat-number" id="jdash-stat-completed">0</div>
+          </div>
+
+          <div class="glass-card stat-bento-card stat-amber">
+            <span class="stat-tag">PENDING EVALUATION</span>
+            <div class="stat-number" id="jdash-stat-pending">0</div>
+          </div>
+
+          <div class="glass-card stat-bento-card">
+            <span class="stat-tag">PROGRESS</span>
+            <div class="stat-number" id="jdash-stat-progress">0%</div>
+          </div>
+        </div>
+
+        <!-- Evaluation Projects Section -->
+        <div class="glass-card jury-projects-card">
+          <div class="table-action-header">
+            <h3>Assigned Projects for Evaluation</h3>
+            <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJudgeProjects()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh
+            </button>
+          </div>
+
+          <!-- Empty State (Phase 1) -->
+          <div id="jdash-empty-state" class="jury-empty-state">
+            <div class="empty-state-icon-box">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            </div>
+            <h3 class="empty-state-title">No Projects Assigned Yet</h3>
+            <p class="empty-state-desc" id="jdash-empty-msg">Project allocations for Panel P1 will be published by the hackathon coordinators. Once teams are assigned to your panel, your evaluation sheets will appear here automatically.</p>
+          </div>
+
+          <!-- Projects Table (for when projects are assigned) -->
+          <div id="jdash-projects-container" class="table-scroll-container hidden">
+            <table class="glass-data-table">
+              <thead>
+                <tr>
+                  <th>Team ID</th>
+                  <th>Team & Project Title</th>
+                  <th>Theme</th>
+                  <th>Institution / School</th>
+                  <th>My Evaluation</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="jdash-projects-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+  </div>
+
+  <!-- Mandatory Password Change Modal for Judges -->
+  <div id="modal-jury-password" class="jury-modal hidden">
+    <div class="jury-modal-box glass-card">
+      <div class="modal-header">
+        <h3 class="modal-title">First Time Login - Update Password</h3>
+        <p class="modal-subtitle">For your security, please update your default panel password to a private password of your choice (minimum 8 characters).</p>
+      </div>
+      <form id="form-judge-change-password" class="glass-form">
+        <div class="form-group">
+          <label for="pwd-current">Current Password</label>
+          <input type="password" id="pwd-current" placeholder="Current default password" required autocomplete="current-password" />
+        </div>
+        <div class="form-group">
+          <label for="pwd-new">New Password (min. 8 characters)</label>
+          <input type="password" id="pwd-new" placeholder="Enter new secure password" required minlength="8" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label for="pwd-confirm">Confirm New Password</label>
+          <input type="password" id="pwd-confirm" placeholder="Re-enter new password" required minlength="8" autocomplete="new-password" />
+        </div>
+        <div id="pwd-error" class="glass-alert-error hidden" role="alert"></div>
+        <button type="submit" class="glass-btn glass-btn-primary" id="btn-save-pwd">
+          <span class="btn-text">Save New Password & Continue</span>
+          <div class="btn-spinner hidden"></div>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Evaluation Modal for Judge -->
+  <div id="modal-jury-evaluation" class="jury-modal hidden">
+    <div class="jury-modal-box glass-card jury-eval-modal-content">
+      <div class="modal-header eval-modal-header">
+        <div>
+          <div class="eval-team-code mono" id="eval-modal-team-code">RMKJH261001</div>
+          <h2 class="eval-team-title" id="eval-modal-team-name">Team Name</h2>
+          <p class="eval-team-subtitle" id="eval-modal-proj-title">Project Title • Category</p>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeEvaluationModal()" aria-label="Close Evaluation">✕</button>
+      </div>
+
+      <div class="eval-modal-body">
+        <div class="eval-score-summary-bar">
+          <span class="score-summary-label">Total Score</span>
+          <span class="score-summary-val" id="eval-modal-total-score">0 / 100</span>
+          <span class="status-pill-badge pill-absent" id="eval-modal-status-pill">Draft</span>
+        </div>
+
+        <div id="eval-criteria-container" class="eval-criteria-list">
+          <!-- Dynamic criteria injected here -->
+        </div>
+
+        <div class="form-group eval-remarks-group">
+          <label for="eval-remarks">Written Evaluation Remarks / Feedback</label>
+          <textarea id="eval-remarks" rows="4" placeholder="Enter constructive feedback, strengths, and areas of improvement..."></textarea>
+        </div>
+
+        <div id="eval-error" class="glass-alert-error hidden" role="alert"></div>
+      </div>
+
+      <div class="eval-modal-footer">
+        <button type="button" class="glass-btn glass-btn-secondary" onclick="closeEvaluationModal()">
+          Close
+        </button>
+        <button type="button" class="glass-btn glass-btn-secondary" id="btn-eval-draft" onclick="saveEvaluationDraft()">
+          Save Draft
+        </button>
+        <button type="button" class="glass-btn glass-btn-primary" id="btn-eval-submit" onclick="submitEvaluationFinal()">
+          Submit Final Evaluation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evaluation Detail Modal for Jury Admin -->
+  <div id="modal-jury-admin-eval-detail" class="jury-modal hidden">
+    <div class="jury-modal-box glass-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="admin-eval-modal-title">Evaluation Details</h3>
+        <button type="button" class="modal-close-btn" onclick="closeAdminEvalModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="admin-eval-modal-body" id="admin-eval-modal-body">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
   </div>
 
   <!-- Fullscreen Map Modal -->

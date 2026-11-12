@@ -6,10 +6,16 @@
 
 // Team leaders use the site root; admins use /rmkjrhackathon2026-adminlogin (flag set in index.html)
 const IS_ADMIN_PAGE = document.documentElement.classList.contains('admin-page');
+const IS_JURY_ADMIN_PAGE = document.documentElement.classList.contains('jury-admin-page');
+const IS_JURY_PAGE = document.documentElement.classList.contains('jury-page');
 
 let teamToken = null;
 let adminToken = null;
 let teamData = null;
+
+let juryAdminToken = null;
+let judgeToken = null;
+let judgeMeData = null;
 
 let currentFilter = 'all';
 let searchDebounceTimer = null;
@@ -34,7 +40,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // A QR opened with the phone's camera app lands here as /#p=<code>. Keep the code for this tab
 // (it survives a reload before login) and clear it from the address bar.
 function takeVenueCodeFromLink() {
-  if (IS_ADMIN_PAGE) return;
+  if (IS_ADMIN_PAGE || IS_JURY_ADMIN_PAGE || IS_JURY_PAGE) return;
   let code = null;
   const hashMatch = location.hash.match(/[#&]?(?:p|venue_qr)=(\d{64})/i);
   if (hashMatch) {
@@ -63,14 +69,49 @@ function updateQrNoticeBanner() {
 }
 
 function setupEventListeners() {
-  document.getElementById('form-team-login').addEventListener('submit', handleTeamLogin);
-  document.getElementById('form-admin-login').addEventListener('submit', handleAdminLogin);
+  const formTeam = document.getElementById('form-team-login');
+  if (formTeam) formTeam.addEventListener('submit', handleTeamLogin);
+
+  const formAdmin = document.getElementById('form-admin-login');
+  if (formAdmin) formAdmin.addEventListener('submit', handleAdminLogin);
+
+  const formJuryAdmin = document.getElementById('form-jury-admin-login');
+  if (formJuryAdmin) formJuryAdmin.addEventListener('submit', handleJuryAdminLogin);
+
+  const formJudge = document.getElementById('form-judge-login');
+  if (formJudge) formJudge.addEventListener('submit', handleJudgeLogin);
+
+  const formJudgePwd = document.getElementById('form-judge-change-password');
+  if (formJudgePwd) formJudgePwd.addEventListener('submit', handleJudgeChangePassword);
 }
 
 // ─────────────────────────────────────────────────────────────
 // SESSION RESTORATION
 // ─────────────────────────────────────────────────────────────
 function restoreSession() {
+  if (IS_JURY_ADMIN_PAGE) {
+    document.title = 'RMK Jr. Hackathon 2026 — Jury Admin';
+    juryAdminToken = localStorage.getItem('rmk_jury_admin_token');
+    if (juryAdminToken) {
+      initJuryAdminDashboard();
+      showView('view-jury-admin');
+    } else {
+      showView('view-jury-admin-login');
+    }
+    return;
+  }
+
+  if (IS_JURY_PAGE) {
+    document.title = 'RMK Jr. Hackathon 2026 — Jury Evaluation';
+    judgeToken = localStorage.getItem('rmk_judge_token');
+    if (judgeToken) {
+      refreshJudgeStatus();
+    } else {
+      showView('view-jury-login');
+    }
+    return;
+  }
+
   if (IS_ADMIN_PAGE) {
     document.title = 'RMK Jr. Hackathon 2026 — Admin';
     adminToken = localStorage.getItem('rmk_admin_token');
@@ -1656,3 +1697,1141 @@ async function toggleAttendanceFromVenue(id, event) {
     alert('Failed to update attendance due to connection error.');
   }
 }
+
+
+// ════════════════════════════════════════════════════════════════
+//  JURY MANAGEMENT & EVALUATION PORTAL CLIENT LOGIC
+// ════════════════════════════════════════════════════════════════
+
+// ─── Jury Admin State ───
+let rawJuryPanelsData = [];
+let rawJuryEvalsData = [];
+let currentJuryFilter = 'all';
+let currentJurySearch = '';
+let jurySearchDebounceTimer = null;
+let juryEvalsDebounceTimer = null;
+
+// ─── Judge State ───
+let currentJudgeCriteria = [];
+let currentJudgeProjects = [];
+let currentEvalTeamId = null;
+let currentEvalExisting = null;
+
+// ─────────────────────────────────────────────────────────────
+// JURY ADMINISTRATOR FLOW
+// ─────────────────────────────────────────────────────────────
+
+async function handleJuryAdminLogin(e) {
+  e.preventDefault();
+  const usernameInput = document.getElementById('jury-admin-username');
+  const passwordInput = document.getElementById('jury-admin-password');
+  const errBox = document.getElementById('jury-admin-login-error');
+  const submitBtn = document.getElementById('btn-jury-admin-login');
+  const btnText = submitBtn.querySelector('.btn-text');
+  const btnSpinner = submitBtn.querySelector('.btn-spinner');
+
+  errBox.classList.add('hidden');
+  btnText.classList.add('hidden');
+  btnSpinner.classList.remove('hidden');
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/jury-admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: usernameInput.value.trim(),
+        password: passwordInput.value
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errBox.textContent = data.error || 'Authentication failed.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    juryAdminToken = data.token;
+    localStorage.setItem('rmk_jury_admin_token', juryAdminToken);
+    initJuryAdminDashboard();
+    showView('view-jury-admin');
+    showToast(`Welcome, ${data.name || 'Jury Administrator'}`, 'info');
+  } catch (err) {
+    console.error('[ERROR] handleJuryAdminLogin:', err);
+    errBox.textContent = 'Network or server error. Please try again.';
+    errBox.classList.remove('hidden');
+  } finally {
+    btnText.classList.remove('hidden');
+    btnSpinner.classList.add('hidden');
+    submitBtn.disabled = false;
+  }
+}
+
+function logoutJuryAdmin() {
+  juryAdminToken = null;
+  localStorage.removeItem('rmk_jury_admin_token');
+  showView('view-jury-admin-login');
+  showToast('Logged out of Jury Admin portal', 'info');
+}
+
+function initJuryAdminDashboard() {
+  loadJuryAdminStats();
+  loadJuryAdminPanels();
+  loadJuryAdminEvaluations();
+}
+
+function switchJuryAdminSection(secName) {
+  const secPanels = document.getElementById('jury-admin-sec-panels');
+  const secEvals = document.getElementById('jury-admin-sec-evals');
+  const btnPanels = document.getElementById('jlink-panels');
+  const btnEvals = document.getElementById('jlink-evals');
+
+  if (secName === 'panels') {
+    secPanels.classList.remove('hidden');
+    secPanels.classList.add('active');
+    secEvals.classList.add('hidden');
+    secEvals.classList.remove('active');
+    btnPanels.classList.add('active');
+    btnEvals.classList.remove('active');
+    loadJuryAdminStats();
+    loadJuryAdminPanels();
+  } else if (secName === 'evals') {
+    secEvals.classList.remove('hidden');
+    secEvals.classList.add('active');
+    secPanels.classList.add('hidden');
+    secPanels.classList.remove('active');
+    btnEvals.classList.add('active');
+    btnPanels.classList.remove('active');
+    loadJuryAdminEvaluations();
+  }
+}
+
+async function loadJuryAdminStats() {
+  if (!juryAdminToken) return;
+  try {
+    const res = await fetch('/api/jury-admin/stats', {
+      headers: { Authorization: 'Bearer ' + juryAdminToken }
+    });
+    if (res.status === 401) return logoutJuryAdmin();
+    if (!res.ok) return;
+
+    const data = await res.json();
+    document.getElementById('jstat-panels').textContent = data.total_panels ?? 15;
+    document.getElementById('jstat-judges').textContent = data.total_judges ?? 30;
+    document.getElementById('jstat-registered').textContent = data.registered_judges ?? 0;
+    document.getElementById('jstat-pending').textContent = data.pending_registrations ?? 0;
+    document.getElementById('jstat-active').textContent = data.active_judges ?? 30;
+    document.getElementById('jstat-evals').textContent = data.evaluations_completed ?? 0;
+  } catch (err) {
+    console.warn('[WARN] loadJuryAdminStats:', err);
+  }
+}
+
+async function loadJuryAdminPanels() {
+  if (!juryAdminToken) return;
+  const grid = document.getElementById('jury-panels-grid');
+  if (!grid) return;
+
+  try {
+    const res = await fetch('/api/jury-admin/panels', {
+      headers: { Authorization: 'Bearer ' + juryAdminToken }
+    });
+    if (res.status === 401) return logoutJuryAdmin();
+    if (!res.ok) {
+      grid.innerHTML = '<div class="qr-loading">Failed to load judging panels.</div>';
+      return;
+    }
+
+    const data = await res.json();
+    rawJuryPanelsData = data.panels || [];
+    renderJuryPanels();
+  } catch (err) {
+    console.error('[ERROR] loadJuryAdminPanels:', err);
+    grid.innerHTML = '<div class="qr-loading">Connection error loading panels.</div>';
+  }
+}
+
+function handleJuryAdminSearch() {
+  clearTimeout(jurySearchDebounceTimer);
+  jurySearchDebounceTimer = setTimeout(() => {
+    currentJurySearch = document.getElementById('jury-admin-search-input').value.trim().toLowerCase();
+    renderJuryPanels();
+  }, 250);
+}
+
+function setJuryAdminFilter(filterVal, btn) {
+  currentJuryFilter = filterVal;
+  document.querySelectorAll('#jury-admin-sec-panels .filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderJuryPanels();
+}
+
+function renderJuryPanels() {
+  const grid = document.getElementById('jury-panels-grid');
+  if (!grid) return;
+
+  const query = currentJurySearch;
+  const filter = currentJuryFilter;
+
+  const filtered = rawJuryPanelsData.filter(panel => {
+    const internal = panel.internal_judge;
+    const external = panel.external_judge;
+
+    // Filter chip logic
+    if (filter === 'registered') {
+      const anyRegistered = (internal && internal.is_registered) || (external && external.is_registered);
+      if (!anyRegistered) return false;
+    } else if (filter === 'pending') {
+      const anyPending = (internal && !internal.is_registered) || (external && !external.is_registered);
+      if (!anyPending) return false;
+    }
+
+    // Search query
+    if (query) {
+      const codeMatch = (panel.panel_code || '').toLowerCase().includes(query);
+      const nameMatch = (panel.panel_name || '').toLowerCase().includes(query);
+      const inUserMatch = internal && internal.username.toLowerCase().includes(query);
+      const exUserMatch = external && external.username.toLowerCase().includes(query);
+      const inNameMatch = internal && internal.profile && internal.profile.full_name.toLowerCase().includes(query);
+      const exNameMatch = external && external.profile && external.profile.full_name.toLowerCase().includes(query);
+      const inOrgMatch = internal && internal.profile && (internal.profile.organization || '').toLowerCase().includes(query);
+      const exOrgMatch = external && external.profile && (external.profile.organization || '').toLowerCase().includes(query);
+
+      return codeMatch || nameMatch || inUserMatch || exUserMatch || inNameMatch || exNameMatch || inOrgMatch || exOrgMatch;
+    }
+
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="qr-loading">No judging panels match the search / filter.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(panel => {
+    return `
+      <div class="jury-panel-card">
+        <div class="jury-panel-head">
+          <div class="jury-panel-title-wrap">
+            <span class="jury-panel-code-pill">${escapeHtml(panel.panel_code)}</span>
+            <span class="jury-panel-name">${escapeHtml(panel.panel_name)}</span>
+          </div>
+          <span class="status-pill-badge ${panel.is_active ? 'pill-present' : 'pill-absent'}">
+            ${panel.is_active ? 'Active' : 'Disabled'}
+          </span>
+        </div>
+
+        <div class="jury-panel-judges">
+          ${renderJudgeSubcard(panel.internal_judge, 'INTERNAL')}
+          ${renderJudgeSubcard(panel.external_judge, 'EXTERNAL')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderJudgeSubcard(judge, type) {
+  if (!judge) {
+    return `<div class="jury-judge-subcard"><span class="judge-profile-pending">No account provisioned</span></div>`;
+  }
+
+  const isInternal = type === 'INTERNAL';
+  const typeClass = isInternal ? 'type-internal' : 'type-external';
+  const typeLabel = isInternal ? 'Internal Judge' : 'External Judge';
+
+  let profileHtml = '';
+  if (judge.is_registered && judge.profile) {
+    profileHtml = `
+      <div class="judge-profile-registered">${escapeHtml(judge.profile.full_name)}</div>
+      <div class="judge-profile-meta-text">${escapeHtml(judge.profile.designation || '—')} • ${escapeHtml(judge.profile.organization || '—')}</div>
+      <div class="judge-profile-meta-text mono">${escapeHtml(judge.profile.email)} | ${escapeHtml(judge.profile.phone_no)}</div>
+    `;
+  } else {
+    profileHtml = `<div class="judge-profile-pending">Registration Pending (Not completed yet)</div>`;
+  }
+
+  return `
+    <div class="jury-judge-subcard">
+      <div class="judge-subcard-head">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="judge-type-pill ${typeClass}">${typeLabel}</span>
+          <span class="judge-username-tag">${escapeHtml(judge.username)}</span>
+        </div>
+        <span class="status-pill-badge ${judge.is_active ? 'pill-present' : 'pill-absent'}" style="font-size:10px; padding:2px 6px;">
+          ${judge.is_active ? 'Active' : 'Disabled'}
+        </span>
+      </div>
+
+      <div class="judge-subcard-body">
+        ${profileHtml}
+      </div>
+
+      <div class="judge-subcard-actions">
+        <button type="button" class="btn-judge-action" onclick="resetJudgePassword(${judge.id}, '${escapeHtml(judge.username)}')">
+          Reset Password
+        </button>
+        <button type="button" class="btn-judge-action ${judge.is_active ? 'btn-danger-action' : ''}" onclick="toggleJudgeStatus(${judge.id}, '${escapeHtml(judge.username)}')">
+          ${judge.is_active ? 'Disable' : 'Enable'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function resetJudgePassword(judgeId, username) {
+  if (!confirm(`Are you sure you want to reset credentials for ${username} back to default convention (e.g. PanelX-IN)? The judge will be forced to change password on next login.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/jury-admin/judges/${judgeId}/reset-password`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + juryAdminToken }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Failed to reset password', 'error');
+      return;
+    }
+    showToast(`${username} password reset to: ${data.default_password}`, 'info');
+    loadJuryAdminPanels();
+  } catch (err) {
+    console.error('[ERROR] resetJudgePassword:', err);
+    showToast('Failed to reset password due to network error', 'error');
+  }
+}
+
+async function toggleJudgeStatus(judgeId, username) {
+  try {
+    const res = await fetch(`/api/jury-admin/judges/${judgeId}/toggle-status`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + juryAdminToken }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Failed to toggle account status', 'error');
+      return;
+    }
+    showToast(`${username} is now ${data.is_active ? 'Enabled' : 'Disabled'}`, 'info');
+    loadJuryAdminPanels();
+    loadJuryAdminStats();
+  } catch (err) {
+    console.error('[ERROR] toggleJudgeStatus:', err);
+    showToast('Failed to update status', 'error');
+  }
+}
+
+async function loadJuryAdminEvaluations() {
+  if (!juryAdminToken) return;
+  const tbody = document.getElementById('jury-evals-table-body');
+  if (!tbody) return;
+
+  try {
+    const res = await fetch('/api/jury-admin/evaluations', {
+      headers: { Authorization: 'Bearer ' + juryAdminToken }
+    });
+    if (res.status === 401) return logoutJuryAdmin();
+    if (!res.ok) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center">Failed to load evaluations.</td></tr>';
+      return;
+    }
+
+    const data = await res.json();
+    rawJuryEvalsData = data.evaluations || [];
+    renderJuryAdminEvaluations(rawJuryEvalsData);
+  } catch (err) {
+    console.error('[ERROR] loadJuryAdminEvaluations:', err);
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Network error loading evaluations.</td></tr>';
+  }
+}
+
+function handleJuryEvalsSearch() {
+  clearTimeout(juryEvalsDebounceTimer);
+  juryEvalsDebounceTimer = setTimeout(() => {
+    const q = document.getElementById('jury-evals-search-input').value.trim().toLowerCase();
+    if (!q) {
+      renderJuryAdminEvaluations(rawJuryEvalsData);
+      return;
+    }
+    const filtered = rawJuryEvalsData.filter(e => 
+      (e.team_code || '').toLowerCase().includes(q) ||
+      (e.team_name || '').toLowerCase().includes(q) ||
+      (e.project_title || '').toLowerCase().includes(q) ||
+      (e.panel_code || '').toLowerCase().includes(q)
+    );
+    renderJuryAdminEvaluations(filtered);
+  }, 250);
+}
+
+function renderJuryAdminEvaluations(evals) {
+  const tbody = document.getElementById('jury-evals-table-body');
+  if (!tbody) return;
+
+  if (evals.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No evaluations submitted yet. (Waiting for project allocations & judge scoring)</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = evals.map(item => {
+    const inScore = item.internal_eval ? `${item.internal_eval.score} / 100` : '<span class="text-muted">Pending</span>';
+    const exScore = item.external_eval ? `${item.external_eval.score} / 100` : '<span class="text-muted">Pending</span>';
+    
+    // Combined score is ONLY shown when both are submitted; never coerced to zero
+    let combinedHtml = '<span class="status-pill-badge pill-absent">Pending</span>';
+    if (item.is_complete && item.combined_score !== null) {
+      combinedHtml = `<span class="score-summary-val" style="font-size:16px;">${item.combined_score} / 200</span>`;
+    }
+
+    let statusBadge = '<span class="status-pill-badge pill-absent">Pending</span>';
+    if (item.is_complete) {
+      statusBadge = '<span class="status-pill-badge pill-present">Completed</span>';
+    } else if (item.internal_eval || item.external_eval) {
+      statusBadge = '<span class="status-pill-badge pill-amber">Partial</span>';
+    }
+
+    const hasAnyEval = (item.internal_eval && item.internal_eval.evaluation_id) || (item.external_eval && item.external_eval.evaluation_id);
+    const evalIdToView = item.internal_eval ? item.internal_eval.evaluation_id : (item.external_eval ? item.external_eval.evaluation_id : null);
+
+    return `
+      <tr>
+        <td data-label="Panel"><span class="table-team-id mono">${escapeHtml(item.panel_code)}</span></td>
+        <td data-label="Team & Project">
+          <div class="table-team-id mono">${escapeHtml(item.team_code)}</div>
+          <div class="table-team-title">${escapeHtml(item.project_title || item.team_name)}</div>
+          <div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(item.school || '—')}</div>
+        </td>
+        <td data-label="Internal Score">${inScore}</td>
+        <td data-label="External Score">${exScore}</td>
+        <td data-label="Final Combined Score">${combinedHtml}</td>
+        <td data-label="Status">${statusBadge}</td>
+        <td data-label="Action">
+          ${hasAnyEval ? `
+            <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="openAdminEvalDetail(${evalIdToView})">
+              View Breakdown
+            </button>
+          ` : '—'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function openAdminEvalDetail(evalId) {
+  const modal = document.getElementById('modal-jury-admin-eval-detail');
+  const body = document.getElementById('admin-eval-modal-body');
+  if (!modal || !body) return;
+
+  body.innerHTML = '<div class="qr-loading">Loading breakdown...</div>';
+  modal.classList.remove('hidden');
+
+  try {
+    const res = await fetch(`/api/jury-admin/evaluations/${evalId}`, {
+      headers: { Authorization: 'Bearer ' + juryAdminToken }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      body.innerHTML = `<div class="glass-alert-error">${data.error || 'Failed to load details'}</div>`;
+      return;
+    }
+
+    const ev = data.evaluation;
+    const scores = data.criteria_scores || [];
+
+    body.innerHTML = `
+      <div style="background:#f8fafc; padding:16px; border-radius:10px; border:1px solid #e2e8f0;">
+        <div style="font-size:12px; font-weight:700; color:var(--accent-green-dark);">${escapeHtml(ev.panel_code)} • ${escapeHtml(ev.judge_type)} EVALUATION</div>
+        <h3 style="font-size:18px; margin:4px 0;">${escapeHtml(ev.team_name)} (${escapeHtml(ev.team_code)})</h3>
+        <p style="font-size:13px; color:var(--text-muted);">${escapeHtml(ev.project_title || '—')}</p>
+        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Judge: <strong>${escapeHtml(ev.judge_name || ev.judge_username)}</strong></span>
+          <span class="score-summary-val" style="font-size:20px;">${ev.total_score} / 100</span>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <h4 style="font-size:14px; font-weight:700;">Criteria Marks Breakdown</h4>
+        ${scores.map(s => `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; border:1px solid #e2e8f0; padding:10px 14px; border-radius:8px;">
+            <div>
+              <div style="font-size:13px; font-weight:700;">${escapeHtml(s.title)}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(s.criterion_code)} • Max ${s.max_score} marks</div>
+            </div>
+            <div class="mono" style="font-size:16px; font-weight:800; color:var(--accent-green);">${s.score}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="margin-top:10px;">
+        <h4 style="font-size:13px; font-weight:700; margin-bottom:6px;">Written Remarks / Feedback</h4>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
+          ${ev.remarks ? escapeHtml(ev.remarks) : '<span style="color:var(--text-muted); font-style:italic;">No remarks submitted.</span>'}
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    console.error('[ERROR] openAdminEvalDetail:', err);
+    body.innerHTML = '<div class="glass-alert-error">Failed to load evaluation details.</div>';
+  }
+}
+
+function closeAdminEvalModal() {
+  const modal = document.getElementById('modal-jury-admin-eval-detail');
+  if (modal) modal.classList.add('hidden');
+}
+
+// ─────────────────────────────────────────────────────────────
+// JUDGE AUTHENTICATION, PASSWORD UPDATE & REGISTRATION FLOW
+// ─────────────────────────────────────────────────────────────
+
+async function handleJudgeLogin(e) {
+  e.preventDefault();
+  const usernameInput = document.getElementById('judge-username');
+  const passwordInput = document.getElementById('judge-password');
+  const errBox = document.getElementById('judge-login-error');
+  const submitBtn = document.getElementById('btn-judge-login');
+  const btnText = submitBtn.querySelector('.btn-text');
+  const btnSpinner = submitBtn.querySelector('.btn-spinner');
+
+  errBox.classList.add('hidden');
+  btnText.classList.add('hidden');
+  btnSpinner.classList.remove('hidden');
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/jury/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: usernameInput.value.trim(),
+        password: passwordInput.value
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errBox.textContent = data.error || 'Login failed.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    judgeToken = data.token;
+    localStorage.setItem('rmk_judge_token', judgeToken);
+    judgeMeData = data;
+
+    // Check mandatory password change on first login
+    if (data.must_change_password) {
+      openJudgePasswordModal();
+      return;
+    }
+
+    // Check profile registration
+    if (!data.is_registered) {
+      initJudgeRegistration(data);
+      return;
+    }
+
+    // Otherwise straight to dashboard
+    initJudgeDashboard();
+  } catch (err) {
+    console.error('[ERROR] handleJudgeLogin:', err);
+    errBox.textContent = 'Server connection error. Please try again.';
+    errBox.classList.remove('hidden');
+  } finally {
+    btnText.classList.remove('hidden');
+    btnSpinner.classList.add('hidden');
+    submitBtn.disabled = false;
+  }
+}
+
+function logoutJudge() {
+  judgeToken = null;
+  judgeMeData = null;
+  localStorage.removeItem('rmk_judge_token');
+  showView('view-jury-login');
+  closeJudgePasswordModal();
+  closeEvaluationModal();
+  showToast('Logged out of Jury portal', 'info');
+}
+
+async function refreshJudgeStatus() {
+  if (!judgeToken) {
+    showView('view-jury-login');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/jury/me', {
+      headers: { Authorization: 'Bearer ' + judgeToken }
+    });
+
+    if (res.status === 401) {
+      logoutJudge();
+      return;
+    }
+
+    const data = await res.json();
+    judgeMeData = data;
+
+    if (data.must_change_password) {
+      showView('view-jury-login');
+      openJudgePasswordModal();
+      return;
+    }
+
+    if (!data.is_registered) {
+      initJudgeRegistration(data);
+      return;
+    }
+
+    initJudgeDashboard();
+  } catch (err) {
+    console.error('[ERROR] refreshJudgeStatus:', err);
+    showView('view-jury-login');
+  }
+}
+
+function openJudgePasswordModal() {
+  const modal = document.getElementById('modal-jury-password');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeJudgePasswordModal() {
+  const modal = document.getElementById('modal-jury-password');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function handleJudgeChangePassword(e) {
+  e.preventDefault();
+  const currentPwd = document.getElementById('pwd-current').value;
+  const newPwd = document.getElementById('pwd-new').value;
+  const confirmPwd = document.getElementById('pwd-confirm').value;
+  const errBox = document.getElementById('pwd-error');
+  const btn = document.getElementById('btn-save-pwd');
+  const btnText = btn.querySelector('.btn-text');
+  const btnSpinner = btn.querySelector('.btn-spinner');
+
+  errBox.classList.add('hidden');
+
+  if (newPwd.length < 8) {
+    errBox.textContent = 'New password must be at least 8 characters long.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  if (newPwd !== confirmPwd) {
+    errBox.textContent = 'New password and confirmation do not match.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  btnText.classList.add('hidden');
+  btnSpinner.classList.remove('hidden');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/jury/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + judgeToken
+      },
+      body: JSON.stringify({ current_password: currentPwd, new_password: newPwd })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errBox.textContent = data.error || 'Password update failed';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    closeJudgePasswordModal();
+    showToast('Password updated successfully!', 'info');
+
+    // Refresh context and proceed to registration if pending
+    await refreshJudgeStatus();
+  } catch (err) {
+    console.error('[ERROR] handleJudgeChangePassword:', err);
+    errBox.textContent = 'Server connection error.';
+    errBox.classList.remove('hidden');
+  } finally {
+    btnText.classList.remove('hidden');
+    btnSpinner.classList.add('hidden');
+    btn.disabled = false;
+  }
+}
+
+function initJudgeRegistration(context) {
+  const ctx = context || judgeMeData;
+  if (!ctx) return;
+
+  showView('view-jury-register');
+  document.getElementById('reg-badge-panel').textContent = `Panel ${ctx.panel_code}`;
+  
+  const isInternal = ctx.judge_type === 'INTERNAL';
+  document.getElementById('reg-title').textContent = `${isInternal ? 'Internal' : 'External'} Judge Registration`;
+
+  // Internal vs External field visibility
+  document.getElementById('reg-group-institution').classList.toggle('hidden', !isInternal);
+  document.getElementById('reg-group-company').classList.toggle('hidden', isInternal);
+
+  // Reset steps
+  document.getElementById('reg-step-form').classList.remove('hidden');
+  document.getElementById('reg-step-review').classList.add('hidden');
+}
+
+function reviewJudgeRegistration() {
+  const errBox = document.getElementById('reg-error');
+  errBox.classList.add('hidden');
+
+  const fullName = document.getElementById('reg-fullname').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const designation = document.getElementById('reg-designation').value.trim();
+  const isInternal = judgeMeData && judgeMeData.judge_type === 'INTERNAL';
+  const org = isInternal 
+    ? document.getElementById('reg-institution').value.trim() 
+    : document.getElementById('reg-company').value.trim();
+
+  if (!fullName || fullName.length < 2) {
+    errBox.textContent = 'Please enter your complete full name.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  if (cleanPhone.length < 10) {
+    errBox.textContent = 'Please enter a valid 10-digit mobile number.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errBox.textContent = 'Please enter a valid email address.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  if (!designation) {
+    errBox.textContent = 'Please specify your designation.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  if (!org) {
+    errBox.textContent = isInternal ? 'Please specify your College / Institution name.' : 'Please specify your Company name.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  // Populate review screen
+  document.getElementById('rev-fullname').textContent = fullName;
+  document.getElementById('rev-phone').textContent = '+91 ' + cleanPhone.slice(-10);
+  document.getElementById('rev-email').textContent = email;
+  document.getElementById('rev-designation').textContent = designation;
+  document.getElementById('rev-org-label').textContent = isInternal ? 'College / Institution' : 'Company / Enterprise';
+  document.getElementById('rev-org-val').textContent = org;
+
+  // Switch to review step
+  document.getElementById('reg-step-form').classList.add('hidden');
+  document.getElementById('reg-step-review').classList.remove('hidden');
+}
+
+function editJudgeRegistration() {
+  document.getElementById('reg-step-review').classList.add('hidden');
+  document.getElementById('reg-step-form').classList.remove('hidden');
+}
+
+async function submitJudgeRegistration() {
+  const btn = document.getElementById('btn-confirm-register');
+  const btnText = btn.querySelector('.btn-text');
+  const btnSpinner = btn.querySelector('.btn-spinner');
+
+  btnText.classList.add('hidden');
+  btnSpinner.classList.remove('hidden');
+  btn.disabled = true;
+
+  const isInternal = judgeMeData && judgeMeData.judge_type === 'INTERNAL';
+  const payload = {
+    full_name: document.getElementById('reg-fullname').value.trim(),
+    phone_no: document.getElementById('reg-phone').value.trim(),
+    email: document.getElementById('reg-email').value.trim(),
+    designation: document.getElementById('reg-designation').value.trim(),
+    institution_name: isInternal ? document.getElementById('reg-institution').value.trim() : null,
+    company_name: !isInternal ? document.getElementById('reg-company').value.trim() : null
+  };
+
+  try {
+    const res = await fetch('/api/jury/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + judgeToken
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Registration failed');
+      return;
+    }
+
+    showToast('Registration profile saved successfully!', 'info');
+    await refreshJudgeStatus();
+  } catch (err) {
+    console.error('[ERROR] submitJudgeRegistration:', err);
+    alert('Server error registering profile.');
+  } finally {
+    btnText.classList.remove('hidden');
+    btnSpinner.classList.add('hidden');
+    btn.disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// JUDGE DASHBOARD & EVALUATION EXECUTION
+// ─────────────────────────────────────────────────────────────
+
+async function initJudgeDashboard() {
+  showView('view-jury-dashboard');
+
+  try {
+    const res = await fetch('/api/jury/me', {
+      headers: { Authorization: 'Bearer ' + judgeToken }
+    });
+    if (!res.ok) return;
+
+    const me = await res.json();
+    judgeMeData = me;
+
+    const isInternal = me.judge_type === 'INTERNAL';
+    const typeLabel = isInternal ? 'Internal Judge' : 'External Judge';
+
+    document.getElementById('jdash-topbar-panel').textContent = `Panel ${me.panel_code}`;
+    document.getElementById('jdash-topbar-type').textContent = typeLabel;
+    document.getElementById('jdash-badge-panel').textContent = `Panel ${me.panel_code}`;
+    document.getElementById('jdash-badge-type').textContent = typeLabel;
+    document.getElementById('jdash-badge-type').className = `status-pill-badge ${isInternal ? 'pill-blue' : 'pill-purple'}`;
+
+    if (me.profile) {
+      document.getElementById('jdash-name').textContent = me.profile.full_name || me.username;
+      document.getElementById('jdash-avatar').textContent = (me.profile.full_name || me.username).charAt(0).toUpperCase();
+      const org = isInternal ? me.profile.institution_name : me.profile.company_name;
+      document.getElementById('jdash-sub').textContent = `${me.profile.designation || 'Judge'} • ${org || 'RMK Hackathon'}`;
+      document.getElementById('jdash-email').textContent = me.profile.email || '—';
+      document.getElementById('jdash-phone').textContent = me.profile.phone_no || '—';
+    }
+
+    loadJudgeProjects();
+  } catch (err) {
+    console.error('[ERROR] initJudgeDashboard:', err);
+  }
+}
+
+async function loadJudgeProjects() {
+  if (!judgeToken) return;
+
+  try {
+    const res = await fetch('/api/jury/projects', {
+      headers: { Authorization: 'Bearer ' + judgeToken }
+    });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    currentJudgeProjects = data.projects || [];
+
+    const total = currentJudgeProjects.length;
+    const completed = currentJudgeProjects.filter(p => p.evaluation && p.evaluation.status === 'SUBMITTED').length;
+    const pending = total - completed;
+    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    document.getElementById('jdash-stat-total').textContent = total;
+    document.getElementById('jdash-stat-completed').textContent = completed;
+    document.getElementById('jdash-stat-pending').textContent = pending;
+    document.getElementById('jdash-stat-progress').textContent = `${progress}%`;
+
+    const emptyBox = document.getElementById('jdash-empty-state');
+    const tableContainer = document.getElementById('jdash-projects-container');
+    const emptyMsg = document.getElementById('jdash-empty-msg');
+
+    if (total === 0) {
+      emptyBox.classList.remove('hidden');
+      tableContainer.classList.add('hidden');
+      if (judgeMeData) {
+        emptyMsg.textContent = `Project allocations for Panel ${judgeMeData.panel_code} will be published by the hackathon coordinators. Once teams are assigned to your panel, your evaluation sheets will appear here automatically.`;
+      }
+    } else {
+      emptyBox.classList.add('hidden');
+      tableContainer.classList.remove('hidden');
+      renderJudgeProjects(currentJudgeProjects);
+    }
+  } catch (err) {
+    console.error('[ERROR] loadJudgeProjects:', err);
+  }
+}
+
+function renderJudgeProjects(projects) {
+  const tbody = document.getElementById('jdash-projects-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = projects.map(p => {
+    const isSubmitted = p.evaluation && p.evaluation.status === 'SUBMITTED';
+    const isDraft = p.evaluation && p.evaluation.status === 'DRAFT';
+
+    let statusPill = '<span class="status-pill-badge pill-absent">Not Evaluated</span>';
+    if (isSubmitted) {
+      statusPill = `<span class="status-pill-badge pill-present">Submitted (${p.evaluation.total_score} pts)</span>`;
+    } else if (isDraft) {
+      statusPill = `<span class="status-pill-badge pill-amber">Draft Saved (${p.evaluation.total_score} pts)</span>`;
+    }
+
+    return `
+      <tr>
+        <td data-label="Team ID"><span class="table-team-id mono">${escapeHtml(p.team_code)}</span></td>
+        <td data-label="Project">
+          <div class="table-team-title">${escapeHtml(p.project_title || p.team_name)}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(p.team_name)}</div>
+        </td>
+        <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>
+        <td data-label="School">${escapeHtml(p.college_name || '—')}</td>
+        <td data-label="My Evaluation">${statusPill}</td>
+        <td data-label="Action">
+          <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm" onclick="openEvaluationModal(${p.team_id})">
+            ${isSubmitted ? 'View Evaluation' : (isDraft ? 'Resume Evaluation' : 'Evaluate')}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function openEvaluationModal(teamId) {
+  currentEvalTeamId = teamId;
+  const project = currentJudgeProjects.find(p => p.team_id === teamId);
+  if (!project) return;
+
+  document.getElementById('eval-modal-team-code').textContent = project.team_code;
+  document.getElementById('eval-modal-team-name').textContent = project.team_name;
+  document.getElementById('eval-modal-proj-title').textContent = `${project.project_title || '—'} • ${project.category || 'Innovation'}`;
+
+  const criteriaBox = document.getElementById('eval-criteria-container');
+  criteriaBox.innerHTML = '<div class="qr-loading">Loading scoring criteria...</div>';
+  document.getElementById('eval-error').classList.add('hidden');
+  document.getElementById('modal-jury-evaluation').classList.remove('hidden');
+
+  try {
+    // 1. Fetch Criteria
+    const critRes = await fetch('/api/jury/criteria', { headers: { Authorization: 'Bearer ' + judgeToken } });
+    const critData = await critRes.json();
+    currentJudgeCriteria = critData.criteria || [];
+
+    // 2. Fetch existing evaluation (if draft or submitted)
+    const evalRes = await fetch(`/api/jury/evaluations/${teamId}`, { headers: { Authorization: 'Bearer ' + judgeToken } });
+    const evalData = await evalRes.json();
+    currentEvalExisting = evalData.evaluation;
+
+    const existingScoresMap = new Map();
+    if (evalData.scores) {
+      evalData.scores.forEach(s => existingScoresMap.set(s.criterion_id, s.score));
+    }
+
+    const isSubmitted = currentEvalExisting && currentEvalExisting.status === 'SUBMITTED';
+
+    // Status pill
+    const statusPill = document.getElementById('eval-modal-status-pill');
+    statusPill.textContent = isSubmitted ? 'Submitted (Locked)' : 'Draft';
+    statusPill.className = `status-pill-badge ${isSubmitted ? 'pill-present' : 'pill-absent'}`;
+
+    // Remarks
+    document.getElementById('eval-remarks').value = currentEvalExisting ? (currentEvalExisting.remarks || '') : '';
+    document.getElementById('eval-remarks').disabled = isSubmitted;
+
+    // Action buttons
+    document.getElementById('btn-eval-draft').classList.toggle('hidden', isSubmitted);
+    const submitBtn = document.getElementById('btn-eval-submit');
+    submitBtn.textContent = isSubmitted ? 'Already Final Submitted' : 'Submit Final Evaluation';
+    submitBtn.disabled = isSubmitted;
+
+    // Build Criteria HTML
+    criteriaBox.innerHTML = currentJudgeCriteria.map(c => {
+      const savedScore = existingScoresMap.has(c.id) ? existingScoresMap.get(c.id) : 0;
+      return `
+        <div class="eval-criterion-card" data-crit-id="${c.id}" data-max-score="${c.max_score}">
+          <div class="criterion-card-head">
+            <div class="criterion-title-wrap">
+              <span class="criterion-code-tag">${escapeHtml(c.criterion_code)}</span>
+              <span class="criterion-title">${escapeHtml(c.title)}</span>
+            </div>
+            <span class="criterion-max-tag">Max: ${c.max_score} pts</span>
+          </div>
+
+          <p class="criterion-desc">${escapeHtml(c.description || '')}</p>
+
+          <div class="criterion-input-row">
+            <input type="range" class="criterion-range-slider" min="0" max="${c.max_score}" step="0.5" value="${savedScore}" 
+                   oninput="syncCritInput(this, 'slider')" ${isSubmitted ? 'disabled' : ''} />
+            <input type="number" class="criterion-number-input" min="0" max="${c.max_score}" step="0.5" value="${savedScore}" 
+                   oninput="syncCritInput(this, 'number')" ${isSubmitted ? 'disabled' : ''} />
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    updateTotalScoreDisplay();
+  } catch (err) {
+    console.error('[ERROR] openEvaluationModal:', err);
+    criteriaBox.innerHTML = '<div class="glass-alert-error">Failed to load criteria.</div>';
+  }
+}
+
+function syncCritInput(elem, type) {
+  const card = elem.closest('.eval-criterion-card');
+  const slider = card.querySelector('.criterion-range-slider');
+  const number = card.querySelector('.criterion-number-input');
+  const max = parseFloat(card.dataset.maxScore) || 20;
+
+  let val = parseFloat(elem.value) || 0;
+  if (val < 0) val = 0;
+  if (val > max) val = max;
+
+  if (type === 'slider') {
+    number.value = val;
+  } else {
+    slider.value = val;
+  }
+
+  updateTotalScoreDisplay();
+}
+
+function updateTotalScoreDisplay() {
+  let total = 0;
+  let maxPossible = 0;
+
+  document.querySelectorAll('.eval-criterion-card').forEach(card => {
+    const num = card.querySelector('.criterion-number-input');
+    const max = parseFloat(card.dataset.maxScore) || 20;
+    total += parseFloat(num.value) || 0;
+    maxPossible += max;
+  });
+
+  document.getElementById('eval-modal-total-score').textContent = `${total} / ${maxPossible}`;
+}
+
+function closeEvaluationModal() {
+  const modal = document.getElementById('modal-jury-evaluation');
+  if (modal) modal.classList.add('hidden');
+  currentEvalTeamId = null;
+  currentEvalExisting = null;
+}
+
+function collectEvaluationScores() {
+  const scores = [];
+  document.querySelectorAll('.eval-criterion-card').forEach(card => {
+    const critId = parseInt(card.dataset.critId, 10);
+    const num = card.querySelector('.criterion-number-input');
+    scores.push({
+      criterion_id: critId,
+      score: parseFloat(num.value) || 0
+    });
+  });
+  return scores;
+}
+
+async function saveEvaluationDraft() {
+  if (!currentEvalTeamId) return;
+  const scores = collectEvaluationScores();
+  const remarks = document.getElementById('eval-remarks').value;
+  const errBox = document.getElementById('eval-error');
+  errBox.classList.add('hidden');
+
+  try {
+    const res = await fetch(`/api/jury/evaluations/${currentEvalTeamId}/draft`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + judgeToken
+      },
+      body: JSON.stringify({ scores, remarks })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errBox.textContent = data.error || 'Failed to save draft';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    showToast('Evaluation draft saved successfully', 'info');
+    loadJudgeProjects();
+  } catch (err) {
+    console.error('[ERROR] saveEvaluationDraft:', err);
+    errBox.textContent = 'Server connection error';
+    errBox.classList.remove('hidden');
+  }
+}
+
+async function submitEvaluationFinal() {
+  if (!currentEvalTeamId) return;
+  const errBox = document.getElementById('eval-error');
+  errBox.classList.add('hidden');
+
+  if (!confirm('Are you sure you want to final-submit this evaluation? Once submitted, your scores and feedback will be locked and cannot be edited.')) {
+    return;
+  }
+
+  const scores = collectEvaluationScores();
+  const remarks = document.getElementById('eval-remarks').value;
+
+  try {
+    const res = await fetch(`/api/jury/evaluations/${currentEvalTeamId}/submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + judgeToken
+      },
+      body: JSON.stringify({ scores, remarks })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errBox.textContent = data.error || 'Failed to submit evaluation';
+      errBox.classList.remove('hidden');
+      return;
+    }
+
+    showToast('Final evaluation submitted and locked successfully!', 'info');
+    closeEvaluationModal();
+    loadJudgeProjects();
+  } catch (err) {
+    console.error('[ERROR] submitEvaluationFinal:', err);
+    errBox.textContent = 'Server connection error';
+    errBox.classList.remove('hidden');
+  }
+}
+
+// ─── Attach to global window scope for inline HTML handlers ───
+window.switchJuryAdminSection = switchJuryAdminSection;
+window.loadJuryAdminPanels = loadJuryAdminPanels;
+window.loadJuryAdminStats = loadJuryAdminStats;
+window.setJuryAdminFilter = setJuryAdminFilter;
+window.handleJuryAdminSearch = handleJuryAdminSearch;
+window.resetJudgePassword = resetJudgePassword;
+window.toggleJudgeStatus = toggleJudgeStatus;
+window.logoutJuryAdmin = logoutJuryAdmin;
+window.loadJuryAdminEvaluations = loadJuryAdminEvaluations;
+window.handleJuryEvalsSearch = handleJuryEvalsSearch;
+window.openAdminEvalDetail = openAdminEvalDetail;
+window.closeAdminEvalModal = closeAdminEvalModal;
+
+window.logoutJudge = logoutJudge;
+window.reviewJudgeRegistration = reviewJudgeRegistration;
+window.editJudgeRegistration = editJudgeRegistration;
+window.submitJudgeRegistration = submitJudgeRegistration;
+window.loadJudgeProjects = loadJudgeProjects;
+window.openEvaluationModal = openEvaluationModal;
+window.closeEvaluationModal = closeEvaluationModal;
+window.syncCritInput = syncCritInput;
+window.saveEvaluationDraft = saveEvaluationDraft;
+window.submitEvaluationFinal = submitEvaluationFinal;
