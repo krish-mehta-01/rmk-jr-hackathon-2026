@@ -11198,3 +11198,36 @@ All files are saved, committed to GitHub, and available for download directly fr
    - Quick venue cards beneath the map preview updated to reflect the 15-panel room breakdown.
 3. **Committed & Deployed**:
    - Pushed commit 68b68cf to GitHub main for auto-deploy on Render.
+### 🧑 Krish · 12 Nov 2026, 13:18 IST
+
+> its not looking good
+
+### 🧑 Krish · 12 Nov 2026, 13:19 IST
+
+> search web for rmk map
+
+### 🧑 Krish · 12 Nov 2026, 13:21 IST
+
+> new block is removed
+
+### 🧑 Krish · 12 Nov 2026, 13:21 IST
+
+> dont mention to much detail just mention block name and road and arrows *way)
+
+---
+
+### 🤖 Antigravity · 12 Nov 2026, 13:26 IST
+
+#### Clean 3D Navigation Map (Minimal Labels, New Block Removed)
+1. **Regenerated Clean 3D Map (rontend/assets/campus_venue_map.jpg)**:
+   - **Only 2 Blocks Shown**:
+     - RJ Block (Main Block)
+     - SV Block (Auditorium)
+   - **New Block Removed**: Completely eliminated New Block from the campus illustration.
+   - **Minimalist Aesthetic**:
+     - Removed all dense text boxes, floor lists, and panel numbers from the image.
+     - Kept only clean block names, the entrance gate (RMK Engineering College Main Gate), the highway (Chennai - Tada Highway), and prominent red directional arrows showing the participant routes.
+2. **Frontend UI Cleaned**:
+   - Removed New Block card from rontend/index.html and rontend/app.js, displaying only the two active blocks: RJ Block & SV Block.
+3. **Pushed & Live**:
+   - Pushed commit 4c5dfdd to GitHub main for auto-deploy on Render.
