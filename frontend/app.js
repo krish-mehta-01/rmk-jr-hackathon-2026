@@ -995,7 +995,7 @@ function renderThemes() {
                     </td>
                     <td class="theme-td-idea">
                       <div class="theme-roster-project-title">${escapeHtml(t.project_title || '—')}</div>
-                      ${t.category ? `<div class="theme-roster-theme-tag">🎯 ${escapeHtml(t.category)}</div>` : ''}
+                      ${t.category ? `<div class="theme-roster-theme-tag">${escapeHtml(t.category)}</div>` : ''}
                     </td>
                     <td class="theme-td-members">
                       <div class="theme-roster-leader"><strong>Leader:</strong> ${escapeHtml(t.leader_name || '—')} ${t.mobile_no ? `(${escapeHtml(t.mobile_no)})` : ''}</div>
@@ -1127,7 +1127,7 @@ function renderThemes() {
                       <span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span>
                     </div>
                     <div class="theme-roster-team-name">${escapeHtml(t.team_name || '—')}</div>
-                    ${t.venue ? `<div class="theme-roster-venue-hint">📍 ${escapeHtml(t.venue)}</div>` : ''}
+                    ${t.venue ? `<div class="theme-roster-venue-hint">${escapeHtml(t.venue)}</div>` : ''}
                   </td>
                   <td class="theme-td-idea">
                     <div class="theme-roster-project-title">${escapeHtml(t.project_title || '—')}</div>

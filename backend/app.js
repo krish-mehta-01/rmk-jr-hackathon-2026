@@ -1,4 +1,4 @@
-// Build: v20261112_r8_15_venue_tiles_and_scroll_fix - 15 Venue Tiles by Default, No Panel Labels, 500 Teams Limit for Full Scroll, Clean Arrows-Only Campus Map
+// Build: v20261112_r10_table_gap_and_straight_sv_map - Decreased Mentor Gap, Table Layout Fixed, Zero Cars Straight SV Map, No Emojis
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
