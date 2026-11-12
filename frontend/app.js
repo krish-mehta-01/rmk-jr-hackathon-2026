@@ -264,12 +264,15 @@ function renderVenueMap(team) {
   let blockName = '';
   let activeBlockId = '';
 
-  if (venue.includes('RJ BLOCK')) {
+  if (venue.includes('RJ BLOCK') || venue.includes('IDEA LAB') || venue.includes('CO-WORK') || venue.includes('CO WORK')) {
     blockName = 'RJ Block';
     activeBlockId = 'dir-block-rj';
   } else if (venue.includes('SV BLOCK')) {
     blockName = 'SV Block';
     activeBlockId = 'dir-block-sv';
+  } else if (venue.includes('VR BLOCK')) {
+    blockName = 'VR Block';
+    activeBlockId = 'dir-block-vr';
   }
 
   const badge = document.getElementById('pass-map-block-name');
