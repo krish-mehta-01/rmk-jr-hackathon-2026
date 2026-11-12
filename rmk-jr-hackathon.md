@@ -11315,3 +11315,40 @@ All files are saved, committed to GitHub, and available for download directly fr
    - Updated `frontend/index.html` and `frontend/app.js` to remove '(Main Block)' and clarify SV Block side/front entrances.
 6. **Deployed**:
    - Pushed commit `07c75f6` to GitHub main for auto-deploy on Render.
+
+
+---
+
+### Update (Nov 12, 2026 - 15:32 IST): 15 Venue Tiles, Panel Number Removal, 500-Team Scroll Fix, and Clean Arrows-Only Map Deployment
+
+#### 1. Teams Scrolling Cutoff Fixed (Upgraded from 200 to 500 Teams)
+* **Root Cause**: `frontend/app.js` had requested `/api/admin/teams?limit=200` by default. As a result, the admin table stopped rendering at team #200, hiding teams #201–282.
+* **Resolution**: Updated `limit` in `frontend/app.js` to `500` (`/api/admin/teams?limit=500`). The table now displays all **282 teams** smoothly without cutoff.
+
+#### 2. Admin Venue View Defaulted to Exactly 15 Venue Tiles
+* **15 Dedicated Venue Cards**: In `frontend/app.js`, `renderThemes()` now branches on `venueDisplayMode === 'venue'` (the default mode), directly mapping `rawVenuesData` (15 items).
+* **Assigned Themes Listed Under Each Venue**: Each card displays:
+  * Card Header: Venue Name (e.g., `Idea Lab I (RJ Block)`, `Corporate Centre-A (RJ Block)`)
+  * Header Pill: `Venue`
+  * Sub-row: `Assigned Themes:` listing all tracks evaluated in that room with `.theme-track-pill` chips.
+  * Real-time metrics: Team count, attendance scanned count, and progress bar.
+* **Panel Numbers Completely Omitted**: Per user instruction (*"panel are 15 and venue are 15 so theri will beno neeed to even mention panel no. in here"*), all references to `Panel 1`, `Panel 2`, etc., have been removed from the venue card titles, tags, and table rows.
+* **Expandable Roster**: Shows all teams assigned to each venue with Team ID, Team Name, Project & Theme Track, Leader, Members, School, and real-time attendance toggle.
+
+#### 3. Data Audit: 282 Database Teams vs. 298 Form Submissions / 299 Summary Total
+* **Google Form Submissions**: 298 total submission rows.
+* **Duplicate Submissions**: Exactly 16 submissions were repeat entries by students submitting twice or thrice:
+  1. `S.YUVAN` (Holy Infant Jesus MHSS) – 3 submissions (Rows 278, 279, 280)
+  2. `Priyanka.S` (GK Shetty VV) – 2 submissions (Rows 195, 198)
+  3. `Nishanthini.R` (Holy Infant Jesus MHSS) – 2 submissions (Rows 199, 201)
+  4. `Aswin.B` (Sriram Vidhya Mandir) – 2 submissions (Rows 219, 220)
+  5. `Manasha S` (DAV Sr. Secondary School) – 2 submissions (Rows 240, 246)
+  6. `SANJAY Y` (Infant Jesus MHSS) – 2 submissions (Rows 18, 277)
+  7. `Mona Sree.A` (Velammal Vidyalaya Avadi) – 2 submissions (Rows 295, 296)
+  8. `Kathir velan D` (Sri Ram Vidhya Mandir) – 2 submissions (Rows 188, 297)
+  9. `A. Mohammed heniba` (Govt Boys HSS) – 2 submissions (Rows 125, 126)
+* **Deduplicated Total**: $298 - 16 = \mathbf{282}$ unique teams. Every single valid registration is present in the database (`RMKJH261001` through `RMKJH261282`).
+
+#### 4. Clean Arrows-Only Campus Map Deployed
+* High-resolution aerial rendering with lush RMK greenery deployed to `frontend/assets/campus_venue_map.jpg`.
+* Strictly arrows only: Removed all "Auditorium" and "First Floor" text labels, removed the top header ribbon, and removed "Main Block" text.
