@@ -5,14 +5,14 @@ const DEFAULT_THEME_VENUES = {
   'Renewable/Sustainable Energy': 'Idea Lab I (RJ Block)',
   'Agriculture': 'Second Floor Seminar Hall-A (RJ Block)',
   'Healthcare': 'Co-Work Space (RJ Block)',
-  'Education': 'VR Block Ground Floor - A',
+  'Education': 'Ground Floor - A (VR Block)',
   'Robotics': 'Seminar Hall 3 (SV Block)',
   'Smart Automation': 'First Floor Seminar Hall-A (RJ Block)',
   'Smart Vehicles': 'Idea Lab II (RJ Block)',
-  'Traditional Games of Indian Ethos': 'VR Block Ground Floor - B',
-  'Virtual Reality Experience': 'VR Block First Floor - A',
-  'Clean and Green Environment': 'VR Block First Floor - B',
-  'Indian Heritage and Digital Creativity': 'VR Block Ground Floor - B',
+  'Traditional Games of Indian Ethos': 'Ground Floor - B (VR Block)',
+  'Virtual Reality Experience': 'First Floor - A (VR Block)',
+  'Clean and Green Environment': 'First Floor - B (VR Block)',
+  'Indian Heritage and Digital Creativity': 'Ground Floor - B (VR Block)',
   'AI for Disater Management': 'Seminar Hall 1 (SV Block)'
 };
 
