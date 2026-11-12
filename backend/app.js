@@ -1,4 +1,4 @@
-// Build: v20261112_r13_standardized_venue_format_and_3block_depth_map - Standardized venue format '[Room] ([Block])' and 3-block front-to-back campus map
+// Build: v20261112_r14_vr_block_top_right_map - VR Block positioned on the top-right side along right perimeter road
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
