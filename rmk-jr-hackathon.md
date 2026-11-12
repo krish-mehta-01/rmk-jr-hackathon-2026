@@ -11008,3 +11008,146 @@ All your project transcripts are safely organized in your master folder:
 > 
 > _[Attachment: image/png]_
 
+### 🤖 Antigravity · 12 Nov 2026, 08:01 IST
+
+# 15-Panel Jury & Venue Allocation — Completed & Deployed
+
+The updated 15-panel jury split has been configured across the database, backend APIs, student passes, admin views, and all 4 printable/downloadable rosters.
+
+---
+
+### 1. TiDB Cloud Allocation Summary (282 Teams Total)
+
+All 282 teams across 12 domain themes have been assigned their `panel_no` (1–15) and designated `venue`:
+
+| Panel | Theme(s) & Team Slice | Allocated Venue | Teams Count |
+| :---: | :--- | :--- | :---: |
+| **Panel 1** | Renewable / Sustainable Energy (Teams 1–19) | Idea Lab I (RJ Block) | 19 |
+| **Panel 2** | Agriculture (Teams 1–22) | RJ Block, Second Floor Seminar Hall-A | 22 |
+| **Panel 3** | Agriculture (Teams 23–40) | RJ Block, Second Floor Seminar Hall-B | 18 |
+| **Panel 4** | Health Care (Teams 1–19) | Co-Work Space (RJ Block) | 19 |
+| **Panel 5** | Education (Teams 1–17) | Corporate Centre (RJ Block)-D | 17 |
+| **Panel 6** | Robotics (Teams 1–20) | SV Block Seminar Hall 3 | 20 |
+| **Panel 7** | Smart Automation (Teams 1–20) | RJ Block, First Floor Seminar Hall-A | 20 |
+| **Panel 8** | Smart Automation (Teams 21–40) | RJ Block, First Floor Seminar Hall-B | 20 |
+| **Panel 9** | Smart Vehicles (Teams 1–19) | Idea Lab II (RJ Block) | 19 |
+| **Panel 10** | Traditional Games of Indian Ethos (1–9) & Indian Heritage (1–9) | Corporate Centre (RJ Block)-A | 18 |
+| **Panel 11** | Smart Automation (41–49) & Virtual Reality Experience (1–8) | Corporate Centre (RJ Block)-C | 17 |
+| **Panel 12** | Clean and Green Environment (Teams 1–21) | Corporate Centre (RJ Block)-B | 21 |
+| **Panel 13** | AI for Disaster Management (Teams 1–20) | SV Block Seminar Hall 1 | 20 |
+| **Panel 14** | AI for Disaster Management (Teams 21–38) | SV Block Seminar Hall 2 | 18 |
+| **Panel 15** | Renewable Energy (20–23), Healthcare (20–23), Smart Vehicles (20–25) | Corporate Centre (RJ Block)-E | 14 |
+| **Total** | **All 12 Registered Domains** | **15 Evaluation Venues** | **282 Teams** |
+
+*Verification*: Exactly **0** teams have `NULL` panel or venue. 100% of registrations are mapped.
+
+---
+
+### 2. Student Team Pass & Admin Portal Updates
+
+1. **Student Team Pass (`/api/team/login`, `/api/team/status`)**:
+   - The pass view now returns and displays the team's dedicated **Panel Badge** alongside their **Sitting Place**:
+     > `Allocated Panel & Sitting Place: [Panel 2] RJ Block, Second Floor Seminar Hall-A`
+   - Campus block auto-highlight (RJ Block vs SV Block) activates appropriately upon checking in.
+2. **Admin Themes & Venue Roster**:
+   - Each registered team row now shows an inline `Panel [X]` tag and venue indicator.
+   - Admin search allows searching directly by panel number, venue name, theme, or team code.
+3. **Admin All Teams Table**:
+   - Expanding any team's details displays their **Panel & Venue** allocation.
+
+---
+
+### 3. Regenerated Deliverables (15 Panels Segregated)
+
+All 4 deliverables have been regenerated with the 15-panel jury sheets, institutional styling (deep green `#166534` headers, subtle mint `#F0FDF4` zebra rows, and thin `#000000` black borders):
+
+1. **[RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx)**
+   - 16 total worksheets: `Summary` sheet with all 15 panel rooms, jury sign-off columns, plus 15 individual worksheets (`Panel 1` to `Panel 15`) with full team member details.
+2. **[RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx)**
+   - Formatted Word document with 15 panel sections, dual logos, mint ribbon banners, and the 8-column layout including `Team Members` and `Theme Track`.
+3. **[RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf)**
+   - Exported directly via Word COM engine.
+4. **[RMK_Junior_Hackathon_2026_Presence_Roster.xlsx](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Presence_Roster.xlsx)**
+   - Master registration and attendance roster containing all 282 teams with `Panel No.` and updated venues.
+
+*(Copies are synchronized in workspace root, `public/exports/`, and brain artifacts).*
+
+---
+
+### 4. Production Deployment & Transcripts
+
+- **Live Service**: Verified operational on Render production (`GET /api/health` returned commit `d290387`).
+- **Live Login Verified**:
+  - Sample Agriculture Team 1 (`RMKJH261006`): `Panel 2 | RJ Block, Second Floor Seminar Hall-A`
+  - Sample Agriculture Team 26 (`RMKJH261169`): `Panel 3 | RJ Block, Second Floor Seminar Hall-B`
+  - Sample Disaster Mgmt Team (`RMKJH261018`): `Panel 13 | SV Block Seminar Hall 1`
+- **Transcript Logs**: Updated in `KrishMehta/transcripts/rmk-jr-hackathon.md`, cache previews, and local project workspace.
+
+### 🧑 Krish · 12 Nov 2026, 07:45 IST
+
+> I hope changes reflect in exported files too !!
+
+### 🤖 Antigravity · 12 Nov 2026, 08:02 IST
+
+**Yes, 100% verified! Every exported deliverable now fully reflects the 15-Panel Jury Allocation.**
+
+An automated file inspection audit was performed across all 4 exported files to confirm the data:
+
+---
+
+### Audit Verification Results
+
+#### 1. Venue-Wise Segregated Excel — [`RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx`](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx)
+* **Worksheets**: Exactly **16 worksheets** (`Summary`, `Panel 1`, `Panel 2`, ..., `Panel 15`).
+* **Summary Ribbon**: `15-PANEL JURY VENUE ALLOCATION SUMMARY • 15 Evaluation Panels • 282 Registered Teams`
+* **Panel Sheets**: Each sheet contains its dedicated Jury Evaluation table with **dual letterhead logos**, emerald headers (`#166534`), and column 4 containing **Team Members**.
+
+---
+
+#### 2. Venue-Wise Word Document — [`RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx`](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.docx)
+* **Banners**: Formatted into **15 distinct panel sections** with mint ribbon headers:
+  * *Panel 1*: `Idea Lab I (RJ Block)` (19 teams)
+  * *Panel 2*: `RJ Block, Second Floor Seminar Hall-A` (22 teams)
+  * *Panel 3*: `RJ Block, Second Floor Seminar Hall-B` (18 teams)
+  * *Panel 4*: `Co-Work Space (RJ Block)` (19 teams)
+  * *... through to Panel 15*: `Corporate Centre (RJ Block)-E` (14 teams)
+* **Columns**: 8-column layout (`Sl. No.`, `Junior Hackathon ID`, `Team Leader Name`, `Team Members`, `Team Name`, `Title of Your Project`, `Theme Track`, `School Name`).
+
+---
+
+#### 3. Venue-Wise PDF Document — [`RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf`](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Venue_Wise_Teams.pdf)
+* **Page Count**: **30 pages** generated via Microsoft Word COM engine.
+* **Layout**: Complete with dual logos, zero overlaps, and crisp thin black borders (`#000000`).
+
+---
+
+#### 4. Master Presence Roster — [`RMK_Junior_Hackathon_2026_Presence_Roster.xlsx`](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/RMK_Junior_Hackathon_2026_Presence_Roster.xlsx)
+* **Row 5 Column 12**: Added **`Panel No.`** column.
+* **Row 5 Column 13**: Updated **`Allocated Venue`** for every single team out of all 282 rows.
+
+---
+
+### Download & Access
+All files are saved, committed to GitHub, and available for download directly from the admin export menu on the live site:
+- **Live Portal**: [https://rmkjuniorhackathon2026.onrender.com/](https://rmkjuniorhackathon2026.onrender.com/) *(Admin Export Dropdown)*
+- **Local Directory**: [`public/exports/`](file:///c:/Users/krish/Documents/RMK%20Engineering%20College/RMK%20Jr.%20hackathon/public/exports/)
+
+### 🧑 Krish · 12 Nov 2026, 12:17 IST
+
+> split venue wise in that venue option for admin let it be
+> Idea Lab I
+> Corporate Centre (RJ Block)-A
+> Corporate Centre (RJ Block)-B
+> Corporate Centre (RJ Block)-C
+> Corporate Centre (RJ Block)-D
+> Corporate Centre (RJ Block)-E
+> 	RJ Block, First Floor Seminar Hall-A
+> RJ Block, First Floor Seminar Hall-B
+> etc etc
+> 
+> like this and assigned teams listed under this
+> 
+> enter like Idea Lab I (RJ Block)
+> Corporate Centre-E (RJ Block)
+> First Floor Seminar Hall-A (RJ Block) etc etc
+
