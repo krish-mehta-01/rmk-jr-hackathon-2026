@@ -1,0 +1,297 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="100%" height="100%" style="background:#1b3824; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Shadow filters -->
+    <filter id="building-shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="pill-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="glow-red" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ef4444" flood-opacity="0.9"/>
+    </filter>
+
+    <!-- Gradients -->
+    <linearGradient id="lawn-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e4428"/>
+      <stop offset="100%" stop-color="#16351f"/>
+    </linearGradient>
+
+    <linearGradient id="road-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2a2e35"/>
+      <stop offset="50%" stop-color="#343942"/>
+      <stop offset="100%" stop-color="#2a2e35"/>
+    </linearGradient>
+
+    <linearGradient id="rj-roof" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c86743"/>
+      <stop offset="50%" stop-color="#a84e2d"/>
+      <stop offset="100%" stop-color="#8a3c1e"/>
+    </linearGradient>
+
+    <linearGradient id="sv-glass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="40%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+
+    <linearGradient id="vr-facade" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="50%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+
+    <!-- Arrow Marker -->
+    <marker id="arrow-head" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="#ef4444" />
+    </marker>
+  </defs>
+
+  <!-- 1. CAMPUS LAWN BACKGROUND -->
+  <rect x="0" y="0" width="1600" height="1200" fill="url(#lawn-grad)"/>
+
+  <!-- Subtle Campus Perimeter Fence / Wall -->
+  <rect x="25" y="25" width="1550" height="1065" fill="none" stroke="#375a3e" stroke-width="4" stroke-dasharray="16 8" rx="16"/>
+
+  <!-- Perimeter Trees / Landscape Clustered on Outer Edges -->
+  <!-- Left Perimeter Trees -->
+  <g fill="#164322" opacity="0.85">
+    <circle cx="50" cy="150" r="32"/><circle cx="65" cy="230" r="36"/><circle cx="50" cy="310" r="30"/>
+    <circle cx="60" cy="400" r="34"/><circle cx="55" cy="500" r="38"/><circle cx="65" cy="620" r="35"/>
+    <circle cx="50" cy="740" r="36"/><circle cx="60" cy="850" r="34"/><circle cx="55" cy="950" r="32"/>
+    <circle cx="70" cy="180" r="28" fill="#20562e"/><circle cx="75" cy="360" r="26" fill="#20562e"/>
+    <circle cx="80" cy="560" r="30" fill="#20562e"/><circle cx="75" cy="780" r="28" fill="#20562e"/>
+  </g>
+  <!-- Right Perimeter Trees -->
+  <g fill="#164322" opacity="0.85">
+    <circle cx="1550" cy="150" r="32"/><circle cx="1535" cy="230" r="36"/><circle cx="1550" cy="310" r="30"/>
+    <circle cx="1540" cy="400" r="34"/><circle cx="1545" cy="500" r="38"/><circle cx="1535" cy="620" r="35"/>
+    <circle cx="1550" cy="740" r="36"/><circle cx="1540" cy="850" r="34"/><circle cx="1545" cy="950" r="32"/>
+    <circle cx="1530" cy="180" r="28" fill="#20562e"/><circle cx="1525" cy="360" r="26" fill="#20562e"/>
+    <circle cx="1520" cy="560" r="30" fill="#20562e"/><circle cx="1525" cy="780" r="28" fill="#20562e"/>
+  </g>
+
+  <!-- 2. HIGHWAY AT BOTTOM -->
+  <rect x="0" y="1100" width="1600" height="100" fill="#22252a"/>
+  <!-- Highway lane markings -->
+  <line x1="0" y1="1150" x2="1600" y2="1150" stroke="#f1f5f9" stroke-width="4" stroke-dasharray="35 25" opacity="0.85"/>
+  <rect x="0" y="1092" width="1600" height="8" fill="#94a3b8" opacity="0.4"/>
+
+  <!-- Highway Label -->
+  <text x="800" y="1178" fill="#f8fafc" font-size="24" font-weight="700" letter-spacing="3" text-anchor="middle">CHENNAI - TADA HIGHWAY</text>
+
+  <!-- 3. MAIN GATE -->
+  <!-- Gate plaza -->
+  <polygon points="680,1100 920,1100 900,1030 700,1030" fill="#33373f"/>
+  <!-- Gate Structure -->
+  <g filter="url(#building-shadow)">
+    <rect x="680" y="1025" width="240" height="26" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+    <rect x="710" y="1008" width="180" height="20" rx="4" fill="#e2e8f0"/>
+    <!-- Gate Arch Pillars -->
+    <rect x="690" y="1035" width="22" height="45" fill="#f1f5f9"/>
+    <rect x="785" y="1035" width="30" height="45" fill="#f1f5f9"/>
+    <rect x="888" y="1035" width="22" height="45" fill="#f1f5f9"/>
+    <text x="800" y="1022" fill="#0f172a" font-size="11" font-weight="800" letter-spacing="1" text-anchor="middle">RMK ENGINEERING COLLEGE MAIN GATE</text>
+  </g>
+
+  <!-- 4. ROADWAYS (ACCORDING TO REAL CAMPUS AERIAL LAYOUT) -->
+  <!-- Central Main Driveway (Main Gate straight up to RJ Block) -->
+  <rect x="750" y="780" width="100" height="245" fill="url(#road-grad)"/>
+  <line x1="800" y1="795" x2="800" y2="1025" stroke="#f8fafc" stroke-width="3" stroke-dasharray="20 15" opacity="0.65"/>
+  <!-- Driveway avenue trees -->
+  <g fill="#1e5229" opacity="0.85">
+    <circle cx="730" cy="830" r="16"/><circle cx="730" cy="890" r="16"/><circle cx="730" cy="950" r="16"/><circle cx="730" cy="1000" r="16"/>
+    <circle cx="870" cy="830" r="16"/><circle cx="870" cy="890" r="16"/><circle cx="870" cy="950" r="16"/><circle cx="870" cy="1000" r="16"/>
+  </g>
+
+  <!-- THE WHITE ROAD PATH (FROM USER DRAWING):
+       - Front curve around LEFT of RJ Block
+       - Behind RJ Block horizontally
+       - Turns 90 degrees UP towards VR Block on the right side
+  -->
+  <g fill="none" stroke="url(#road-grad)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer road body (width 90px) -->
+    <path d="M 750,780 
+             L 280,780 
+             A 60,60 0 0,1 220,720 
+             L 220,530 
+             A 60,60 0 0,1 280,470 
+             L 1100,470 
+             A 60,60 0 0,0 1160,410 
+             L 1160,140" 
+          stroke-width="90"/>
+  </g>
+
+  <!-- Road White Edge Lines -->
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Left outer border -->
+    <path d="M 750,825 L 280,825 A 105,105 0 0,1 175,720 L 175,530 A 105,105 0 0,1 280,425 L 1100,425 A 15,15 0 0,0 1115,410 L 1115,140"/>
+    <!-- Inner border -->
+    <path d="M 750,735 L 280,735 A 15,15 0 0,1 265,720 L 265,530 A 15,15 0 0,1 280,515 L 1100,515 A 105,105 0 0,0 1205,410 L 1205,140"/>
+  </g>
+
+  <!-- Road Center Dashed Line -->
+  <path d="M 750,780 
+           L 280,780 
+           A 60,60 0 0,1 220,720 
+           L 220,530 
+           A 60,60 0 0,1 280,470 
+           L 1100,470 
+           A 60,60 0 0,0 1160,410 
+           L 1160,140" 
+        fill="none" stroke="#f8fafc" stroke-width="3" stroke-dasharray="22 16" opacity="0.7"/>
+
+  <!-- Plaza in front of RJ Block -->
+  <rect x="660" y="745" width="280" height="35" rx="8" fill="#475569" opacity="0.35"/>
+
+
+  <!-- 5. BUILDINGS (POSITIONED ACCORDING TO USER'S AERIAL PHOTO) -->
+
+  <!-- [A] RJ BLOCK (GREEN in user sketch): Front-Center, Wide Classical Building -->
+  <g filter="url(#building-shadow)">
+    <!-- Base / Footprint -->
+    <rect x="360" y="560" width="880" height="185" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="3"/>
+    
+    <!-- Left Wing Roof -->
+    <polygon points="360,560 680,560 660,650 380,650" fill="url(#rj-roof)"/>
+    <!-- Right Wing Roof -->
+    <polygon points="920,560 1240,560 1220,650 940,650" fill="url(#rj-roof)"/>
+    
+    <!-- Central Portico / Hall Roof -->
+    <polygon points="670,550 930,550 910,660 690,660" fill="#a84e2d"/>
+    <!-- Pediment Gable Triangle in Center -->
+    <polygon points="800,530 710,580 890,580" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+    
+    <!-- Grand Entrance Pillars (White Columns) -->
+    <g fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5">
+      <rect x="735" y="660" width="14" height="65" rx="2"/>
+      <rect x="765" y="660" width="14" height="65" rx="2"/>
+      <rect x="795" y="660" width="14" height="65" rx="2"/>
+      <rect x="825" y="660" width="14" height="65" rx="2"/>
+      <rect x="855" y="660" width="14" height="65" rx="2"/>
+    </g>
+    <!-- Entrance Steps -->
+    <rect x="710" y="725" width="180" height="15" rx="3" fill="#e2e8f0"/>
+    <rect x="725" y="740" width="150" height="8" rx="2" fill="#cbd5e1"/>
+
+    <!-- Windows Rhythm Left & Right Wings -->
+    <g fill="#334155" opacity="0.6">
+      <!-- Left Windows -->
+      <rect x="400" y="665" width="16" height="24" rx="2"/><rect x="435" y="665" width="16" height="24" rx="2"/><rect x="470" y="665" width="16" height="24" rx="2"/>
+      <rect x="505" y="665" width="16" height="24" rx="2"/><rect x="540" y="665" width="16" height="24" rx="2"/><rect x="575" y="665" width="16" height="24" rx="2"/>
+      <!-- Right Windows -->
+      <rect x="1010" y="665" width="16" height="24" rx="2"/><rect x="1045" y="665" width="16" height="24" rx="2"/><rect x="1080" y="665" width="16" height="24" rx="2"/>
+      <rect x="1115" y="665" width="16" height="24" rx="2"/><rect x="1150" y="665" width="16" height="24" rx="2"/><rect x="1185" y="665" width="16" height="24" rx="2"/>
+    </g>
+  </g>
+
+  <!-- RJ Block Label Badge -->
+  <g filter="url(#pill-shadow)">
+    <rect x="700" y="585" width="200" height="42" rx="21" fill="#0f172a" stroke="#22c55e" stroke-width="2.5"/>
+    <circle cx="725" cy="606" r="8" fill="#22c55e"/>
+    <text x="805" y="612" fill="#ffffff" font-size="18" font-weight="800" letter-spacing="1.5" text-anchor="middle">RJ BLOCK</text>
+  </g>
+
+
+  <!-- [B] SV BLOCK & AUDITORIUM (RED in user sketch): Behind Left side of RJ Block -->
+  <g filter="url(#building-shadow)">
+    <!-- SV Academic Block -->
+    <rect x="360" y="240" width="380" height="175" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="3"/>
+    <!-- Glass Facade Ribbons -->
+    <rect x="375" y="255" width="350" height="145" rx="5" fill="url(#sv-glass)"/>
+    <line x1="375" y1="300" x2="725" y2="300" stroke="#93c5fd" stroke-width="2" opacity="0.6"/>
+    <line x1="375" y1="350" x2="725" y2="350" stroke="#93c5fd" stroke-width="2" opacity="0.6"/>
+    <line x1="490" y1="255" x2="490" y2="400" stroke="#93c5fd" stroke-width="2" opacity="0.5"/>
+    <line x1="610" y1="255" x2="610" y2="400" stroke="#93c5fd" stroke-width="2" opacity="0.5"/>
+    <!-- Connected Auditorium Section (Left side curved/distinct hall) -->
+    <path d="M 360,260 L 320,280 L 320,380 L 360,400 Z" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+    <!-- Entrance Portico facing the road behind RJ -->
+    <rect x="495" y="415" width="110" height="15" rx="3" fill="#f8fafc"/>
+  </g>
+
+  <!-- SV Block & Auditorium Label Badge -->
+  <g filter="url(#pill-shadow)">
+    <rect x="410" y="300" width="280" height="42" rx="21" fill="#0f172a" stroke="#ef4444" stroke-width="2.5"/>
+    <circle cx="435" cy="321" r="8" fill="#ef4444"/>
+    <text x="555" y="327" fill="#ffffff" font-size="16" font-weight="800" letter-spacing="1" text-anchor="middle">SV BLOCK &amp; AUDITORIUM</text>
+  </g>
+
+
+  <!-- [C] VR BLOCK (ORANGE in user sketch): Right Side, Upper Zone, Oriented Vertically -->
+  <g filter="url(#building-shadow)">
+    <!-- Main Vertical Block Structure -->
+    <rect x="1225" y="160" width="240" height="320" rx="10" fill="url(#vr-facade)" stroke="#f97316" stroke-width="3"/>
+    <!-- Architectural roof elements -->
+    <rect x="1245" y="180" width="200" height="280" rx="6" fill="#334155"/>
+    <!-- Windows and Glass columns -->
+    <g fill="#38bdf8" opacity="0.8">
+      <rect x="1265" y="200" width="40" height="240" rx="4"/>
+      <rect x="1325" y="200" width="40" height="240" rx="4"/>
+      <rect x="1385" y="200" width="40" height="240" rx="4"/>
+    </g>
+    <!-- Floor dividers -->
+    <g stroke="#1e293b" stroke-width="3" opacity="0.7">
+      <line x1="1245" y1="260" x2="1445" y2="260"/>
+      <line x1="1245" y1="320" x2="1445" y2="320"/>
+      <line x1="1245" y1="380" x2="1445" y2="380"/>
+    </g>
+    <!-- Entrance Canopy facing the roadway (Left side of VR block) -->
+    <rect x="1205" y="300" width="20" height="60" rx="3" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+  </g>
+
+  <!-- VR Block Label Badge -->
+  <g filter="url(#pill-shadow)">
+    <rect x="1245" y="300" width="200" height="42" rx="21" fill="#0f172a" stroke="#f97316" stroke-width="2.5"/>
+    <circle cx="1270" cy="321" r="8" fill="#f97316"/>
+    <text x="1350" y="327" fill="#ffffff" font-size="18" font-weight="800" letter-spacing="1.5" text-anchor="middle">VR BLOCK</text>
+  </g>
+
+
+  <!-- 6. VIBRANT RED NAVIGATION ROUTE ARROWS -->
+  <!-- Path 1: Main Gate -> RJ Block -->
+  <g filter="url(#glow-red)">
+    <line x1="800" y1="1025" x2="800" y2="760" stroke="#ef4444" stroke-width="6" stroke-linecap="round" marker-end="url(#arrow-head)"/>
+    <!-- Number 1 badge -->
+    <circle cx="800" cy="900" r="16" fill="#ef4444"/>
+    <text x="800" y="906" fill="#ffffff" font-size="15" font-weight="900" text-anchor="middle">1</text>
+  </g>
+
+  <!-- Path 2: Around left of RJ Block -> SV Block & Auditorium -->
+  <g filter="url(#glow-red)">
+    <path d="M 770,780 
+             L 280,780 
+             A 60,60 0 0,1 220,720 
+             L 220,530 
+             A 60,60 0 0,1 280,470 
+             L 550,470 
+             L 550,435" 
+          fill="none" stroke="#ef4444" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-head)"/>
+    <!-- Number 2 badge -->
+    <circle cx="220" cy="625" r="16" fill="#ef4444"/>
+    <text x="220" y="631" fill="#ffffff" font-size="15" font-weight="900" text-anchor="middle">2</text>
+  </g>
+
+  <!-- Path 3: Continues along road behind RJ Block, turns UP -> VR Block -->
+  <g filter="url(#glow-red)">
+    <path d="M 550,470 
+             L 1100,470 
+             A 60,60 0 0,0 1160,410 
+             L 1160,330 
+             L 1200,330" 
+          fill="none" stroke="#ef4444" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-head)"/>
+    <!-- Number 3 badge -->
+    <circle cx="1160" cy="380" r="16" fill="#ef4444"/>
+    <text x="1160" y="386" fill="#ffffff" font-size="15" font-weight="900" text-anchor="middle">3</text>
+  </g>
+
+  <!-- Clean Compass Rose in Top-Left Corner -->
+  <g transform="translate(100, 80)" opacity="0.8">
+    <circle cx="0" cy="0" r="30" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+    <polygon points="0,-24 7,0 0,-5" fill="#ef4444"/>
+    <polygon points="0,24 7,0 0,5" fill="#94a3b8"/>
+    <polygon points="0,-24 -7,0 0,-5" fill="#dc2626"/>
+    <polygon points="0,24 -7,0 0,5" fill="#cbd5e1"/>
+    <text x="0" y="-28" fill="#f8fafc" font-size="12" font-weight="800" text-anchor="middle">N</text>
+  </g>
+
+</svg>

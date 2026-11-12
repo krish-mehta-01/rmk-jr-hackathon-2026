@@ -1,4 +1,4 @@
-// Build: v20261112_r14_vr_block_top_right_map - VR Block positioned on the top-right side along right perimeter road
+// Build: v20261112_r15_real_aerial_layout_schematic_map - Campus map faithful to real aerial layout: Green RJ Block, Red SV & Auditorium, Orange VR Block, White road left loop
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
