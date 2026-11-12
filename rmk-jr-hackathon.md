@@ -11231,3 +11231,31 @@ All files are saved, committed to GitHub, and available for download directly fr
    - Removed New Block card from rontend/index.html and rontend/app.js, displaying only the two active blocks: RJ Block & SV Block.
 3. **Pushed & Live**:
    - Pushed commit 4c5dfdd to GitHub main for auto-deploy on Render.
+### 🧑 Krish · 12 Nov 2026, 13:44 IST
+
+> something like this
+> [Attachment: Hand-drawn route sketch: Main Gate -> RJ Block -> Left road to SV Block]
+
+### 🧑 Krish · 12 Nov 2026, 13:46 IST
+
+> [Attachment 1: Real photo of Srinivasa Block (SV Block) with silver-grey panels and blue glass windows]
+> [Attachment 2: Real aerial drone photo of Rajendra Naidu Block (RJ Block) with central portico and arched windows]
+
+---
+
+### 🤖 Antigravity · 12 Nov 2026, 13:50 IST
+
+#### Realistic 3D Campus Navigation Map (Sketch Route + Real Architectural Facades)
+1. **Accurate Building Architecture (rontend/assets/campus_venue_map.jpg)**:
+   - **RJ Block (Main Block)**: Modeled after the real RMK Rajendra Naidu Block drone photo — symmetrical collegiate building with cream facade, arched windows, and central entrance portico with pediment.
+   - **SV Block (Auditorium)**: Modeled after the real RMK Srinivasa Block photo — modern silver-grey panel cladding with a central band of reflective blue-tinted glass windows and 3 ground entrance doors.
+2. **Exact Hand-Drawn Sketch Navigation Flow**:
+   - Paved roadway enters through **RMK Engineering College Main Gate** on **Chennai - Tada Highway**.
+   - Red navigation arrows point straight into the central entrance of **RJ Block**.
+   - Red navigation arrows turn **LEFT** around the western flank of RJ Block, run straight up, and turn right directly into **SV Block**.
+3. **Completely Clean & Visual**:
+   - Only two blocks shown: RJ Block (Main Block) and SV Block (Auditorium).
+   - New Block completely omitted.
+   - No cluttered text boxes, floor breakdowns, or room lists.
+4. **Deployed**:
+   - Pushed commit 888d18a to GitHub main for auto-deploy on Render.
