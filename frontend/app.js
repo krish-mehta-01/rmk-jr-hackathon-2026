@@ -627,7 +627,7 @@ async function loadTeamsTable() {
   const tbody = document.getElementById('teams-table-body');
   const search = document.getElementById('admin-search-input').value.trim();
 
-  let url = '/api/admin/teams?limit=200';
+  let url = '/api/admin/teams?limit=500';
   if (currentFilter !== 'all') {
     url += '&present=' + currentFilter;
   }
@@ -771,18 +771,24 @@ function setVenueDisplayMode(mode) {
   renderThemes();
 }
 
+function getItemKey(g) {
+  return (venueDisplayMode === 'venue') ? (g.venue || `venue_${g.panel_no}`) : g.theme;
+}
+
 function safeThemeDomId(themeName) {
   return 'th-' + encodeURIComponent(themeName || 'theme').replace(/[^a-zA-Z0-9]/g, '_');
 }
 
 function updateThemeStats() {
-  const totalThemes = rawThemesData.length;
-  let assignedVenues = 0;
+  const isVenueMode = (venueDisplayMode === 'venue');
+  const sourceData = isVenueMode ? rawVenuesData : rawThemesData;
+  const totalCount = sourceData.length;
+  let assignedCount = 0;
   let totalTeams = 0;
   let totalScanned = 0;
 
-  for (const g of rawThemesData) {
-    if (g.venue && g.venue.trim()) assignedVenues++;
+  for (const g of sourceData) {
+    if (g.venue && g.venue.trim()) assignedCount++;
     totalTeams += (g.total || 0);
     totalScanned += (g.scanned || 0);
   }
@@ -794,8 +800,8 @@ function updateThemeStats() {
   const elTeams = document.getElementById('theme-stat-teams');
   const elScanned = document.getElementById('theme-stat-scanned');
 
-  if (elTotal) elTotal.textContent = totalThemes;
-  if (elVenues) elVenues.textContent = `${assignedVenues} / ${totalThemes}`;
+  if (elTotal) elTotal.textContent = totalCount;
+  if (elVenues) elVenues.textContent = `${assignedCount} / ${totalCount}`;
   if (elTeams) elTeams.textContent = totalTeams;
   if (elScanned) elScanned.textContent = `${scannedRate}%`;
 }
@@ -827,10 +833,12 @@ function renderThemes() {
   const container = document.getElementById('themes-grid');
   if (!container) return;
 
+  const isVenueMode = (venueDisplayMode === 'venue');
+  const sourceData = isVenueMode ? rawVenuesData : rawThemesData;
   const query = currentThemeSearch.toLowerCase().trim();
   const filter = currentThemeFilter;
 
-  const filtered = rawThemesData.filter(g => {
+  const filtered = sourceData.filter(g => {
     const hasVenue = Boolean(g.venue && g.venue.trim());
     
     // Filter chip logic
@@ -840,15 +848,30 @@ function renderThemes() {
 
     // Search query logic
     if (query) {
-      const matchTheme = (g.theme || '').toLowerCase().includes(query);
-      const matchVenue = (g.venue || '').toLowerCase().includes(query);
-      const matchTeam = (g.teams || []).some(t => 
-        (t.team_code || '').toLowerCase().includes(query) ||
-        (t.team_name || '').toLowerCase().includes(query) ||
-        (t.leader_name || '').toLowerCase().includes(query) ||
-        (t.college_name || '').toLowerCase().includes(query)
-      );
-      if (!matchTheme && !matchVenue && !matchTeam) return false;
+      if (isVenueMode) {
+        const matchVenue = (g.venue || '').toLowerCase().includes(query);
+        const matchThemes = (g.themes || []).some(t => (t || '').toLowerCase().includes(query));
+        const matchTeam = (g.teams || []).some(t => 
+          (t.team_code || '').toLowerCase().includes(query) ||
+          (t.team_name || '').toLowerCase().includes(query) ||
+          (t.leader_name || '').toLowerCase().includes(query) ||
+          (t.college_name || '').toLowerCase().includes(query) ||
+          (t.project_title || '').toLowerCase().includes(query) ||
+          (t.category || '').toLowerCase().includes(query)
+        );
+        if (!matchVenue && !matchThemes && !matchTeam) return false;
+      } else {
+        const matchTheme = (g.theme || '').toLowerCase().includes(query);
+        const matchVenue = (g.venue || '').toLowerCase().includes(query);
+        const matchTeam = (g.teams || []).some(t => 
+          (t.team_code || '').toLowerCase().includes(query) ||
+          (t.team_name || '').toLowerCase().includes(query) ||
+          (t.leader_name || '').toLowerCase().includes(query) ||
+          (t.college_name || '').toLowerCase().includes(query) ||
+          (t.project_title || '').toLowerCase().includes(query)
+        );
+        if (!matchTheme && !matchVenue && !matchTeam) return false;
+      }
     }
 
     return true;
@@ -858,8 +881,8 @@ function renderThemes() {
     container.innerHTML = `
       <div class="theme-empty-box glass-card">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="theme-empty-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-        <div class="theme-empty-title">No matching themes found</div>
-        <p class="theme-empty-desc">Try clearing your search query or selecting "All" themes.</p>
+        <div class="theme-empty-title">No matching ${isVenueMode ? 'venues' : 'themes'} found</div>
+        <p class="theme-empty-desc">Try clearing your search query or selecting "All".</p>
         <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="resetThemeFilters()">Clear Filters</button>
       </div>`;
     updateToggleAllButton(false);
@@ -868,18 +891,143 @@ function renderThemes() {
 
   // Auto-expand cards if searching to immediately reveal matched teams
   if (query) {
-    filtered.forEach(g => expandedThemes.add(g.theme));
+    filtered.forEach(g => expandedThemes.add(getItemKey(g)));
   }
 
-  const allVisibleExpanded = filtered.every(g => expandedThemes.has(g.theme));
+  const allVisibleExpanded = filtered.every(g => expandedThemes.has(getItemKey(g)));
   updateToggleAllButton(allVisibleExpanded);
 
   container.innerHTML = filtered.map(g => {
-    const domId = safeThemeDomId(g.theme);
-    const isOpen = expandedThemes.has(g.theme);
+    const itemKey = getItemKey(g);
+    const domId = safeThemeDomId(itemKey);
+    const isOpen = expandedThemes.has(itemKey);
     const hasVenue = Boolean(g.venue && g.venue.trim());
     const rate = g.total > 0 ? Math.round((g.scanned / g.total) * 100) : 0;
 
+    if (isVenueMode) {
+      // ─────────────────────────────────────────────
+      // 15 VENUE TILES (DEFAULT) - NO PANEL NUMBER
+      // ─────────────────────────────────────────────
+      return `
+      <div class="theme-card glass-card has-venue ${isOpen ? 'is-open' : ''}" id="${domId}">
+        
+        <!-- Venue Card Header -->
+        <div class="theme-card-header">
+          <div class="theme-card-title-group">
+            <div class="theme-category-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Venue</span>
+            </div>
+            <h3 class="theme-card-title">${escapeHtml(g.venue || 'TBD')}</h3>
+          </div>
+
+          <div class="theme-card-badges">
+            <span class="theme-metric-badge teams-count-badge">${g.total} ${g.total === 1 ? 'Team' : 'Teams'}</span>
+            <span class="theme-metric-badge scan-count-badge ${g.scanned > 0 ? 'scanned-active' : ''}">${g.scanned}/${g.total} Scanned</span>
+          </div>
+        </div>
+
+        <!-- Under Venue: List the Themes -->
+        <div class="theme-venue-section">
+          <div class="theme-venue-row">
+            <div class="theme-venue-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <span>Assigned Theme${(g.themes && g.themes.length > 1) ? 's' : ''}:</span>
+            </div>
+            <div class="theme-venue-value is-set">
+              ${(g.themes || []).map(t => `<span class="theme-track-pill">${escapeHtml(t)}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance Progress -->
+        <div class="theme-progress-strip">
+          <div class="theme-progress-track">
+            <div class="theme-progress-fill" style="width: ${rate}%;"></div>
+          </div>
+          <span class="theme-progress-label">${rate}% Scanned</span>
+        </div>
+
+        <!-- Expand / Collapse Teams Button -->
+        <button type="button" class="theme-card-expand-bar" data-key="${escapeHtml(itemKey)}" data-theme="${escapeHtml(itemKey)}" aria-expanded="${isOpen}">
+          <span class="expand-bar-left">
+            <svg class="chevron-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            <span class="expand-bar-title">${isOpen ? 'Hide' : 'Show'} Registered Teams (${g.total})</span>
+          </span>
+          <span class="expand-bar-summary">${g.scanned} Present · ${g.total - g.scanned} Pending</span>
+        </button>
+
+        <!-- Expandable Teams Roster -->
+        <div class="theme-teams-roster-box ${isOpen ? '' : 'hidden'}" id="roster-${domId}">
+          <div class="theme-roster-table-wrap">
+            <table class="theme-roster-table">
+              <colgroup>
+                <col style="width: 20%;">
+                <col style="width: 26%;">
+                <col style="width: 26%;">
+                <col style="width: 16%;">
+                <col style="width: 12%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Team ID & Name</th>
+                  <th>Project & Theme</th>
+                  <th>Leader & Members</th>
+                  <th>School Name</th>
+                  <th style="text-align: center;">Attendance</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(g.teams || []).map(t => {
+                  const isPresent = Boolean(t.is_present);
+                  const scannedAt = t.check_in_time
+                    ? new Date(t.check_in_time).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
+                    : '';
+                  const modeLabel = isPresent ? (t.marked_by === 'Admin' ? 'Present (Admin)' : 'Scanned (QR)') : 'Not Scanned';
+                  const membersStr = t.members ? escapeHtml(t.members) : '—';
+                  return `
+                  <tr class="theme-roster-row ${isPresent ? 'is-present-row' : ''}">
+                    <td class="theme-td-code">
+                      <div class="theme-roster-team-id-badge">
+                        <span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span>
+                      </div>
+                      <div class="theme-roster-team-name">${escapeHtml(t.team_name || '—')}</div>
+                    </td>
+                    <td class="theme-td-idea">
+                      <div class="theme-roster-project-title">${escapeHtml(t.project_title || '—')}</div>
+                      ${t.category ? `<div class="theme-roster-theme-tag">🎯 ${escapeHtml(t.category)}</div>` : ''}
+                    </td>
+                    <td class="theme-td-members">
+                      <div class="theme-roster-leader"><strong>Leader:</strong> ${escapeHtml(t.leader_name || '—')} ${t.mobile_no ? `(${escapeHtml(t.mobile_no)})` : ''}</div>
+                      <div class="theme-roster-member-names"><strong>Members:</strong> ${membersStr}</div>
+                    </td>
+                    <td class="theme-td-school">
+                      <span class="theme-roster-school">${escapeHtml(t.college_name || '—')}</span>
+                    </td>
+                    <td class="theme-td-attendance">
+                      <div class="theme-roster-attend-cell">
+                        <span class="status-pill-badge ${isPresent ? 'pill-present' : 'pill-absent'}">
+                          ${modeLabel}
+                        </span>
+                        ${scannedAt ? `<div class="theme-roster-scanned-time">${scannedAt}</div>` : ''}
+                        <button type="button" class="glass-btn glass-btn-secondary btn-xs btn-venue-toggle-attend" onclick="toggleAttendanceFromVenue(${t.id}, event)">
+                          ${isPresent ? 'Unmark' : 'Mark'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>`;
+    }
+
+    // ─────────────────────────────────────────────
+    // 12 THEMES MODE (ALTERNATIVE VIEW)
+    // ─────────────────────────────────────────────
     return `
     <div class="theme-card glass-card ${hasVenue ? 'has-venue' : 'missing-venue'} ${isOpen ? 'is-open' : ''}" id="${domId}">
       
@@ -918,7 +1066,7 @@ function renderThemes() {
         <!-- Inline Venue Editor -->
         <div class="theme-venue-editor hidden" id="venue-editor-${domId}">
           <div class="theme-venue-editor-inner">
-            <input type="text" class="theme-venue-input" id="venue-input-${domId}" value="${escapeHtml(g.venue || '')}" placeholder="e.g. Main Block - Lab 304, 2nd Floor" autocomplete="off" />
+            <input type="text" class="theme-venue-input" id="venue-input-${domId}" value="${escapeHtml(g.venue || '')}" placeholder="e.g. RJ Block - Idea Lab I" autocomplete="off" />
             <div class="theme-venue-editor-actions">
               <button type="button" class="glass-btn glass-btn-primary btn-xs btn-venue-save" data-theme="${escapeHtml(g.theme)}">Save</button>
               <button type="button" class="glass-btn glass-btn-secondary btn-xs btn-venue-cancel" data-theme="${escapeHtml(g.theme)}">Cancel</button>
@@ -936,7 +1084,7 @@ function renderThemes() {
       </div>
 
       <!-- Expand / Collapse Teams Button -->
-      <button type="button" class="theme-card-expand-bar" data-theme="${escapeHtml(g.theme)}" aria-expanded="${isOpen}">
+      <button type="button" class="theme-card-expand-bar" data-key="${escapeHtml(itemKey)}" data-theme="${escapeHtml(itemKey)}" aria-expanded="${isOpen}">
         <span class="expand-bar-left">
           <svg class="chevron-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           <span class="expand-bar-title">${isOpen ? 'Hide' : 'Show'} Registered Teams (${g.total})</span>
@@ -949,11 +1097,11 @@ function renderThemes() {
         <div class="theme-roster-table-wrap">
           <table class="theme-roster-table">
             <colgroup>
-              <col style="width: 18%;">
-              <col style="width: 24%;">
+              <col style="width: 20%;">
               <col style="width: 26%;">
-              <col style="width: 18%;">
-              <col style="width: 14%;">
+              <col style="width: 26%;">
+              <col style="width: 16%;">
+              <col style="width: 12%;">
             </colgroup>
             <thead>
               <tr>
@@ -977,7 +1125,6 @@ function renderThemes() {
                   <td class="theme-td-code">
                     <div class="theme-roster-team-id-badge">
                       <span class="mono theme-code-badge">${escapeHtml(t.team_code || '—')}</span>
-                      ${t.panel_no ? `<span class="panel-tag-sm" title="${escapeHtml(t.venue || '')}">Panel ${t.panel_no}</span>` : ''}
                     </div>
                     <div class="theme-roster-team-name">${escapeHtml(t.team_name || '—')}</div>
                     ${t.venue ? `<div class="theme-roster-venue-hint">📍 ${escapeHtml(t.venue)}</div>` : ''}
@@ -1121,9 +1268,9 @@ function updateToggleAllButton(allExpanded) {
 }
 
 function toggleAllThemes() {
-  const visibleKeys = (venueDisplayMode === 'venue')
-    ? rawVenuesData.map(g => `venue_${g.panel_no}`)
-    : rawThemesData.map(g => g.theme);
+  const isVenueMode = (venueDisplayMode === 'venue');
+  const sourceData = isVenueMode ? rawVenuesData : rawThemesData;
+  const visibleKeys = sourceData.map(getItemKey);
 
   const allExpanded = visibleKeys.every(k => expandedThemes.has(k));
 
@@ -1226,10 +1373,10 @@ document.addEventListener('click', e => {
   // 4. Expand / Collapse Theme card button
   const expandBar = e.target.closest('.theme-card-expand-bar');
   if (expandBar) {
-    const theme = expandBar.dataset.theme;
-    if (theme) {
-      if (expandedThemes.has(theme)) expandedThemes.delete(theme);
-      else expandedThemes.add(theme);
+    const key = expandBar.dataset.key || expandBar.dataset.theme;
+    if (key) {
+      if (expandedThemes.has(key)) expandedThemes.delete(key);
+      else expandedThemes.add(key);
       renderThemes();
     }
     return;
