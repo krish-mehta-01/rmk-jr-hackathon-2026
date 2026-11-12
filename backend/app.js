@@ -1,4 +1,4 @@
-// Build: v20261112_r16_3d_campus_map_and_dynamic_export_roster - 3D isometric campus map, dynamic live DB exports, updated VR Block PDF & Word rosters
+// Build: v20261112_r17_real_google_satellite_campus_map - Actual Google Satellite aerial view of RMK campus with professional building & route overlays
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
