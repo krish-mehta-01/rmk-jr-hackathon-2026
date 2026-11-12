@@ -3537,3 +3537,57 @@ h4 {
   font-weight: 600;
   margin-top: 3px;
 }
+
+.venue-themes-line {
+  font-size: 13px;
+  color: #047857;
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.venue-themes-label {
+  font-weight: 700;
+  color: #065f46;
+}
+
+.theme-track-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #065f46;
+  background: #d1fae5;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
+  white-space: nowrap;
+}
+
+.venue-mode-pill {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  gap: 3px;
+}
+
+.venue-mode-pill .filter-tab {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.venue-mode-pill .filter-tab.active {
+  background: #ffffff;
+  color: #166534;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

@@ -1,4 +1,4 @@
-// Build: v20261112_r1_15panels - 15-Panel Jury Venue Allocation
+// Build: v20261112_r2_venuewise_admin - Venue-Wise Admin Split & Clean Names
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
@@ -310,22 +310,31 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
   }
 });
 
-// Teams grouped by theme, with each theme's sitting place
-app.get('/api/admin/themes', authAdmin, async (req, res) => {
+// Teams grouped venue-wise (15 Rooms) and theme-wise (12 Tracks)
+async function getThemesAndVenuesData(req, res) {
   try {
     const [rows] = await pool.execute(
-      `SELECT t.id, t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.members, t.mentor_name, t.category, t.is_present, t.check_in_time, t.marked_by, t.panel_no, COALESCE(t.venue, v.venue) AS venue
-       FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
-       ORDER BY t.category, t.team_code`
+      `SELECT t.id, t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.members, t.mentor_name, t.category, t.is_present, t.check_in_time, t.marked_by, t.panel_no, t.venue
+       FROM teams t
+       ORDER BY t.panel_no ASC, t.category ASC, t.team_code ASC`
     );
-    const themes = new Map();
+
+    // 1. Group by Venue (15 Panels / Rooms)
+    const venuesMap = new Map();
+    for (let p = 1; p <= 15; p++) {
+      venuesMap.set(p, { panel_no: p, venue: '', themes: new Set(), total: 0, scanned: 0, teams: [] });
+    }
     for (const r of rows) {
-      const name = r.category || 'No theme';
-      if (!themes.has(name)) themes.set(name, { theme: name, venue: r.venue || null, total: 0, scanned: 0, teams: [] });
-      const group = themes.get(name);
-      group.total++;
-      if (r.is_present) group.scanned++;
-      group.teams.push({
+      const p = r.panel_no || 1;
+      if (!venuesMap.has(p)) {
+        venuesMap.set(p, { panel_no: p, venue: r.venue || 'TBD', themes: new Set(), total: 0, scanned: 0, teams: [] });
+      }
+      const vGroup = venuesMap.get(p);
+      if (r.venue) vGroup.venue = r.venue;
+      if (r.category) vGroup.themes.add(r.category);
+      vGroup.total++;
+      if (r.is_present) vGroup.scanned++;
+      vGroup.teams.push({
         id: r.id,
         team_code: r.team_code,
         team_name: r.team_name,
@@ -335,6 +344,7 @@ app.get('/api/admin/themes', authAdmin, async (req, res) => {
         project_title: r.project_title,
         members: r.members,
         mentor_name: r.mentor_name,
+        category: r.category,
         panel_no: r.panel_no,
         venue: r.venue,
         is_present: Boolean(r.is_present),
@@ -342,12 +352,50 @@ app.get('/api/admin/themes', authAdmin, async (req, res) => {
         marked_by: r.marked_by
       });
     }
-    res.json({ themes: [...themes.values()] });
+
+    const venues = [...venuesMap.values()].map(v => ({
+      ...v,
+      themes: [...v.themes]
+    }));
+
+    // 2. Group by Theme Track (12 Tracks)
+    const themesMap = new Map();
+    for (const r of rows) {
+      const name = r.category || 'No theme';
+      if (!themesMap.has(name)) {
+        themesMap.set(name, { theme: name, venue: r.venue || null, total: 0, scanned: 0, teams: [] });
+      }
+      const tGroup = themesMap.get(name);
+      tGroup.total++;
+      if (r.is_present) tGroup.scanned++;
+      tGroup.teams.push({
+        id: r.id,
+        team_code: r.team_code,
+        team_name: r.team_name,
+        leader_name: r.leader_name,
+        mobile_no: r.mobile_no,
+        college_name: r.college_name,
+        project_title: r.project_title,
+        members: r.members,
+        mentor_name: r.mentor_name,
+        category: r.category,
+        panel_no: r.panel_no,
+        venue: r.venue,
+        is_present: Boolean(r.is_present),
+        check_in_time: r.check_in_time,
+        marked_by: r.marked_by
+      });
+    }
+
+    res.json({ venues, themes: [...themesMap.values()] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
-});
+}
+
+app.get('/api/admin/themes', authAdmin, getThemesAndVenuesData);
+app.get('/api/admin/venues', authAdmin, getThemesAndVenuesData);
 
 // Update sitting place (venue) for a theme
 app.post('/api/admin/themes/venue', authAdmin, async (req, res) => {

@@ -756,12 +756,23 @@ async function toggleAttendance(id) {
 }
 
 // ─────────────────────────────────────────────
-// THEMES & SITTING VENUES MANAGEMENT
+// VENUES & THEMES MANAGEMENT (15 ROOMS SPLIT)
 // ─────────────────────────────────────────────
+let rawVenuesData = [];
 let rawThemesData = [];
+let venueDisplayMode = 'venue'; // 'venue' (15 Venues - default) or 'theme' (12 Themes)
 let currentThemeFilter = 'all';
 let currentThemeSearch = '';
 const expandedThemes = new Set();
+
+function setVenueDisplayMode(mode) {
+  venueDisplayMode = mode;
+  const btnVenue = document.getElementById('btn-mode-venue');
+  const btnTheme = document.getElementById('btn-mode-theme');
+  if (btnVenue) btnVenue.classList.toggle('active', mode === 'venue');
+  if (btnTheme) btnTheme.classList.toggle('active', mode === 'theme');
+  renderThemes();
+}
 
 function safeThemeDomId(themeName) {
   return 'th-' + encodeURIComponent(themeName || 'theme').replace(/[^a-zA-Z0-9]/g, '_');
@@ -795,22 +806,23 @@ function updateThemeStats() {
 async function loadThemes() {
   const list = document.getElementById('themes-grid');
   if (!list) return;
-  list.innerHTML = '<div class="qr-loading">Loading themes...</div>';
+  list.innerHTML = '<div class="qr-loading">Loading venue allocations...</div>';
 
   try {
     const res = await fetch('/api/admin/themes', { headers: { Authorization: 'Bearer ' + adminToken } });
     if (sessionExpired(res)) return;
     if (!res.ok) {
-      list.innerHTML = '<div class="qr-loading">Failed to load themes.</div>';
+      list.innerHTML = '<div class="qr-loading">Failed to load venues.</div>';
       return;
     }
     const data = await res.json();
+    rawVenuesData = data.venues || [];
     rawThemesData = data.themes || [];
     updateThemeStats();
     renderThemes();
   } catch (err) {
     console.error('[ERROR] loadThemes:', err);
-    list.innerHTML = '<div class="qr-loading">Connection error loading themes.</div>';
+    list.innerHTML = '<div class="qr-loading">Connection error loading venues.</div>';
   }
 }
 
@@ -1112,13 +1124,16 @@ function updateToggleAllButton(allExpanded) {
 }
 
 function toggleAllThemes() {
-  const visibleThemes = rawThemesData.map(g => g.theme);
-  const allExpanded = visibleThemes.every(th => expandedThemes.has(th));
+  const visibleKeys = (venueDisplayMode === 'venue')
+    ? rawVenuesData.map(g => `venue_${g.panel_no}`)
+    : rawThemesData.map(g => g.theme);
+
+  const allExpanded = visibleKeys.every(k => expandedThemes.has(k));
 
   if (allExpanded) {
-    visibleThemes.forEach(th => expandedThemes.delete(th));
+    visibleKeys.forEach(k => expandedThemes.delete(k));
   } else {
-    visibleThemes.forEach(th => expandedThemes.add(th));
+    visibleKeys.forEach(k => expandedThemes.add(k));
   }
   renderThemes();
 }
