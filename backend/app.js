@@ -1,4 +1,4 @@
-// Build: v20261112_r10_table_gap_and_straight_sv_map - Decreased Mentor Gap, Table Layout Fixed, Zero Cars Straight SV Map, No Emojis
+// Build: v20261112_r11_road_between_blocks_map - Road between RJ and SV blocks, no greenery between buildings
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
