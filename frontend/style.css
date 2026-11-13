@@ -2243,31 +2243,139 @@ h4 {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   SITTING PLACE — team pass (after scanning) and admin Themes tab
+   SITTING PLACE & VENUE ALLOCATION HERO BENTO — team leader pass
    ════════════════════════════════════════════════════════════════ */
-.pass-detail-row.pass-venue-row {
-  background: var(--accent-green-soft);
-  border: 1px solid var(--accent-green-border);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  margin: 12px 0 4px;
+.pass-alloc-hero-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border: 1.5px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 16px 0 18px;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06);
+  animation: fadeIn 0.2s ease-out;
 }
 
-.pass-venue-row dt {
-  color: var(--accent-green-dark);
+.pass-alloc-hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dcfce7;
 }
 
-#pass-venue {
-  font-size: 18px;
+.pass-alloc-hero-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
   font-weight: 800;
-  color: var(--accent-green-dark);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #166534;
 }
 
-.pass-venue-theme {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-top: 2px;
+.pass-alloc-hero-title .alloc-pin-icon {
+  color: #16a34a;
+}
+
+.pass-alloc-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #dcfce7;
+  color: #15803d;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pass-alloc-tiles-grid {
+  display: grid;
+  grid-template-columns: 140px 1.5fr 1.2fr;
+  gap: 10px;
+}
+
+.pass-alloc-tile {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s ease;
+}
+
+.pass-alloc-tile:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.alloc-tile-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.alloc-tile-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.alloc-tile-hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Tile specifics */
+.alloc-tile-panel {
+  border-left: 3.5px solid #16a34a;
+  background: #f8fafc;
+}
+
+.alloc-tile-panel .alloc-tile-value {
+  font-size: 18px;
+  font-weight: 900;
+  color: #166534;
+}
+
+.alloc-tile-venue {
+  border-left: 3.5px solid #0284c7;
+  background: #f0f9ff;
+}
+
+.alloc-tile-venue .alloc-tile-value {
+  color: #0369a1;
+}
+
+.alloc-tile-theme {
+  border-left: 3.5px solid #8b5cf6;
+  background: #faf5ff;
+}
+
+.alloc-tile-theme .alloc-tile-value {
+  color: #6b21a8;
+  font-size: 13.5px;
+}
+
+@media (max-width: 640px) {
+  .pass-alloc-tiles-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .alloc-tile-venue {
+    grid-column: span 2;
+    order: -1; /* Show venue prominently first on mobile! */
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -2283,27 +2391,29 @@ h4 {
   border-radius: var(--radius-md);
 }
 
-/* ─── Themewise Filter Row at Top of Venue Menu ─── */
-.theme-filter-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
+/* ─── Themewise Filter in Venue Action Header ─── */
 .theme-filter-select-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 5px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: var(--transition);
+}
+
+.theme-filter-select-wrapper:hover,
+.theme-filter-select-wrapper:focus-within {
+  border-color: var(--accent-green);
+  background: #ffffff;
+}
+
+.theme-filter-select-wrapper.has-active-filter {
+  border-color: #10b981;
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
 }
 
 .theme-filter-icon {
@@ -2312,23 +2422,18 @@ h4 {
 }
 
 .theme-filter-label {
-  font-size: 12px;
-  font-weight: 800;
-  color: #1e293b;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
+  display: none;
 }
 
 .theme-select-dropdown {
   background: transparent;
   border: none;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
   outline: none;
   cursor: pointer;
-  max-width: 260px;
+  max-width: 240px;
 }
 
 .theme-active-filter-badge {
@@ -3706,644 +3811,10 @@ h4 {
 
 /* ════════════════════════════════════════════════════════════════
    JURY MANAGEMENT & EVALUATION PORTAL STYLES
-   - Clean, professional RMK design system
-   - Responsive layouts for phone, tablet, and desktop
-   - No emojis. High contrast.
+   - Consolidated into the comprehensive Unslop & Responsive
+     Jury Design System at the end of this stylesheet.
    ════════════════════════════════════════════════════════════════ */
 
-.sidebar-portal-badge {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent-green-light);
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  margin-top: 10px;
-}
-
-/* ─── 15 Panels Grid ─── */
-.jury-panels-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-@media (max-width: 640px) {
-  .jury-panels-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.jury-panel-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: var(--transition);
-}
-
-.jury-panel-card:hover {
-  border-color: var(--accent-green-border);
-  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.06);
-}
-
-.jury-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 12px;
-}
-
-.jury-panel-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.jury-panel-code-pill {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 800;
-  color: #ffffff;
-  background: #0f172a;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-}
-
-.jury-panel-name {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.jury-panel-judges {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.jury-judge-subcard {
-  background: #f8fafc;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.judge-subcard-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.judge-type-pill {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-}
-
-.judge-type-pill.type-internal {
-  color: #0369a1;
-  background: #e0f2fe;
-  border: 1px solid #bae6fd;
-}
-
-.judge-type-pill.type-external {
-  color: #6d28d9;
-  background: #f3e8ff;
-  border: 1px solid #ddd6fe;
-}
-
-.judge-username-tag {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.judge-subcard-body {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  line-height: 1.45;
-}
-
-.judge-profile-registered {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.judge-profile-meta-text {
-  font-size: 11.5px;
-  color: var(--text-muted);
-}
-
-.judge-profile-pending {
-  font-size: 12px;
-  font-style: italic;
-  color: var(--accent-amber);
-}
-
-.judge-subcard-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.btn-judge-action {
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: var(--radius-xs);
-  cursor: pointer;
-  border: 1px solid var(--border-card);
-  background: #ffffff;
-  color: var(--text-primary);
-  transition: var(--transition);
-}
-
-.btn-judge-action:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.btn-judge-action.btn-danger-action {
-  color: #b91c1c;
-  border-color: #fecaca;
-  background: #fef2f2;
-}
-
-.btn-judge-action.btn-danger-action:hover {
-  background: #fee2e2;
-}
-
-/* ─── Judge Profile Registration View ─── */
-.jury-register-card {
-  max-width: 620px;
-  margin: 40px auto;
-  padding: 32px;
-  background: var(--surface-card);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.05);
-}
-
-.register-header-strip {
-  margin-bottom: 24px;
-  text-align: left;
-}
-
-.register-panel-tag {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent-green-dark);
-  background: var(--accent-green-soft);
-  border: 1px solid var(--accent-green-border);
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  margin-bottom: 10px;
-}
-
-.register-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.register-subtitle {
-  font-size: 13.5px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.review-details-card {
-  background: #f8fafc;
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.review-heading {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 8px;
-}
-
-.review-btn-row {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-/* ─── Judge Dashboard ─── */
-.jury-dashboard-shell {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 30px 20px 80px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.topbar-judge-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.topbar-badge {
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.topbar-badge.badge-panel {
-  background: #0f172a;
-  color: #ffffff;
-  font-family: var(--font-mono);
-}
-
-.topbar-badge.badge-type {
-  background: var(--accent-green-soft);
-  color: var(--accent-green-dark);
-  border: 1px solid var(--accent-green-border);
-}
-
-.judge-profile-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  padding: 24px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-}
-
-.judge-profile-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.judge-avatar-capsule {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #0f172a;
-  color: #ffffff;
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-}
-
-.judge-profile-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.judge-profile-badges {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 2px;
-}
-
-.pill-blue {
-  background: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
-}
-
-.pill-purple {
-  background: #f3e8ff;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
-}
-
-.judge-name-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.judge-title-sub {
-  font-size: 13.5px;
-  color: var(--text-secondary);
-}
-
-.judge-profile-contacts {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.contact-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  background: #f8fafc;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-subtle);
-}
-
-/* ─── Empty State ─── */
-.jury-empty-state {
-  text-align: center;
-  padding: 50px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
-.empty-state-icon-box {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 6px;
-}
-
-.empty-state-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.empty-state-desc {
-  max-width: 480px;
-  font-size: 13.5px;
-  color: var(--text-muted);
-  line-height: 1.55;
-}
-
-/* ─── Jury Modals ─── */
-.jury-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.jury-modal-box {
-  background: var(--surface-card);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  max-width: 520px;
-  width: 100%;
-  padding: 28px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.jury-eval-modal-content {
-  max-width: 760px;
-}
-
-.modal-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.eval-modal-header {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 16px;
-}
-
-.eval-team-code {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent-green-dark);
-}
-
-.eval-team-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-top: 2px;
-}
-
-.eval-team-subtitle {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.modal-close-btn {
-  background: #f1f5f9;
-  border: 1px solid var(--border-subtle);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--text-secondary);
-  transition: var(--transition);
-}
-
-.modal-close-btn:hover {
-  background: #e2e8f0;
-}
-
-.eval-score-summary-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #0f172a;
-  color: #ffffff;
-  padding: 12px 18px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 20px;
-}
-
-.score-summary-label {
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
-}
-
-.score-summary-val {
-  font-family: var(--font-mono);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--accent-green-light);
-}
-
-.eval-criteria-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.eval-criterion-card {
-  background: #f8fafc;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.criterion-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.criterion-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.criterion-code-tag {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  background: #e2e8f0;
-  color: #334155;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.criterion-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.criterion-max-tag {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.criterion-desc {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.criterion-input-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.criterion-range-slider {
-  flex: 1;
-  accent-color: var(--accent-green);
-  cursor: pointer;
-}
-
-.criterion-number-input {
-  width: 72px;
-  padding: 6px 10px;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-xs);
-  background: #ffffff;
-}
-
-.eval-remarks-group {
-  margin-top: 10px;
-}
-
-.eval-remarks-group textarea {
-  width: 100%;
-  padding: 10px 14px;
-  font-family: var(--font-text);
-  font-size: 13.5px;
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-sm);
-  outline: none;
-  background: #ffffff;
-  resize: vertical;
-}
-
-.eval-remarks-group textarea:focus {
-  border-color: var(--accent-green);
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-}
-
-.eval-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 16px;
-}
-
-.admin-eval-modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .venue-themes-line {
   font-size: 13px;
   color: #047857;
@@ -4680,22 +4151,83 @@ h4 {
 }
 
 .alloc-panels-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Full-width Panel Row Card (like Venue) */
+.alloc-panel-row-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.alloc-panel-row-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.alloc-panel-row-header {
+  padding: 14px 18px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 12px;
+  user-select: none;
+}
+
+.alloc-panel-row-card.expanded .alloc-panel-row-header {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.alloc-panel-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.alloc-panel-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.alloc-panel-row-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.alloc-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.alloc-panel-row-body {
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.alloc-panel-teams-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-@media (max-width: 1200px) {
-  .alloc-panels-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .alloc-panels-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
 }
 
 /* Panel Card */
@@ -5063,339 +4595,1242 @@ h4 {
   color: #991b1b;
 }
 
-
 /* ════════════════════════════════════════════════════════════════
-   JURY PORTAL INTEGRATION & MOBILE-FIRST REDESIGN (Milestone 3)
+   RMK JUNIOR HACKATHON 2026 — LIGHT THEME JURY & EVALUATION SUITE
+   - Aesthetic: Clean, bright, high-contrast, identical to Team Leader & Admin portals
+   - Color Ramp: Soft ambient background (#f8fafc), pure white cards (#ffffff),
+                 crisp borders (#e2e8f0), dark slate headings (#0f172a),
+                 precision emerald green buttons (#059669 / #10b981)
+   - Cross-Platform: 100% responsive for Laptop (full desktop table + master-detail)
+                     and Mobile (touch cards >= 48px target + sticky action modal)
    ════════════════════════════════════════════════════════════════ */
 
-.status-pill-badge.pill-venue {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+/* ─── Ambient Glow & Light Theme Background ─── */
+html.jury-page,
+html.jury-admin-page,
+html.jury-theme-active,
+html.jury-page body,
+html.jury-admin-page body,
+html.jury-theme-active body {
+  background-color: var(--bg-color, #f8fafc) !important;
+  color: var(--text-primary, #0f172a) !important;
+}
+
+.jury-page .glass-ambient-bg,
+.jury-admin-page .glass-ambient-bg,
+.jury-theme-active .glass-ambient-bg {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+/* ─── Jury Login & Jury Admin Login Cards (Identical to Team Leader Pass Login) ─── */
+#view-jury-login,
+#view-jury-admin-login,
+#view-jury-register {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 80px);
+}
+
+.jury-auth-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 24px !important;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08) !important;
+  max-width: 440px !important;
+  width: 100% !important;
+  margin: 40px auto !important;
+  padding: 34px 36px !important;
+  box-sizing: border-box !important;
+  color: #0f172a !important;
+}
+
+.jury-auth-card .auth-brand-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.jury-auth-card .auth-logos-capsule {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.status-pill-badge.pill-venue svg {
-  flex-shrink: 0;
-}
-
-.topbar-badge.badge-venue {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-/* Progress Bar Card */
-.jdash-progress-card {
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  background: var(--surface-card);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-}
-
-.jdash-progress-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.jdash-progress-title {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--text-primary);
-  font-family: var(--font-display);
-}
-
-.jdash-progress-ratio {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--accent-green-dark);
-}
-
-.jdash-progress-track {
-  width: 100%;
-  height: 9px;
-  background: #e2e8f0;
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-
-.jdash-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-green), #10b981);
-  border-radius: var(--radius-pill);
-  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Action Header */
-.jdash-action-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 14px;
+  background: #f8fafc;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
 }
 
-.jdash-header-title-block h3 {
-  font-size: 16px;
+.jury-auth-card .auth-event-title {
+  font-size: 20px;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #0f172a !important;
+  margin: 12px 0 2px 0;
+  letter-spacing: -0.01em;
+}
+
+.jury-auth-card .auth-portal-tag {
+  font-size: 13.5px;
+  color: #64748b !important;
+  font-weight: 500;
   margin: 0;
 }
 
+.jury-auth-card .glass-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.jury-auth-card .form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155 !important;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.jury-auth-card .form-group input {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  min-height: 48px !important;
+  padding: 10px 16px !important;
+  font-size: 14.5px !important;
+  color: #0f172a !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.jury-auth-card .form-group input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+.jury-auth-card .glass-btn-primary {
+  background: #059669 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  border-radius: 12px !important;
+  min-height: 48px !important;
+  width: 100% !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28) !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  margin-top: 6px !important;
+}
+
+.jury-auth-card .glass-btn-primary:hover {
+  background: #047857 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35) !important;
+}
+
+/* ─── Topbar Navigation ─── */
+#view-jury-dashboard .app-topbar,
+#view-jury-register .app-topbar {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 14px 28px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+}
+
+#view-jury-dashboard .app-topbar-inner,
+#view-jury-register .app-topbar-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+.topbar-logout {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  padding: 8px 16px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.topbar-logout:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* ─── Judge Dashboard Container ─── */
+.jury-dashboard-shell {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  padding: 24px 20px 48px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  box-sizing: border-box !important;
+}
+
+/* ─── Judge Profile Hero Card (No Email, No Phone) ─── */
+.judge-profile-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
+  padding: 20px 24px !important;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;
+}
+
+.judge-profile-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.judge-avatar-capsule {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 50% !important;
+  background: #ecfdf5 !important;
+  border: 2px solid #a7f3d0 !important;
+  color: #047857 !important;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.judge-profile-meta {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.judge-profile-badges {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.judge-name-title {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.judge-title-sub {
+  font-size: 13.5px !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+}
+
+/* Hide contacts pill container */
+.judge-profile-contacts {
+  display: none !important;
+}
+
+/* Badges */
+.status-pill-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 4px 10px !important;
+  border-radius: 9999px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+
+.status-pill-badge.pill-present {
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+.status-pill-badge.pill-blue {
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+.status-pill-badge.pill-purple {
+  background: #faf5ff !important;
+  border: 1px solid #e9d5ff !important;
+  color: #7e22ce !important;
+}
+
+.status-pill-badge.pill-venue {
+  background: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+  color: #b45309 !important;
+}
+
+.status-pill-badge.pill-absent {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #b91c1c !important;
+}
+
+.status-pill-badge.pill-amber {
+  background: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+  color: #b45309 !important;
+}
+
+/* ─── Evaluation Overview Bento Grid ─── */
+.laptop-stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px !important;
+}
+
+@media (max-width: 900px) {
+  .laptop-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+.stat-bento-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03) !important;
+}
+
+.stat-bento-card .stat-tag {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.stat-bento-card .stat-number {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin-top: 6px !important;
+}
+
+.stat-bento-card.stat-green .stat-number {
+  color: #059669 !important;
+}
+
+.stat-bento-card.stat-amber .stat-number {
+  color: #d97706 !important;
+}
+
+/* ─── Progress Card ─── */
+.jdash-progress-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03) !important;
+}
+
+.jdash-progress-label-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 13px !important;
+}
+
+.jdash-progress-title {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.jdash-progress-ratio {
+  color: #059669 !important;
+  font-weight: 700 !important;
+  font-family: monospace !important;
+}
+
+.jdash-progress-track {
+  background: #f1f5f9 !important;
+  height: 8px !important;
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+  margin-top: 8px !important;
+}
+
+.jdash-progress-bar {
+  background: #059669 !important;
+  height: 100% !important;
+  border-radius: 9999px !important;
+  transition: width 0.3s ease !important;
+}
+
+/* ─── Projects Section Card ─── */
+.jury-projects-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
+  padding: 22px 24px !important;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03) !important;
+}
+
+.jdash-action-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 16px !important;
+}
+
+.jdash-header-title-block h3 {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+}
+
 .jdash-header-subtitle {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 2px;
+  font-size: 13px !important;
+  color: #64748b !important;
+  margin: 3px 0 0 0 !important;
 }
 
 /* Search and Filter Row */
 .jdash-search-filter-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  margin-bottom: 18px !important;
+  flex-wrap: wrap !important;
 }
 
 .jdash-search-pill {
-  flex: 1;
-  min-width: 240px;
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 9999px !important;
+  padding: 8px 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 1 !important;
+  min-width: 260px !important;
+  max-width: 440px !important;
+}
+
+.jdash-search-pill input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  font-size: 13.5px !important;
+  color: #0f172a !important;
+  width: 100% !important;
 }
 
 .jdash-filter-pill {
-  display: flex;
-  gap: 4px;
+  background: #f1f5f9 !important;
+  border-radius: 9999px !important;
+  padding: 3px !important;
+  display: inline-flex !important;
+  gap: 3px !important;
 }
 
-/* Desktop vs Mobile Toggle */
+.jdash-filter-pill .filter-tab {
+  padding: 6px 14px !important;
+  border-radius: 9999px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.jdash-filter-pill .filter-tab.active {
+  background: #059669 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25) !important;
+}
+
+/* ─── Projects Desktop Table View (Spacious, Zero Overlap) ─── */
+.jdash-desktop-table-wrap {
+  overflow-x: auto !important;
+  width: 100% !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+}
+
+.jury-projects-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+  min-width: 1050px !important;
+}
+
+.jury-projects-table th {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 12px 14px !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+  text-align: left !important;
+  box-sizing: border-box !important;
+}
+
+.jury-projects-table td {
+  padding: 13px 14px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #334155 !important;
+  font-size: 13px !important;
+  vertical-align: middle !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.jury-projects-table tr:hover td {
+  background: #f8fafc !important;
+}
+
+/* Explicit non-colliding column widths */
+.jury-projects-table th:nth-child(1),
+.jury-projects-table td:nth-child(1) { width: 110px !important; max-width: 110px !important; }
+
+.jury-projects-table th:nth-child(2),
+.jury-projects-table td:nth-child(2) { width: 160px !important; min-width: 150px !important; }
+
+.jury-projects-table th:nth-child(3),
+.jury-projects-table td:nth-child(3) { width: 200px !important; min-width: 180px !important; }
+
+.jury-projects-table th:nth-child(4),
+.jury-projects-table td:nth-child(4) { width: 140px !important; min-width: 130px !important; }
+
+.jury-projects-table th:nth-child(5),
+.jury-projects-table td:nth-child(5) { width: 200px !important; min-width: 190px !important; }
+
+.jury-projects-table th:nth-child(6),
+.jury-projects-table td:nth-child(6) { width: 180px !important; min-width: 170px !important; }
+
+.jury-projects-table th:nth-child(7),
+.jury-projects-table td:nth-child(7) { width: 130px !important; text-align: center !important; }
+
+.jury-projects-table .table-team-id {
+  font-family: monospace !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  font-size: 12.5px !important;
+}
+
+.jury-projects-table .table-team-name {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+}
+
+.jury-projects-table .table-project-title {
+  color: #334155 !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+}
+
+.jury-projects-table .table-leader-name {
+  color: #475569 !important;
+  font-size: 12.5px !important;
+}
+
+/* Buttons in table */
+.jury-projects-table .glass-btn-primary {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  padding: 7px 14px !important;
+  font-size: 12.5px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.jury-projects-table .glass-btn-primary:hover {
+  background: #047857 !important;
+}
+
+.jury-projects-table .glass-btn-secondary {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  padding: 7px 14px !important;
+  font-size: 12.5px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.jury-projects-table .glass-btn-secondary:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* ─── Mobile Cards List (Mobile Devices & Small Screens) ─── */
 @media (min-width: 769px) {
-  .jdash-desktop-table-wrap {
-    display: block !important;
-  }
-  .jdash-mobile-cards-list {
-    display: none !important;
-  }
+  .jdash-desktop-table-wrap { display: block !important; }
+  .jdash-mobile-cards-list { display: none !important; }
 }
 
 @media (max-width: 768px) {
-  .jdash-desktop-table-wrap {
-    display: none !important;
-  }
+  .jdash-desktop-table-wrap { display: none !important; }
   .jdash-mobile-cards-list {
     display: flex !important;
-    flex-direction: column;
-    gap: 14px;
+    flex-direction: column !important;
+    gap: 12px !important;
   }
 }
 
-/* Mobile Touch-Friendly Project Card */
-.jdash-project-card {
-  padding: 16px;
-  background: #ffffff;
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+.jdash-touch-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  padding: 16px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
 }
 
-.jdash-project-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+.jdash-touch-card .card-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
 }
 
-.jdash-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.jdash-touch-card .card-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
 }
 
-.jdash-card-id {
-  font-size: 12px;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  padding: 3px 8px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-  border-radius: var(--radius-xs);
+.jdash-touch-card .card-sub {
+  font-size: 12.5px !important;
+  color: #64748b !important;
+  margin: 0 !important;
 }
 
-.jdash-card-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.35;
+.jdash-touch-card .jdash-card-btn {
+  width: 100% !important;
+  min-height: 48px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  border: none !important;
+  box-sizing: border-box !important;
+}
+
+/* ─── Evaluation Modal (#modal-jury-evaluation) ─── */
+.jury-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.jury-eval-modal-content {
+  max-width: 1040px !important;
+  width: 100% !important;
+  max-height: 90vh !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  padding: 28px 32px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  overflow-y: auto !important;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.16) !important;
+  box-sizing: border-box !important;
+  color: #0f172a !important;
+}
+
+.eval-modal-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+  padding-bottom: 14px !important;
+  gap: 12px !important;
+}
+
+.eval-team-code {
+  font-family: monospace !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+}
+
+.eval-team-title {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.3 !important;
+  margin: 4px 0 2px 0 !important;
+}
+
+.eval-team-subtitle {
+  font-size: 13.5px !important;
+  color: #64748b !important;
+  margin: 0 !important;
+}
+
+.eval-chip-institution,
+.eval-chip-members {
+  font-size: 12px !important;
+  padding: 3px 10px !important;
+  border-radius: 6px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+/* Split Layout */
+.eval-modal-split-layout {
+  display: grid !important;
+  grid-template-columns: 1fr 340px !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+@media (max-width: 900px) {
+  .eval-modal-split-layout {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+.eval-column-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.eval-column-hint {
+  font-size: 12px !important;
+  color: #64748b !important;
+}
+
+.eval-criterion-card {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+  margin-bottom: 12px !important;
+}
+
+.criterion-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.criterion-desc {
+  font-size: 12.5px !important;
+  color: #64748b !important;
+  line-height: 1.45 !important;
+}
+
+.criterion-range-slider {
+  flex: 1 !important;
+  height: 6px !important;
+  background: #e2e8f0 !important;
+  border-radius: 9999px !important;
+  accent-color: #059669 !important;
+  outline: none !important;
+  cursor: pointer !important;
+}
+
+.criterion-number-input {
+  width: 72px !important;
+  min-height: 40px !important;
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  color: #0f172a !important;
+  font-family: monospace !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.criterion-number-input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2) !important;
+}
+
+.criterion-score-presets .score-preset-pill {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.criterion-score-presets .score-preset-pill:hover {
+  background: #f1f5f9 !important;
+  border-color: #059669 !important;
+  color: #059669 !important;
+}
+
+/* Score Summary Bar */
+.eval-score-summary-bar {
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  padding: 16px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 16px !important;
+}
+
+.score-summary-label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  display: block !important;
+}
+
+.score-summary-sub {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+}
+
+.score-summary-val {
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  color: #059669 !important;
+  font-family: monospace !important;
+}
+
+/* Remarks in Modal */
+.eval-remarks-group label {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  display: block !important;
+  margin-bottom: 4px !important;
+}
+
+.eval-remarks-hint {
+  font-size: 12px !important;
+  color: #64748b !important;
+  margin-bottom: 8px !important;
+}
+
+#eval-remarks {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  color: #0f172a !important;
+  padding: 12px 14px !important;
+  font-size: 13.5px !important;
+  font-family: inherit !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  resize: vertical !important;
+  min-height: 100px !important;
+}
+
+#eval-remarks:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+.eval-modal-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  margin-top: 16px !important;
+}
+
+.eval-modal-footer .glass-btn-primary {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 10px 20px !important;
+  cursor: pointer !important;
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.25) !important;
+}
+
+.eval-modal-footer .glass-btn-primary:hover {
+  background: #047857 !important;
+}
+
+.eval-modal-footer .glass-btn-secondary {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 10px 16px !important;
+  cursor: pointer !important;
+}
+
+.eval-modal-footer .glass-btn-secondary:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Mobile Sticky Footer inside Modal */
+@media (max-width: 640px) {
+  .jury-eval-modal-content {
+    padding: 18px 16px 80px 16px !important;
+    max-height: 96vh !important;
+    border-radius: 16px !important;
+  }
+  .eval-modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+    padding: 12px 16px !important;
+    margin: 14px -16px -80px -16px !important;
+    box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.08) !important;
+    z-index: 20 !important;
+    flex-direction: column-reverse !important;
+  }
+  .eval-modal-footer .glass-btn {
+    width: 100% !important;
+    min-height: 46px !important;
+    justify-content: center !important;
+  }
+}
+
+/* ─── Confirmation Modal (#modal-eval-confirm) ─── */
+.eval-confirm-box {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.18) !important;
+  padding: 26px 28px !important;
+  max-width: 480px !important;
+  width: 100% !important;
+  color: #0f172a !important;
+}
+
+.eval-confirm-box .modal-title {
+  color: #0f172a !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+}
+
+.eval-confirm-box .modal-body {
+  padding: 14px 0 !important;
+}
+
+.eval-confirm-warning-pill {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 10px !important;
+  padding: 12px 16px !important;
+  color: #991b1b !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  margin-bottom: 12px !important;
+}
+
+.eval-confirm-subtext {
+  color: #475569 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+}
+
+.eval-confirm-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  margin-top: 18px !important;
+}
+
+/* ─── Password Change Modal (#modal-jury-password) ─── */
+.jury-modal-box {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  max-width: 480px !important;
+  width: 100% !important;
+  padding: 28px 32px !important;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+}
+
+.jury-modal-box .modal-title {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.jury-modal-box .modal-subtitle {
+  font-size: 13px !important;
+  color: #64748b !important;
+  margin-top: 4px !important;
+  line-height: 1.5 !important;
+}
+
+.jury-modal-box .form-group label {
+  color: #334155 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+
+.jury-modal-box .form-group input {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  min-height: 44px !important;
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+}
+
+.jury-modal-box .form-group input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* ─── Dropdown Smooth Scroll, Transition & Mouse Hover Effects ─── */
+.custom-dropdown-menu {
+  max-height: 380px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+  border-radius: 16px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 35px -5px rgba(15, 23, 42, 0.14), 0 8px 10px -6px rgba(15, 23, 42, 0.05) !important;
+  padding: 8px !important;
+  box-sizing: border-box !important;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+  border-radius: 9999px !important;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8 !important;
+}
+
+.dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding: 9px 12px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  white-space: nowrap !important;
+}
+
+.dropdown-item:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  transform: translateX(4px) !important;
+}
+
+.dropdown-item svg {
+  flex-shrink: 0 !important;
+  color: #64748b !important;
+  transition: color 0.15s ease !important;
+}
+
+.dropdown-item:hover svg {
+  color: #059669 !important;
+}
+
+.dropdown-item.active {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  font-weight: 700 !important;
+}
+
+.dropdown-group-header {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  padding: 6px 12px 4px 12px !important;
+}
+
+.dropdown-item-divider {
+  height: 1px !important;
+  background: #f1f5f9 !important;
+  margin: 6px 4px !important;
+}
+
+/* ─── Panel Allocation: Jury & Committee Roster Cards (Requested by User) ─── */
+.alloc-panel-jury-box {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 16px;
   margin: 0;
 }
 
-.jdash-card-teamname {
-  font-size: 12.5px;
-  color: var(--text-muted);
+.alloc-panel-jury-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
 }
 
-.jdash-card-tags {
+.pjury-cell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.jdash-card-theme {
-  font-size: 11px;
+.pjury-tag {
+  font-size: 10px;
   font-weight: 700;
-  padding: 2px 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.pjury-tag.tag-external {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.pjury-tag.tag-internal {
   background: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
-  border-radius: var(--radius-pill);
 }
 
-.jdash-card-school {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 7px;
-  background: #f1f5f9;
-  color: #475569;
-  border-radius: var(--radius-pill);
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.pjury-tag.tag-assistance {
+  background: #fdf4ff;
+  color: #86198f;
+  border: 1px solid #f5d0fe;
 }
 
-.jdash-card-members {
-  font-size: 11.5px;
-  color: #64748b;
-  background: #f8fafc;
-  padding: 6px 10px;
-  border-radius: var(--radius-xs);
-  line-height: 1.4;
+.pjury-tag.tag-committee {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 
-.jdash-card-btn {
-  width: 100%;
-  min-height: 44px;
-  font-size: 13.5px;
-  font-weight: 700;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  touch-action: manipulation;
-  text-decoration: none;
-  transition: all 0.18s ease;
-}
-
-.jdash-card-btn:active {
-  transform: scale(0.98);
-}
-
-/* ─── Milestone 4: Criteria Score Presets & Mobile Evaluation Optimization ─── */
-.criterion-score-presets {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
-.presets-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-right: 2px;
-}
-
-.score-preset-pill {
-  flex: 1;
-  min-width: 44px;
-  min-height: 36px;
-  padding: 4px 8px;
-  font-family: var(--font-mono);
+.pjury-name {
   font-size: 12.5px;
   font-weight: 700;
-  background: #ffffff;
-  color: #334155;
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius-xs);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  touch-action: manipulation;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  color: #0f172a;
 }
 
-.score-preset-pill:hover:not(:disabled) {
-  background: #ecfdf5;
-  border-color: var(--accent-green);
-  color: var(--accent-green-dark);
-}
-
-.score-preset-pill.active {
-  background: var(--accent-green);
-  border-color: var(--accent-green);
-  color: #ffffff;
-}
-
-.score-preset-pill:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-@media (max-width: 640px) {
-  .jury-eval-modal-content {
-    padding: 18px 14px;
-    max-height: 94vh;
-  }
-  .eval-modal-header {
-    gap: 8px;
-  }
-  .eval-team-title {
-    font-size: 17px;
-  }
-  .eval-score-summary-bar {
-    padding: 10px 14px;
-    margin-bottom: 14px;
-  }
-  .score-summary-val {
-    font-size: 19px;
-  }
-  .criterion-input-row {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-  }
-  .criterion-number-input {
-    width: 68px;
-    min-height: 44px;
-    font-size: 15px;
-  }
-  .eval-modal-footer {
-    flex-direction: column-reverse;
-    gap: 8px;
-  }
-  .eval-modal-footer .glass-btn {
-    width: 100%;
-    min-height: 44px;
-    justify-content: center;
-  }
+.pjury-meta {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.35;
 }

@@ -276,7 +276,7 @@ async function validateRevision(revisionId) {
     warnings.push(`${unassignedCount} registered team(s) are currently unassigned.`);
   }
 
-  // 4. Panel distribution and empty panel warnings
+  // 4. Panel distribution and balance checks (target 18-22 teams per panel)
   const [dist] = await pool.execute(`
     SELECT p.id, p.panel_code, p.panel_name, p.venue, COUNT(a.team_id) as team_count
     FROM jury_panels p
@@ -285,9 +285,21 @@ async function validateRevision(revisionId) {
     ORDER BY p.id ASC
   `, [revisionId]);
 
+  const panelBalance = [];
+  let isBalanced = true;
   for (const p of dist) {
+    const inRange = p.team_count >= 18 && p.team_count <= 22;
+    if (!inRange) isBalanced = false;
+    panelBalance.push({
+      panel_id: p.id,
+      panel_code: p.panel_code,
+      team_count: p.team_count,
+      in_range: inRange
+    });
     if (p.team_count === 0) {
       warnings.push(`Panel ${p.panel_code} (${p.panel_name}) currently has 0 teams assigned.`);
+    } else if (!inRange) {
+      warnings.push(`Panel ${p.panel_code} has ${p.team_count} teams (target balance is 18-22 teams).`);
     }
   }
 
@@ -368,6 +380,13 @@ async function validateRevision(revisionId) {
 
   return {
     isValid: errors.length === 0,
+    checks: {
+      no_duplicates: dupRows.length === 0,
+      zero_unassigned: unassignedCount === 0,
+      panel_team_count_balance: isBalanced,
+      balance_range: '18-22',
+      panel_balance_details: panelBalance
+    },
     errors,
     warnings,
     changes: changeSummary,

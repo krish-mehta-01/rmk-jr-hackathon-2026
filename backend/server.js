@@ -2,7 +2,7 @@
 const app = require('./app');
 const { testConnection } = require('./db');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 30000;
 
 // Render's free plan sleeps after 15 min without visits, and the next visit then takes ~1 min.
 // In the run-up to the hackathon (15 Nov 2026) the server visits its own public URL every 10 min

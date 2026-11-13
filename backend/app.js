@@ -288,10 +288,20 @@ app.get('/api/admin/teams', authAdmin, async (req, res) => {
 
     let where = ' WHERE 1=1';
     const params = [];
-    if (search) {
-      where += ' AND (team_code LIKE ? OR team_name LIKE ? OR leader_name LIKE ? OR mentor_name LIKE ? OR college_name LIKE ? OR project_title LIKE ? OR mobile_no LIKE ?)';
-      const s = `%${search}%`;
-      params.push(s, s, s, s, s, s, s);
+    if (search && search.trim()) {
+      const cleanTokens = search
+        .replace(/[.,\-_/\\#()]/g, ' ')
+        .toLowerCase()
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      if (cleanTokens.length > 0) {
+        for (const token of cleanTokens) {
+          where += ` AND CONCAT_WS(' ', LOWER(team_code), LOWER(team_name), LOWER(leader_name), LOWER(IFNULL(members, '')), LOWER(IFNULL(mentor_name, '')), LOWER(IFNULL(college_name, '')), LOWER(IFNULL(project_title, '')), LOWER(IFNULL(category, '')), LOWER(IFNULL(mobile_no, '')), LOWER(IFNULL(panel_no, '')), LOWER(IFNULL(venue, ''))) LIKE ?`;
+          params.push(`%${token}%`);
+        }
+      }
     }
     if (present === 'true') where += ' AND is_present = TRUE';
     else if (present === 'false') where += ' AND (is_present = FALSE OR is_present IS NULL)';
@@ -633,6 +643,15 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.get('*', (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+});
+
+// Global error handling middleware (handles invalid JSON body, unhandled errors gracefully without crash)
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON payload' });
+  }
+  console.error('[UNHANDLED EXPRESS ERROR]:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
 module.exports = app;

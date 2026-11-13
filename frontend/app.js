@@ -150,6 +150,9 @@ function showView(viewId) {
     }
   });
 
+  const isJuryView = Boolean(viewId && viewId.startsWith('view-jury'));
+  document.documentElement.classList.toggle('jury-theme-active', isJuryView);
+
   if (viewId !== 'view-team') {
     closeScanner();
   }
@@ -320,12 +323,6 @@ function renderVenueMap(team) {
   if (badge) {
     badge.textContent = blockName ? `Allocated Block: ${blockName}` : 'RMK Engineering College Campus';
   }
-
-  document.querySelectorAll('.pass-block-card').forEach(c => c.classList.remove('block-highlight'));
-  if (activeBlockId) {
-    const activeEl = document.getElementById(activeBlockId);
-    if (activeEl) activeEl.classList.add('block-highlight');
-  }
 }
 
 function openMapModal() {
@@ -346,21 +343,22 @@ function renderTeamDetails(team) {
   document.getElementById('pass-school-name').textContent = team.college_name || '—';
   document.getElementById('pass-mentor-name').textContent = team.mentor_name || '—';
 
-  // Sitting place and Panel for the team
+  // Sitting place and Panel for the team (Hero Allocation Bento)
   const venueRow = document.getElementById('pass-venue-row');
   if (venueRow) {
     venueRow.classList.toggle('hidden', !team.venue && !team.panel_no);
+    const panelEl = document.getElementById('pass-panel-value');
+    if (panelEl) {
+      panelEl.textContent = team.panel_no ? `Panel ${team.panel_no}` : 'Panel Pending';
+    }
     const venueEl = document.getElementById('pass-venue');
     if (venueEl) {
-      if (team.panel_no) {
-        venueEl.innerHTML = `<span class="panel-badge-pill">Panel ${team.panel_no}</span> <span>${escapeHtml(team.venue || '')}</span>`;
-      } else {
-        venueEl.textContent = team.venue || '';
-      }
+      venueEl.textContent = team.venue || 'Venue Pending';
     }
     const themeEl = document.getElementById('pass-venue-theme');
     if (themeEl) {
-      themeEl.textContent = team.theme ? `Theme: ${team.theme}` : '';
+      const cleanTheme = (team.theme || team.category || '').trim();
+      themeEl.textContent = cleanTheme || 'General Track';
     }
   }
 
@@ -883,12 +881,18 @@ window.clearThemewiseFilter = clearThemewiseFilter;
 function updateThemewiseFilterBadge() {
   const badge = document.getElementById('theme-active-filter-badge');
   const text = document.getElementById('theme-active-filter-text');
-  if (!badge) return;
+  const clearBtn = document.getElementById('theme-active-filter-clear-btn');
+  const wrapper = document.querySelector('.theme-filter-select-wrapper');
+
   if (currentThemewiseFilter && currentThemewiseFilter !== 'all') {
-    badge.classList.remove('hidden');
+    if (badge) badge.classList.remove('hidden');
     if (text) text.textContent = `Theme: ${currentThemewiseFilter}`;
+    if (clearBtn) clearBtn.classList.remove('hidden');
+    if (wrapper) wrapper.classList.add('has-active-filter');
   } else {
-    badge.classList.add('hidden');
+    if (badge) badge.classList.add('hidden');
+    if (clearBtn) clearBtn.classList.add('hidden');
+    if (wrapper) wrapper.classList.remove('has-active-filter');
   }
 }
 
@@ -988,28 +992,20 @@ function renderThemes() {
     if (filter === 'scanned' && (!g.scanned || g.scanned === 0)) return false;
 
     // Search query logic
+    // Search query logic (resilient multi-field token matching)
     if (query) {
       if (isVenueMode) {
-        const matchVenue = (g.venue || '').toLowerCase().includes(query);
-        const matchThemes = (g.themes || []).some(t => (t || '').toLowerCase().includes(query));
+        const matchVenue = matchesSearchQuery(query, g.venue);
+        const matchThemes = (g.themes || []).some(t => matchesSearchQuery(query, t));
         const matchTeam = (g.teams || []).some(t => 
-          (t.team_code || '').toLowerCase().includes(query) ||
-          (t.team_name || '').toLowerCase().includes(query) ||
-          (t.leader_name || '').toLowerCase().includes(query) ||
-          (t.college_name || '').toLowerCase().includes(query) ||
-          (t.project_title || '').toLowerCase().includes(query) ||
-          (t.category || '').toLowerCase().includes(query)
+          matchesSearchQuery(query, t.team_code, t.team_name, t.leader_name, t.college_name, t.project_title, t.category, t.members)
         );
         if (!matchVenue && !matchThemes && !matchTeam) return false;
       } else {
-        const matchTheme = (g.theme || '').toLowerCase().includes(query);
-        const matchVenue = (g.venue || '').toLowerCase().includes(query);
+        const matchTheme = matchesSearchQuery(query, g.theme);
+        const matchVenue = matchesSearchQuery(query, g.venue);
         const matchTeam = (g.teams || []).some(t => 
-          (t.team_code || '').toLowerCase().includes(query) ||
-          (t.team_name || '').toLowerCase().includes(query) ||
-          (t.leader_name || '').toLowerCase().includes(query) ||
-          (t.college_name || '').toLowerCase().includes(query) ||
-          (t.project_title || '').toLowerCase().includes(query)
+          matchesSearchQuery(query, t.team_code, t.team_name, t.leader_name, t.college_name, t.project_title, t.category, t.members)
         );
         if (!matchTheme && !matchVenue && !matchTeam) return false;
       }
@@ -1321,6 +1317,19 @@ function closeDropdowns() {
   const filterBtn = document.getElementById('btn-theme-filter-dropdown');
   if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
 }
+
+function toggleAttendanceExportDropdown(event) {
+  if (event) event.stopPropagation();
+  const dropdown = document.getElementById('dropdown-attendance-export');
+  const menu = document.getElementById('menu-attendance-export');
+  const wasOpen = dropdown ? dropdown.classList.contains('open') : false;
+  closeDropdowns();
+  if (dropdown && !wasOpen) {
+    dropdown.classList.add('open');
+    if (menu) menu.classList.add('show');
+  }
+}
+window.toggleAttendanceExportDropdown = toggleAttendanceExportDropdown;
 
 function toggleVenueExportDropdown(event) {
   if (event) {
@@ -2066,6 +2075,34 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Universal resilient search matching helper (case-insensitive, punctuation-agnostic, token-based)
+function normalizeSearchText(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .toLowerCase()
+    .replace(/[.,\-_/\\#()\[\]{}:;'"!?]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function matchesSearchQuery(query, ...fields) {
+  if (!query) return true;
+  const qClean = normalizeSearchText(query);
+  if (!qClean) return true;
+
+  // Split query into individual word tokens
+  const tokens = qClean.split(' ').filter(Boolean);
+  if (tokens.length === 0) return true;
+
+  // Build searchable text from all provided fields
+  const haystack = normalizeSearchText(fields.filter(Boolean).join(' '));
+
+  // Every token must be present somewhere in the haystack
+  return tokens.every(token => haystack.includes(token));
+}
+window.normalizeSearchText = normalizeSearchText;
+window.matchesSearchQuery = matchesSearchQuery;
+
 // Wire document click to close dropdowns when clicking outside
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.custom-dropdown')) {
@@ -2293,18 +2330,20 @@ function renderJuryPanels() {
       if (!anyPending) return false;
     }
 
-    // Search query
+    // Search query (resilient multi-field token matching)
     if (query) {
-      const codeMatch = (panel.panel_code || '').toLowerCase().includes(query);
-      const nameMatch = (panel.panel_name || '').toLowerCase().includes(query);
-      const inUserMatch = internal && internal.username.toLowerCase().includes(query);
-      const exUserMatch = external && external.username.toLowerCase().includes(query);
-      const inNameMatch = internal && internal.profile && internal.profile.full_name.toLowerCase().includes(query);
-      const exNameMatch = external && external.profile && external.profile.full_name.toLowerCase().includes(query);
-      const inOrgMatch = internal && internal.profile && (internal.profile.organization || '').toLowerCase().includes(query);
-      const exOrgMatch = external && external.profile && (external.profile.organization || '').toLowerCase().includes(query);
-
-      return codeMatch || nameMatch || inUserMatch || exUserMatch || inNameMatch || exNameMatch || inOrgMatch || exOrgMatch;
+      return matchesSearchQuery(
+        query,
+        panel.panel_code,
+        panel.panel_name,
+        panel.venue,
+        internal && internal.username,
+        external && external.username,
+        internal && internal.profile && internal.profile.full_name,
+        external && external.profile && external.profile.full_name,
+        internal && internal.profile && internal.profile.organization,
+        external && external.profile && external.profile.organization
+      );
     }
 
     return true;
@@ -2455,16 +2494,13 @@ async function loadJuryAdminEvaluations() {
 function handleJuryEvalsSearch() {
   clearTimeout(juryEvalsDebounceTimer);
   juryEvalsDebounceTimer = setTimeout(() => {
-    const q = document.getElementById('jury-evals-search-input').value.trim().toLowerCase();
-    if (!q) {
+    const q = document.getElementById('jury-evals-search-input').value;
+    if (!q || !q.trim()) {
       renderJuryAdminEvaluations(rawJuryEvalsData);
       return;
     }
     const filtered = rawJuryEvalsData.filter(e => 
-      (e.team_code || '').toLowerCase().includes(q) ||
-      (e.team_name || '').toLowerCase().includes(q) ||
-      (e.project_title || '').toLowerCase().includes(q) ||
-      (e.panel_code || '').toLowerCase().includes(q)
+      matchesSearchQuery(q, e.team_code, e.team_name, e.project_title, e.panel_code, e.leader_name, e.category, e.judge_username, e.judge_name)
     );
     renderJuryAdminEvaluations(filtered);
   }, 250);
@@ -2545,33 +2581,33 @@ async function openAdminEvalDetail(evalId) {
     const scores = data.criteria_scores || [];
 
     body.innerHTML = `
-      <div style="background:#f8fafc; padding:16px; border-radius:10px; border:1px solid #e2e8f0;">
-        <div style="font-size:12px; font-weight:700; color:var(--accent-green-dark);">${escapeHtml(ev.panel_code)} • ${escapeHtml(ev.judge_type)} EVALUATION</div>
-        <h3 style="font-size:18px; margin:4px 0;">${escapeHtml(ev.team_name)} (${escapeHtml(ev.team_code)})</h3>
-        <p style="font-size:13px; color:var(--text-muted);">${escapeHtml(ev.project_title || '—')}</p>
-        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+      <div class="admin-eval-detail-summary">
+        <div class="admin-eval-badge-line">${escapeHtml(ev.panel_code)} • ${escapeHtml(ev.judge_type)} EVALUATION</div>
+        <h3 class="admin-eval-team-title">${escapeHtml(ev.team_name)} (${escapeHtml(ev.team_code)})</h3>
+        <p class="admin-eval-proj-desc">${escapeHtml(ev.project_title || '—')}</p>
+        <div class="admin-eval-judge-score-row">
           <span>Judge: <strong>${escapeHtml(ev.judge_name || ev.judge_username)}</strong></span>
-          <span class="score-summary-val" style="font-size:20px;">${ev.total_score} / 50</span>
+          <span class="score-summary-val">${ev.total_score} / 50</span>
         </div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <h4 style="font-size:14px; font-weight:700;">Criteria Marks Breakdown</h4>
+      <div class="admin-eval-crit-list">
+        <h4 class="admin-eval-section-title">Criteria marks breakdown</h4>
         ${scores.map(s => `
-          <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; border:1px solid #e2e8f0; padding:10px 14px; border-radius:8px;">
+          <div class="admin-eval-crit-item">
             <div>
-              <div style="font-size:13px; font-weight:700;">${escapeHtml(s.title)}</div>
-              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(s.criterion_code)} • Max ${s.max_score} marks</div>
+              <div class="admin-eval-crit-name">${escapeHtml(s.title)}</div>
+              <div class="admin-eval-crit-meta">${escapeHtml(s.criterion_code)} • Max ${s.max_score} marks</div>
             </div>
-            <div class="mono" style="font-size:16px; font-weight:800; color:var(--accent-green);">${s.score}</div>
+            <div class="mono admin-eval-crit-score">${s.score}</div>
           </div>
         `).join('')}
       </div>
 
-      <div style="margin-top:10px;">
-        <h4 style="font-size:13px; font-weight:700; margin-bottom:6px;">Written Remarks / Feedback</h4>
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
-          ${ev.remarks ? escapeHtml(ev.remarks) : '<span style="color:var(--text-muted); font-style:italic;">No remarks submitted.</span>'}
+      <div class="admin-eval-remarks-section">
+        <h4 class="admin-eval-section-title">Written remarks & feedback</h4>
+        <div class="admin-eval-remarks-content">
+          ${ev.remarks ? escapeHtml(ev.remarks) : '<span class="text-muted font-italic">No remarks submitted.</span>'}
         </div>
       </div>
     `;
@@ -2918,22 +2954,34 @@ async function initJudgeDashboard() {
     const isInternal = me.judge_type === 'INTERNAL';
     const typeLabel = isInternal ? 'Internal Judge' : 'External Judge';
 
-    document.getElementById('jdash-topbar-panel').textContent = `Panel ${me.panel_code}`;
-    document.getElementById('jdash-topbar-type').textContent = typeLabel;
-    document.getElementById('jdash-badge-panel').textContent = `Panel ${me.panel_code}`;
-    document.getElementById('jdash-badge-type').textContent = typeLabel;
-    document.getElementById('jdash-badge-type').className = `status-pill-badge ${isInternal ? 'pill-blue' : 'pill-purple'}`;
+    const topPanel = document.getElementById('jdash-topbar-panel');
+    if (topPanel) topPanel.textContent = `Panel ${me.panel_code}`;
+    const topType = document.getElementById('jdash-topbar-type');
+    if (topType) topType.textContent = typeLabel;
+
+    const badgePanel = document.getElementById('jdash-badge-panel');
+    if (badgePanel) badgePanel.textContent = `Panel ${me.panel_code}`;
+    const badgeType = document.getElementById('jdash-badge-type');
+    if (badgeType) {
+      badgeType.textContent = typeLabel;
+      badgeType.className = `status-pill-badge ${isInternal ? 'pill-blue' : 'pill-purple'}`;
+    }
 
     const venueTextEl = document.getElementById('jdash-venue-text');
     if (venueTextEl) venueTextEl.textContent = me.panel_venue || 'Venue Pending';
 
     if (me.profile) {
-      document.getElementById('jdash-name').textContent = me.profile.full_name || me.username;
-      document.getElementById('jdash-avatar').textContent = (me.profile.full_name || me.username).charAt(0).toUpperCase();
+      const nameEl = document.getElementById('jdash-name');
+      if (nameEl) nameEl.textContent = me.profile.full_name || me.username;
+      const avatarEl = document.getElementById('jdash-avatar');
+      if (avatarEl) avatarEl.textContent = (me.profile.full_name || me.username).charAt(0).toUpperCase();
       const org = isInternal ? me.profile.institution_name : me.profile.company_name;
-      document.getElementById('jdash-sub').textContent = `${me.profile.designation || 'Judge'} • ${org || 'RMK Hackathon'}`;
-      document.getElementById('jdash-email').textContent = me.profile.email || '—';
-      document.getElementById('jdash-phone').textContent = me.profile.phone_no || '—';
+      const subEl = document.getElementById('jdash-sub');
+      if (subEl) subEl.textContent = `${me.profile.designation || 'Judge'} • ${org || 'RMK Hackathon'}`;
+      const emailEl = document.getElementById('jdash-email');
+      if (emailEl) emailEl.textContent = me.profile.email || '—';
+      const phoneEl = document.getElementById('jdash-phone');
+      if (phoneEl) phoneEl.textContent = me.profile.phone_no || '—';
     }
 
     loadJudgeProjects();
@@ -3029,14 +3077,10 @@ function renderJudgeProjects() {
     projects = projects.filter(p => !p.evaluation || p.evaluation.status !== 'SUBMITTED');
   }
 
-  // Filter by search query
+  // Filter by search query (resilient multi-field token matching)
   if (query) {
     projects = projects.filter(p =>
-      (p.team_code && p.team_code.toLowerCase().includes(query)) ||
-      (p.team_name && p.team_name.toLowerCase().includes(query)) ||
-      (p.project_title && p.project_title.toLowerCase().includes(query)) ||
-      (p.category && p.category.toLowerCase().includes(query)) ||
-      (p.college_name && p.college_name.toLowerCase().includes(query))
+      matchesSearchQuery(query, p.team_code, p.team_name, p.project_title, p.leader_name, p.category, p.college_name, p.members, p.notes)
     );
   }
 
@@ -3053,22 +3097,20 @@ function renderJudgeProjects() {
 
     let statusPill = '<span class="status-pill-badge pill-absent">Not Evaluated</span>';
     if (isSubmitted) {
-      statusPill = `<span class="status-pill-badge pill-present">Submitted (${p.evaluation.total_score} pts)</span>`;
+      statusPill = `<span class="status-pill-badge pill-present">✓ Evaluated (${p.evaluation.total_score} pts)</span>`;
     } else if (isDraft) {
       statusPill = `<span class="status-pill-badge pill-amber">Draft Saved (${p.evaluation.total_score} pts)</span>`;
     }
 
     return `
       <tr>
-        <td data-label="Team ID"><span class="table-team-id mono">${escapeHtml(p.team_code)}</span></td>
-        <td data-label="Project">
-          <div class="table-team-title">${escapeHtml(p.project_title || p.team_name)}</div>
-          <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(p.team_name)}</div>
-        </td>
+        <td data-label="Team ID"><span class="table-team-id mono">${escapeHtml(p.team_code || '')}</span></td>
+        <td data-label="Team Name"><strong class="table-team-name">${escapeHtml(p.team_name || '—')}</strong></td>
+        <td data-label="Project Title"><div class="table-project-title">${escapeHtml(p.project_title || '—')}</div></td>
+        <td data-label="Leader Name"><div class="table-leader-name">${escapeHtml(p.leader_name || '—')}</div></td>
         <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>
-        <td data-label="School">${escapeHtml(p.college_name || '—')}</td>
         <td data-label="Evaluation Status">${statusPill}</td>
-        <td data-label="Action">
+        <td data-label="Action" style="text-align: center;">
           <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm" onclick="openEvaluationModal(${p.team_id})">
             ${isSubmitted ? 'View Evaluation' : (isDraft ? 'Resume Evaluation' : 'Evaluate')}
           </button>
@@ -3077,21 +3119,21 @@ function renderJudgeProjects() {
     `;
   }).join('');
 
-  // 2. Mobile Touch Cards List (Touch target >= 44px, clean typography)
+  // 2. Mobile Touch Cards List (Touch target >= 48px, optimized for mobile judges)
   mobileList.innerHTML = projects.map(p => {
     const isSubmitted = p.evaluation && p.evaluation.status === 'SUBMITTED';
     const isDraft = p.evaluation && p.evaluation.status === 'DRAFT';
 
     let statusPill = '<span class="status-pill-badge pill-absent">Not Evaluated</span>';
     if (isSubmitted) {
-      statusPill = `<span class="status-pill-badge pill-present">Submitted (${p.evaluation.total_score} pts)</span>`;
+      statusPill = `<span class="status-pill-badge pill-present">✓ Evaluated (${p.evaluation.total_score} pts)</span>`;
     } else if (isDraft) {
       statusPill = `<span class="status-pill-badge pill-amber">Draft Saved (${p.evaluation.total_score} pts)</span>`;
     }
 
     let btnLabel = `
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <span>Evaluate Project</span>
+      <span>Evaluate Team</span>
     `;
     let btnClass = 'glass-btn-primary';
 
@@ -3110,21 +3152,27 @@ function renderJudgeProjects() {
     }
 
     return `
-      <div class="jdash-project-card">
+      <div class="jdash-project-card ${isSubmitted ? 'card-evaluated' : ''}">
         <div class="jdash-card-top">
-          <span class="jdash-card-id">${escapeHtml(p.team_code)}</span>
+          <span class="jdash-card-id mono">${escapeHtml(p.team_code || '')}</span>
           ${statusPill}
         </div>
-        <div>
-          <h4 class="jdash-card-title">${escapeHtml(p.project_title || p.team_name)}</h4>
-          <div class="jdash-card-teamname">${escapeHtml(p.team_name)}</div>
+        <div class="jdash-card-content">
+          <h4 class="jdash-card-teamname">${escapeHtml(p.team_name || '—')}</h4>
+          <div class="jdash-card-detail-row">
+            <span class="detail-label">Project:</span>
+            <span class="detail-value">${escapeHtml(p.project_title || '—')}</span>
+          </div>
+          <div class="jdash-card-detail-row">
+            <span class="detail-label">Leader:</span>
+            <span class="detail-value">${escapeHtml(p.leader_name || '—')}</span>
+          </div>
+          <div class="jdash-card-detail-row">
+            <span class="detail-label">Theme:</span>
+            <span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span>
+          </div>
         </div>
-        <div class="jdash-card-tags">
-          <span class="jdash-card-theme">${escapeHtml(p.category || 'General')}</span>
-          <span class="jdash-card-school" title="${escapeHtml(p.college_name || '—')}">${escapeHtml(p.college_name || '—')}</span>
-        </div>
-        ${p.members ? `<div class="jdash-card-members"><strong>Members:</strong> ${escapeHtml(p.members)}</div>` : ''}
-        <button type="button" class="glass-btn ${btnClass} jdash-card-btn" onclick="openEvaluationModal(${p.team_id})">
+        <button type="button" class="glass-btn ${btnClass} jdash-touch-btn" onclick="openEvaluationModal(${p.team_id})">
           ${btnLabel}
         </button>
       </div>
@@ -3140,6 +3188,19 @@ async function openEvaluationModal(teamId) {
   document.getElementById('eval-modal-team-code').textContent = project.team_code;
   document.getElementById('eval-modal-team-name').textContent = project.team_name;
   document.getElementById('eval-modal-proj-title').textContent = `${project.project_title || '—'} • ${project.category || 'Innovation'}`;
+
+  const schoolEl = document.getElementById('eval-modal-school');
+  if (schoolEl) schoolEl.textContent = project.college_name || 'Institution / School';
+
+  const membersEl = document.getElementById('eval-modal-members');
+  if (membersEl) {
+    if (project.members) {
+      membersEl.textContent = `Members: ${project.members}`;
+      membersEl.classList.remove('hidden');
+    } else {
+      membersEl.classList.add('hidden');
+    }
+  }
 
   const criteriaBox = document.getElementById('eval-criteria-container');
   criteriaBox.innerHTML = '<div class="qr-loading">Loading scoring criteria...</div>';
@@ -3325,25 +3386,37 @@ async function saveEvaluationDraft() {
   }
 }
 
-async function submitEvaluationFinal() {
+function submitEvaluationFinal() {
   if (!currentEvalTeamId) return;
   const errBox = document.getElementById('eval-error');
-  errBox.classList.add('hidden');
+  if (errBox) errBox.classList.add('hidden');
 
-  // Enforce mandatory written remarks before submission
+  // Open dedicated in-app confirmation popup modal
+  const confirmModal = document.getElementById('modal-eval-confirm');
+  if (confirmModal) {
+    confirmModal.classList.remove('hidden');
+  } else if (!confirm('Are you sure you want to final-submit this evaluation? Once submitted, your scores and feedback will be locked and cannot be edited.')) {
+    return;
+  } else {
+    executeFinalEvaluationSubmit();
+  }
+}
+
+function closeEvalConfirmModal() {
+  const confirmModal = document.getElementById('modal-eval-confirm');
+  if (confirmModal) confirmModal.classList.add('hidden');
+}
+
+async function executeFinalEvaluationSubmit() {
+  closeEvalConfirmModal();
+  if (!currentEvalTeamId) return;
+  const errBox = document.getElementById('eval-error');
+  if (errBox) errBox.classList.add('hidden');
+
   const remarks = (document.getElementById('eval-remarks').value || '').trim();
-  if (!remarks) {
-    errBox.textContent = 'Written evaluation remarks and feedback are mandatory for final submission.';
-    errBox.classList.remove('hidden');
-    document.getElementById('eval-remarks').focus();
-    return;
-  }
-
-  if (!confirm('Are you sure you want to final-submit this evaluation? Once submitted, your scores and feedback will be locked and cannot be edited.')) {
-    return;
-  }
-
   const scores = collectEvaluationScores();
+  const submitBtn = document.getElementById('btn-confirm-final-submit') || document.getElementById('btn-eval-submit');
+  if (submitBtn) submitBtn.disabled = true;
 
   try {
     const res = await fetch(`/api/jury/evaluations/${currentEvalTeamId}/submit`, {
@@ -3357,19 +3430,57 @@ async function submitEvaluationFinal() {
 
     const data = await res.json();
     if (!res.ok) {
-      errBox.textContent = data.error || 'Failed to submit evaluation';
-      errBox.classList.remove('hidden');
+      if (errBox) {
+        errBox.textContent = data.error || 'Failed to submit evaluation';
+        errBox.classList.remove('hidden');
+      }
+      if (submitBtn) submitBtn.disabled = false;
       return;
     }
 
-    showToast('Final evaluation submitted and locked successfully!', 'info');
+    showToast('Final evaluation submitted and locked successfully!', 'success');
     closeEvaluationModal();
     loadJudgeProjects();
   } catch (err) {
     console.error('[ERROR] submitEvaluationFinal:', err);
-    errBox.textContent = 'Server connection error';
-    errBox.classList.remove('hidden');
+    if (errBox) {
+      errBox.textContent = 'Server connection error';
+      errBox.classList.remove('hidden');
+    }
+    if (submitBtn) submitBtn.disabled = false;
   }
+}
+window.submitEvaluationFinal = submitEvaluationFinal;
+window.closeEvalConfirmModal = closeEvalConfirmModal;
+window.executeFinalEvaluationSubmit = executeFinalEvaluationSubmit;
+
+function exportJuryEvaluationsCSV() {
+  if (!rawJuryEvalsData || rawJuryEvalsData.length === 0) {
+    showToast('No evaluations to export yet.', 'error');
+    return;
+  }
+  const headers = ['Panel', 'Team Code', 'Team Name', 'Project Title', 'School/College', 'Internal Score (/50)', 'External Score (/50)', 'Combined Score (/100)', 'Status'];
+  const rows = rawJuryEvalsData.map(e => [
+    e.panel_code || '',
+    e.team_code || '',
+    `"${(e.team_name || '').replace(/"/g, '""')}"`,
+    `"${(e.project_title || '').replace(/"/g, '""')}"`,
+    `"${(e.school || '').replace(/"/g, '""')}"`,
+    e.internal_eval ? e.internal_eval.score : '',
+    e.external_eval ? e.external_eval.score : '',
+    e.combined_score !== null ? e.combined_score : '',
+    e.is_complete ? 'Completed' : (e.internal_eval || e.external_eval ? 'Partial' : 'Pending')
+  ]);
+
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `RMK_Jr_Hackathon_2026_Jury_Evaluations_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('Evaluation CSV exported successfully', 'info');
 }
 
 // ─── Attach to global window scope for inline HTML handlers ───
@@ -3383,6 +3494,7 @@ window.toggleJudgeStatus = toggleJudgeStatus;
 window.logoutJuryAdmin = logoutJuryAdmin;
 window.loadJuryAdminEvaluations = loadJuryAdminEvaluations;
 window.handleJuryEvalsSearch = handleJuryEvalsSearch;
+window.exportJuryEvaluationsCSV = exportJuryEvaluationsCSV;
 window.openAdminEvalDetail = openAdminEvalDetail;
 window.closeAdminEvalModal = closeAdminEvalModal;
 
@@ -3404,6 +3516,115 @@ window.submitEvaluationFinal = submitEvaluationFinal;
 //  ADMIN PANEL ALLOCATION MANAGEMENT (Milestone 2)
 // ════════════════════════════════════════════════════════════════
 
+
+const OFFICIAL_PANEL_JURY = {
+  1: {
+    panel: 'Panel 1',
+    external: { name: 'Mr S. Gowtham', designation: 'Deputy Manager', organisation: 'Ashok Leyland' },
+    internal: { name: 'Dr. T. Suresh', designation: 'HoD/ECE', organisation: 'RMKEC' },
+    assistance: { name: 'Ms.M.Naveena', designation: 'Assistant Professor / ECE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.T D Subha / ECE, Dr.Deepa D / CSE', organisation: 'RMKEC' }
+  },
+  2: {
+    panel: 'Panel 2',
+    external: { name: 'Mr. Kumar Krishnamoorthy', designation: 'Technical Lead', organisation: 'DXC Technology' },
+    internal: { name: 'Dr. B.Prathushalaxmi', designation: 'HoD/AIDS', organisation: 'RMKCET' },
+    assistance: { name: 'Mr. D. Senthil Kumar', designation: 'Assistant Professor / CSE (CS)', organisation: 'RMKCET' },
+    committee: { name: 'Dr.Hema Jyothi, Dr.Sesha Vidhya S', organisation: 'RMKCET' }
+  },
+  3: {
+    panel: 'Panel 3',
+    external: { name: 'Ms. Aparna Karthik', designation: 'Associate Test Manager', organisation: 'EY-GDS' },
+    internal: { name: 'Dr.K. Helen Prabha', designation: 'HoD/ECE', organisation: 'RMDEC' },
+    assistance: { name: 'Ms. P. Illampirai', designation: 'Assistant Professor / CSE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.D Abithakumari Prof/CSE, Ms.Latha AP/CSE', organisation: 'RMKEC' }
+  },
+  4: {
+    panel: 'Panel 4',
+    external: { name: 'Mr. R. Harish', designation: 'Technical Lead', organisation: 'HCL Technologies Limited' },
+    internal: { name: 'Dr. R. Raja Guru', designation: 'HoD / CSE', organisation: 'RMKCET' },
+    assistance: { name: 'Ms.C. Vimala Roshni', designation: 'Assistant Professor / AIDS', organisation: 'RMKEC' },
+    committee: { name: 'Dr.R.Poornima / IT, Dr.G.Nagarajan / IT', organisation: 'RMKEC' }
+  },
+  5: {
+    panel: 'Panel 5',
+    external: { name: 'Mr. G.K. Bhaskar', designation: 'Security Analyst', organisation: 'Securin' },
+    internal: { name: 'Dr. J. Jasmine Hephzipa', designation: 'HoD/ECA', organisation: 'RMKEC' },
+    assistance: { name: 'Ms.Renuga Devi', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Mr.S.Vijayakumar / CSE', organisation: 'RMKEC' }
+  },
+  6: {
+    panel: 'Panel 6',
+    external: { name: 'Mr. Raj Kisan Sathiyan', designation: 'AI Vision Team Lead', organisation: 'Intech Systems Pvt Ltd' },
+    internal: { name: 'Dr. Subadra Murugan', designation: 'HoD/EEE', organisation: 'RMKCET' },
+    assistance: { name: 'Mr.AnandRaj', designation: 'Assistant Professor / CSBS', organisation: 'RMKEC' },
+    committee: { name: 'Mrs.Gayathri Priya S, Mr. Bharathi Dhasan D', organisation: 'RMDEC' }
+  },
+  7: {
+    panel: 'Panel 7',
+    external: { name: 'Mr. T. Dellibabu', designation: 'Principal Technical Professional', organisation: 'Kellogg Brown and Root Engineering' },
+    internal: { name: 'Dr.Gangatharan', designation: 'HoD/ECE', organisation: 'RMKCET' },
+    assistance: { name: 'Ms.V.Haritha', designation: 'Assistant Professor / CSE', organisation: 'RMKEC' },
+    committee: { name: 'Ms. M. Rekha / IT, Mr. S.Nagarajan / IT', organisation: 'RMKEC' }
+  },
+  8: {
+    panel: 'Panel 8',
+    external: { name: 'Mr. C. Shivarajkumar', designation: 'Principal Technical Professional', organisation: 'Kellogg Brown and Root Engineering' },
+    internal: { name: 'Dr. A. Swarnalatha', designation: 'HoD/EEE', organisation: 'RMKEC' },
+    assistance: { name: 'Ms. Jhansi Ida', designation: 'Associate Professor / CSBS', organisation: 'RMKEC' },
+    committee: { name: 'Dr.V.Kali Raj, Mr.Karthick Murugan S', organisation: 'RMDEC' }
+  },
+  9: {
+    panel: 'Panel 9',
+    external: { name: 'Mr. J. Veeramani', designation: 'Engineering Manager', organisation: 'Honeywell Automation India Ltd' },
+    internal: { name: 'Dr. G. Amudha', designation: 'HoD/CSBS', organisation: 'RMDEC' },
+    assistance: { name: 'Dr.R.Sheeja', designation: 'Associate Professor / CSE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.Devan P K', organisation: 'RMKCET' }
+  },
+  10: {
+    panel: 'Panel 10',
+    external: { name: 'Ms. Nithya Chandrashekar', designation: 'Assistant Manager', organisation: 'QX Global Ltd' },
+    internal: { name: 'Dr.Sandra Johnson', designation: 'HoD/AIDS', organisation: 'RMKEC' },
+    assistance: { name: 'Ms.T.Kanmani', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Dr.K.B. Aruna, Ms. Anandhi K', organisation: 'RMDEC' }
+  },
+  11: {
+    panel: 'Panel 11',
+    external: { name: 'Mr. Frederick Swartz', designation: 'Software Architect', organisation: 'Squad Software Inc' },
+    internal: { name: 'Dr.G.Anandha Mala', designation: 'Professor / IT', organisation: 'RMKEC' },
+    assistance: { name: 'Ms. Nandhini', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Dr.A.Anna Lakshmi / IT (RMKEC), Ms.L.Sudha (RMKDEC)', organisation: 'RMKEC / RMDEC' }
+  },
+  12: {
+    panel: 'Panel 12',
+    external: { name: 'Ms. Monisha Rajendran', designation: 'Team Lead', organisation: 'QX Global Ltd' },
+    internal: { name: 'Dr. C.S. Anita', designation: 'HoD/AIML', organisation: 'RMDEC' },
+    assistance: { name: 'Ms. S. Deepa', designation: 'Assistant Professor / CSBS', organisation: 'RMDEC' },
+    committee: { name: 'Mr.M.Vengateswaran / CSE', organisation: 'RMKEC' }
+  },
+  13: {
+    panel: 'Panel 13',
+    external: { name: 'Mr. R. Harish', designation: 'Technical Lead', organisation: 'HCL Technologies Limited' },
+    internal: { name: 'Dr. K. Balasubadra', designation: 'HoD / IT', organisation: 'RMDEC' },
+    assistance: { name: 'Ms. T. Akila', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Dr A. Nivas Ahamed / EEE, Ms.M.Kanniga Parameshwari / IT', organisation: 'RMKEC' }
+  },
+  14: {
+    panel: 'Panel 14',
+    external: { name: 'Mr.P. Dhilip Kumar', designation: 'Consultant', organisation: 'Deloitte' },
+    internal: { name: 'Dr. P. Valarmathie', designation: 'HoD / CSE', organisation: 'RMDEC' },
+    assistance: { name: 'Ms.J.Divya', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Ms.K.Selvi / IT, Mr.L.Vinoth Kumar / IT', organisation: 'RMKEC' }
+  },
+  15: {
+    panel: 'Panel 15',
+    external: { name: 'Mr. S.S Venkatasubramanian', designation: 'Founder & CEO', organisation: 'LabnBox (Steam Troops Innovation)' },
+    internal: { name: 'Dr.Y. Sukhi', designation: 'HoD/EEE', organisation: 'RMKEC' },
+    assistance: { name: 'Dr. K. Naresh Kumar', designation: 'Assistant Professor / EEE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.Vendhan D, Dr.Arun Manicka Raja M', organisation: 'RMKCET' }
+  }
+};
+
 let allocState = {
   activeRevision: null,
   draftRevision: null,
@@ -3415,6 +3636,30 @@ let allocState = {
   panelFilter: 'all',
   searchQuery: ''
 };
+
+let expandedAllocPanels = new Set();
+
+function toggleAllocPanel(panelId) {
+  if (expandedAllocPanels.has(panelId)) {
+    expandedAllocPanels.delete(panelId);
+  } else {
+    expandedAllocPanels.add(panelId);
+  }
+  renderAllocationWorkspace();
+}
+
+function toggleAllAllocPanels() {
+  const allIds = allocState.panels.map(p => p.id);
+  const allExpanded = allIds.length > 0 && allIds.every(id => expandedAllocPanels.has(id));
+  if (allExpanded) {
+    expandedAllocPanels.clear();
+  } else {
+    allIds.forEach(id => expandedAllocPanels.add(id));
+  }
+  renderAllocationWorkspace();
+}
+window.toggleAllocPanel = toggleAllocPanel;
+window.toggleAllAllocPanels = toggleAllAllocPanels;
 
 async function loadAdminAllocations() {
   if (!adminToken) return;
@@ -3553,11 +3798,7 @@ function renderAllocationWorkspace() {
   let filteredUnassigned = allocState.unassigned;
   if (query) {
     filteredUnassigned = allocState.unassigned.filter(t =>
-      (t.team_code && t.team_code.toLowerCase().includes(query)) ||
-      (t.team_name && t.team_name.toLowerCase().includes(query)) ||
-      (t.theme && t.theme.toLowerCase().includes(query)) ||
-      (t.leader_name && t.leader_name.toLowerCase().includes(query)) ||
-      (t.college_name && t.college_name.toLowerCase().includes(query))
+      matchesSearchQuery(query, t.team_code, t.team_name, t.theme, t.leader_name, t.college_name, t.project_title, t.members)
     );
   }
 
@@ -3629,15 +3870,16 @@ function renderAllocationWorkspace() {
     return;
   }
 
+  const allIds = displayPanels.map(p => p.id);
+  const isAllExpanded = allIds.length > 0 && allIds.every(id => expandedAllocPanels.has(id));
+  const toggleBtnText = document.getElementById('btn-toggle-all-alloc-text');
+  if (toggleBtnText) toggleBtnText.textContent = isAllExpanded ? 'Collapse All' : 'Expand All';
+
   panelsGrid.innerHTML = displayPanels.map(p => {
     let teams = p.teams || [];
     if (query) {
       teams = teams.filter(t =>
-        (t.team_code && t.team_code.toLowerCase().includes(query)) ||
-        (t.team_name && t.team_name.toLowerCase().includes(query)) ||
-        (t.theme && t.theme.toLowerCase().includes(query)) ||
-        (t.leader_name && t.leader_name.toLowerCase().includes(query)) ||
-        (t.college_name && t.college_name.toLowerCase().includes(query))
+        matchesSearchQuery(query, t.team_code, t.team_name, t.theme, t.leader_name, t.college_name, t.project_title, t.members)
       );
     }
 
@@ -3645,6 +3887,9 @@ function renderAllocationWorkspace() {
     let badgeClass = 'count-badge-optimal';
     if (count === 0) badgeClass = 'count-badge-empty';
     else if (count < 12) badgeClass = 'count-badge-low';
+
+    // Auto-expand if active query matches teams in this panel
+    const isExpanded = query ? (teams.length > 0) : expandedAllocPanels.has(p.id);
 
     const panelOptions = allocState.panels.filter(other => other.id !== p.id).map(other =>
       `<option value="${other.id}">${escapeHtml(other.panel_code)} (${escapeHtml(other.panel_name)})</option>`
@@ -3679,24 +3924,63 @@ function renderAllocationWorkspace() {
           `;
         }).join('');
 
+    const panelNum = parseInt(String(p.panel_code || '').replace(/[^0-9]/g, ''), 10) || 1;
+    const juryInfo = (typeof OFFICIAL_PANEL_JURY !== 'undefined') ? OFFICIAL_PANEL_JURY[panelNum] : null;
+
     return `
-      <div class="alloc-panel-card" id="alloc-panel-${p.id}">
-        <div class="alloc-panel-header">
-          <div class="alloc-panel-title-group">
-            <div class="alloc-panel-code-row">
-              <span class="alloc-panel-code-badge">${escapeHtml(p.panel_code)}</span>
+      <div class="alloc-panel-row-card ${isExpanded ? 'expanded' : ''}" id="alloc-panel-${p.id}">
+        <div class="alloc-panel-row-header" onclick="toggleAllocPanel(${p.id})">
+          <div class="alloc-panel-row-left">
+            <span class="alloc-panel-code-badge">${escapeHtml(p.panel_code)}</span>
+            <div class="alloc-panel-info">
               <h4 class="alloc-panel-name">${escapeHtml(p.panel_name)}</h4>
-            </div>
-            <div class="alloc-panel-venue-pill" title="${escapeHtml(p.venue || 'No venue configured')}">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span>${escapeHtml(p.venue || 'Venue pending')}</span>
+              <div class="alloc-panel-venue-pill" title="${escapeHtml(p.venue || 'No venue configured')}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>${escapeHtml(p.venue || 'Venue pending')}</span>
+              </div>
             </div>
           </div>
-          <span class="alloc-panel-count-badge ${badgeClass}">${count} Teams</span>
+          <div class="alloc-panel-row-right">
+            <span class="alloc-panel-count-badge ${badgeClass}">${count} Teams</span>
+            <button type="button" class="glass-btn btn-xs alloc-expand-btn" onclick="event.stopPropagation(); toggleAllocPanel(${p.id});" aria-label="Toggle Panel">
+              <span class="expand-btn-text">${isExpanded ? 'Collapse' : 'Expand'}</span>
+              <svg class="chevron-icon ${isExpanded ? 'rotate-180' : ''}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
         </div>
-        <div class="alloc-panel-teams-list">
-          ${teamsHtml}
-        </div>
+        ${juryInfo ? `
+          <div class="alloc-panel-jury-box">
+            <div class="alloc-panel-jury-grid">
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-external">External Jury</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.external.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.external.designation)} • ${escapeHtml(juryInfo.external.organisation)}</span>
+              </div>
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-internal">Internal Jury</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.internal.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.internal.designation)} • ${escapeHtml(juryInfo.internal.organisation)}</span>
+              </div>
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-assistance">Panel Assistance</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.assistance.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.assistance.designation)} • ${escapeHtml(juryInfo.assistance.organisation)}</span>
+              </div>
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-committee">Committee Incharge</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.committee.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.committee.organisation)}</span>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+        ${isExpanded ? `
+          <div class="alloc-panel-row-body">
+            <div class="alloc-panel-teams-grid">
+              ${teamsHtml}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   }).join('');
