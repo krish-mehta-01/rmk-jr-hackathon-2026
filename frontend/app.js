@@ -1897,6 +1897,212 @@ async function exportMasterDoc() {
 }
 window.exportMasterPdf = exportMasterPdf;
 window.exportMasterDoc = exportMasterDoc;
+window.exportMasterExcel = exportExcel;
+
+// ─────────────────────────────────────────────────────────────
+// VENUE-WISE ATTENDANCE DOWNLOAD HANDLERS
+// ─────────────────────────────────────────────────────────────
+async function exportVenueAttendanceExcel() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  try {
+    showToast('Preparing Venue-wise Attendance Excel...', 'info');
+    const res = await fetch('/api/admin/export/venue-attendance-excel', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      showToast('Failed to download Venue-wise Attendance Excel', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Venue_Attendance.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Venue-wise Attendance Excel downloaded', 'success');
+  } catch (err) {
+    console.error('exportVenueAttendanceExcel error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  }
+}
+
+async function exportVenueAttendancePdf() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  try {
+    showToast('Preparing Venue-wise Attendance PDF...', 'info');
+    const res = await fetch('/api/admin/export/venue-attendance-pdf', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      showToast('Failed to download Venue-wise Attendance PDF', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Venue_Attendance.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Venue-wise Attendance PDF downloaded', 'success');
+  } catch (err) {
+    console.error('exportVenueAttendancePdf error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  }
+}
+
+async function exportVenueAttendanceDoc() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  try {
+    showToast('Preparing Venue-wise Attendance Word document...', 'info');
+    const res = await fetch('/api/admin/export/venue-attendance-doc', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      showToast('Failed to download Venue-wise Attendance Word document', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Venue_Attendance.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Venue-wise Attendance Word document downloaded', 'success');
+  } catch (err) {
+    console.error('exportVenueAttendanceDoc error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// THEME-WISE ATTENDANCE DOWNLOAD HANDLERS
+// ─────────────────────────────────────────────────────────────
+async function exportThemeAttendanceExcel() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  try {
+    showToast('Preparing Theme-wise Attendance Excel...', 'info');
+    const res = await fetch('/api/admin/export/theme-attendance-excel', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      showToast('Failed to download Theme-wise Attendance Excel', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Theme_Attendance.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Theme-wise Attendance Excel downloaded', 'success');
+  } catch (err) {
+    console.error('exportThemeAttendanceExcel error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  }
+}
+
+async function exportThemeAttendancePdf() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  try {
+    showToast('Preparing Theme-wise Attendance PDF...', 'info');
+    const res = await fetch('/api/admin/export/theme-attendance-pdf', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      showToast('Failed to download Theme-wise Attendance PDF', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Theme_Attendance.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Theme-wise Attendance PDF downloaded', 'success');
+  } catch (err) {
+    console.error('exportThemeAttendancePdf error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  }
+}
+
+async function exportThemeAttendanceDoc() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  try {
+    showToast('Preparing Theme-wise Attendance Word document...', 'info');
+    const res = await fetch('/api/admin/export/theme-attendance-doc', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      showToast('Failed to download Theme-wise Attendance Word document', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Theme_Attendance.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Theme-wise Attendance Word document downloaded', 'success');
+  } catch (err) {
+    console.error('exportThemeAttendanceDoc error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  }
+}
+
+window.exportVenueAttendanceExcel = exportVenueAttendanceExcel;
+window.exportVenueAttendancePdf = exportVenueAttendancePdf;
+window.exportVenueAttendanceDoc = exportVenueAttendanceDoc;
+window.exportThemeAttendanceExcel = exportThemeAttendanceExcel;
+window.exportThemeAttendancePdf = exportThemeAttendancePdf;
+window.exportThemeAttendanceDoc = exportThemeAttendanceDoc;
 
 // ─────────────────────────────────────────────────────────────
 // THEME-WISE DOWNLOAD HANDLERS (ADMIN AUTHENTICATED)
@@ -2040,6 +2246,13 @@ async function exportThemeExcel() {
 window.exportThemePdf = exportThemePdf;
 window.exportThemeDoc = exportThemeDoc;
 window.exportThemeExcel = exportThemeExcel;
+
+window.exportThemeRosterPdf = exportThemePdf;
+window.exportThemeRosterDoc = exportThemeDoc;
+window.exportThemeRosterExcel = exportThemeExcel;
+window.exportVenueRosterPdf = exportVenuePdf;
+window.exportVenueRosterDoc = exportVenueDoc;
+window.exportVenueRosterExcel = exportVenueExcel;
 
 // ─────────────────────────────────────────────────────────────
 // PERMANENT HACKATHON DAY QR CODE

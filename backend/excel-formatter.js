@@ -894,8 +894,519 @@ async function buildThemeWiseWorkbook(themesMap) {
   return wb;
 }
 
+/**
+ * Builds the Venue-wise Presentation Roster workbook (Clean 8 Columns, NO attendance details)
+ */
+async function buildVenueRosterWorkbook(panelsMap) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'RMK Jr. Hackathon Organizers';
+  wb.created = new Date();
+
+  let logoLeftId = null;
+  let logoRightId = null;
+  if (fs.existsSync(LOGO_LEFT_PATH)) {
+    logoLeftId = wb.addImage({ filename: LOGO_LEFT_PATH, extension: 'png' });
+  }
+  if (fs.existsSync(LOGO_RIGHT_PATH)) {
+    logoRightId = wb.addImage({ filename: LOGO_RIGHT_PATH, extension: 'png' });
+  }
+
+  // SHEET 1: SUMMARY SHEET (15 PANELS)
+  const wsSummary = wb.addWorksheet('Summary', {
+    views: [{ state: 'frozen', ySplit: 5, showGridLines: true }]
+  });
+
+  const sumCols = [
+    { header: 'Sl. No.', width: 9 },
+    { header: 'Panel No.', width: 14 },
+    { header: 'Allocated Presentation Venue', width: 44 },
+    { header: 'Themes / Domain Allocation', width: 46 },
+    { header: 'Registered Teams', width: 20 }
+  ];
+
+  wsSummary.mergeCells(1, 1, 1, sumCols.length);
+  const tCell1 = wsSummary.getCell('A1');
+  tCell1.value = 'R.M.K. GROUP OF INSTITUTIONS';
+  tCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
+  tCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+  tCell1.alignment = { horizontal: 'center', vertical: 'bottom' };
+  wsSummary.getRow(1).height = 30;
+
+  wsSummary.mergeCells(2, 1, 2, sumCols.length);
+  const tCell2 = wsSummary.getCell('A2');
+  tCell2.value = 'JUNIOR HACKATHON 2026';
+  tCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
+  tCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+  tCell2.alignment = { horizontal: 'center', vertical: 'top' };
+  wsSummary.getRow(2).height = 26;
+
+  let totalAllTeams = 0;
+  for (const [, info] of panelsMap) {
+    totalAllTeams += (info.teams || []).length;
+  }
+
+  wsSummary.mergeCells(3, 1, 3, sumCols.length);
+  const subT = wsSummary.getCell('A3');
+  subT.value = `15-PANEL JURY VENUE ALLOCATION SUMMARY   •   15 Panels Across Campus   •   ${totalAllTeams} Registered Teams`;
+  subT.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+  subT.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
+  subT.alignment = { horizontal: 'center', vertical: 'middle' };
+  subT.border = BORDER_RIBBON;
+  wsSummary.getRow(3).height = 24;
+
+  wsSummary.getRow(4).height = 6;
+
+  const sumHeadRow = wsSummary.getRow(5);
+  sumHeadRow.height = 28;
+  sumCols.forEach((col, idx) => {
+    const cell = sumHeadRow.getCell(idx + 1);
+    cell.value = col.header;
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
+    cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 4) ? 'center' : 'left', vertical: 'middle' };
+    cell.border = BORDER_CELL;
+  });
+
+  let sl = 1;
+  for (const [panelNo, info] of panelsMap) {
+    const row = wsSummary.getRow(sl + 5);
+    row.height = 24;
+    const isEven = (sl % 2 === 0);
+    const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
+    const tCount = (info.teams || []).length;
+    const themesStr = [...(info.themes || [])].join(', ');
+
+    const vals = [sl, `Panel ${panelNo}`, info.venue, themesStr, tCount];
+    vals.forEach((v, idx) => {
+      const cell = row.getCell(idx + 1);
+      cell.value = v;
+      cell.border = BORDER_CELL;
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+      cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
+      cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 4) ? 'center' : 'left', vertical: 'middle' };
+      if (idx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
+    });
+    sl++;
+  }
+
+  // Total Summary Row
+  const totalRow = wsSummary.getRow(sl + 5);
+  totalRow.height = 26;
+  const totVals = ['', 'TOTAL', '', '', totalAllTeams];
+  totVals.forEach((v, idx) => {
+    const cell = totalRow.getCell(idx + 1);
+    cell.value = v;
+    cell.border = BORDER_RIBBON;
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.ribbonText } };
+    cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 4) ? 'center' : 'left', vertical: 'middle' };
+  });
+
+  sumCols.forEach((col, idx) => {
+    wsSummary.getColumn(idx + 1).width = col.width;
+  });
+
+  if (logoLeftId !== null) {
+    wsSummary.addImage(logoLeftId, {
+      tl: { col: 0.1, row: 0.1 },
+      ext: { width: 130, height: 50 }
+    });
+  }
+  if (logoRightId !== null) {
+    wsSummary.addImage(logoRightId, {
+      tl: { col: sumCols.length - 1.5, row: 0.1 },
+      ext: { width: 155, height: 50 }
+    });
+  }
+
+  // SHEETS 2..16: 15 INDIVIDUAL PANEL ROSTER SHEETS (8 COLUMNS)
+  const rosterCols = [
+    { header: 'Sl. No.', width: 8 },
+    { header: 'Junior Hackathon ID', width: 22 },
+    { header: 'Team Leader Name', width: 24 },
+    { header: 'Team Members', width: 34 },
+    { header: 'Team Name', width: 26 },
+    { header: 'Title of Your Project', width: 36 },
+    { header: 'Theme Track', width: 28 },
+    { header: 'School Name', width: 38 }
+  ];
+
+  function safeVenueTabName(venue, panelNo) {
+    if (!venue) return `Venue ${panelNo}`;
+    let clean = venue
+      .replace(/Second Floor/g, '2nd Flr')
+      .replace(/First Floor/g, '1st Flr')
+      .replace(/Seminar Hall/g, 'Sem Hall')
+      .replace(/[:\\/?*\[\]]/g, '')
+      .trim();
+    if (clean.length > 31) clean = clean.substring(0, 31).trim();
+    return clean || `Venue ${panelNo}`;
+  }
+
+  for (const [panelNo, info] of panelsMap) {
+    const safeSheetName = safeVenueTabName(info.venue, panelNo);
+    const themesStr = [...(info.themes || [])].join(', ');
+
+    const wsPanel = wb.addWorksheet(safeSheetName, {
+      views: [{ state: 'frozen', ySplit: 5, showGridLines: true }]
+    });
+
+    wsPanel.mergeCells(1, 1, 1, rosterCols.length);
+    const tCell1 = wsPanel.getCell('A1');
+    tCell1.value = 'R.M.K. GROUP OF INSTITUTIONS';
+    tCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
+    tCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+    tCell1.alignment = { horizontal: 'center', vertical: 'bottom' };
+    wsPanel.getRow(1).height = 30;
+
+    wsPanel.mergeCells(2, 1, 2, rosterCols.length);
+    const tCell2 = wsPanel.getCell('A2');
+    tCell2.value = 'JUNIOR HACKATHON 2026';
+    tCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
+    tCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+    tCell2.alignment = { horizontal: 'center', vertical: 'top' };
+    wsPanel.getRow(2).height = 26;
+
+    wsPanel.mergeCells(3, 1, 3, rosterCols.length);
+    const subTCell = wsPanel.getCell('A3');
+    subTCell.value = `VENUE: ${info.venue.toUpperCase()}      |      PANEL ${panelNo}      |      THEMES: ${themesStr.toUpperCase()}      |      Teams: ${info.teams.length}`;
+    subTCell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+    subTCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
+    subTCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    subTCell.border = BORDER_RIBBON;
+    wsPanel.getRow(3).height = 24;
+
+    wsPanel.getRow(4).height = 6;
+
+    const tHeadRow = wsPanel.getRow(5);
+    tHeadRow.height = 28;
+    rosterCols.forEach((col, idx) => {
+      const cell = tHeadRow.getCell(idx + 1);
+      cell.value = col.header;
+      cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
+      cell.alignment = { horizontal: (idx === 0 || idx === 1) ? 'center' : 'left', vertical: 'middle' };
+      cell.border = BORDER_CELL;
+    });
+
+    wsPanel.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: rosterCols.length } };
+
+    info.teams.forEach((t, tIdx) => {
+      const rNum = 6 + tIdx;
+      const row = wsPanel.getRow(rNum);
+      row.height = 24;
+      const isEven = (tIdx % 2 === 0);
+      const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
+
+      const vals = [
+        tIdx + 1,
+        t.team_code || '—',
+        t.leader_name || '—',
+        t.members || '—',
+        t.team_name || '—',
+        t.project_title || '—',
+        t.category || '—',
+        t.college_name || '—'
+      ];
+
+      vals.forEach((val, cIdx) => {
+        const cell = row.getCell(cIdx + 1);
+        cell.value = val;
+        cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        cell.border = BORDER_CELL;
+        cell.alignment = { horizontal: (cIdx === 0 || cIdx === 1) ? 'center' : 'left', vertical: 'middle' };
+        if (cIdx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
+      });
+    });
+
+    rosterCols.forEach((col, idx) => {
+      wsPanel.getColumn(idx + 1).width = col.width;
+    });
+
+    if (logoLeftId !== null) {
+      wsPanel.addImage(logoLeftId, {
+        tl: { col: 0.1, row: 0.1 },
+        ext: { width: 130, height: 50 }
+      });
+    }
+    if (logoRightId !== null) {
+      wsPanel.addImage(logoRightId, {
+        tl: { col: rosterCols.length - 1.5, row: 0.1 },
+        ext: { width: 155, height: 50 }
+      });
+    }
+  }
+
+  return wb;
+}
+
+/**
+ * Builds the Theme-wise Presentation Roster workbook (Clean 8 Columns, NO attendance details)
+ */
+async function buildThemeRosterWorkbook(themesMap) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'RMK Jr. Hackathon Organizers';
+  wb.created = new Date();
+
+  let logoLeftId = null;
+  let logoRightId = null;
+  if (fs.existsSync(LOGO_LEFT_PATH)) {
+    logoLeftId = wb.addImage({ filename: LOGO_LEFT_PATH, extension: 'png' });
+  }
+  if (fs.existsSync(LOGO_RIGHT_PATH)) {
+    logoRightId = wb.addImage({ filename: LOGO_RIGHT_PATH, extension: 'png' });
+  }
+
+  // SHEET 1: THEME SUMMARY SHEET (12 THEMES)
+  const wsSummary = wb.addWorksheet('Summary', {
+    views: [{ state: 'frozen', ySplit: 5, showGridLines: true }]
+  });
+
+  const sumCols = [
+    { header: 'Sl. No.', width: 9 },
+    { header: 'Hackathon Theme / Category', width: 42 },
+    { header: 'Allocated Venues & Panels', width: 48 },
+    { header: 'Registered Teams', width: 20 }
+  ];
+
+  wsSummary.mergeCells(1, 1, 1, sumCols.length);
+  const tCell1 = wsSummary.getCell('A1');
+  tCell1.value = 'R.M.K. GROUP OF INSTITUTIONS';
+  tCell1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
+  tCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+  tCell1.alignment = { horizontal: 'center', vertical: 'bottom' };
+  wsSummary.getRow(1).height = 30;
+
+  wsSummary.mergeCells(2, 1, 2, sumCols.length);
+  const tCell2 = wsSummary.getCell('A2');
+  tCell2.value = 'JUNIOR HACKATHON 2026';
+  tCell2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
+  tCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+  tCell2.alignment = { horizontal: 'center', vertical: 'top' };
+  wsSummary.getRow(2).height = 26;
+
+  let totalAllTeams = 0;
+  for (const [, info] of themesMap.entries()) {
+    totalAllTeams += (info.teams || []).length;
+  }
+
+  wsSummary.mergeCells(3, 1, 3, sumCols.length);
+  const subT = wsSummary.getCell('A3');
+  subT.value = `12-THEME JURY EVALUATION & VENUE ROSTER SUMMARY   •   12 Themes Across Campus   •   ${totalAllTeams} Registered Teams`;
+  subT.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+  subT.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
+  subT.alignment = { horizontal: 'center', vertical: 'middle' };
+  subT.border = BORDER_RIBBON;
+  wsSummary.getRow(3).height = 24;
+
+  wsSummary.getRow(4).height = 6;
+
+  const sumHeadRow = wsSummary.getRow(5);
+  sumHeadRow.height = 28;
+  sumCols.forEach((col, idx) => {
+    const cell = sumHeadRow.getCell(idx + 1);
+    cell.value = col.header;
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
+    cell.alignment = { horizontal: (idx === 0 || idx === 3) ? 'center' : 'left', vertical: 'middle' };
+    cell.border = BORDER_CELL;
+  });
+
+  let rowIdx = 6;
+  let sNum = 1;
+  for (const [themeName, info] of themesMap.entries()) {
+    const teams = info.teams || [];
+    const vpMap = new Map();
+    for (const t of teams) {
+      const p = t.panel_no || 1;
+      const v = t.venue || 'TBD';
+      if (!vpMap.has(p)) vpMap.set(p, v);
+    }
+    const vpSummary = [...vpMap.entries()].map(([p, v]) => `Panel ${p}: ${v}`).join(' | ');
+
+    const row = wsSummary.getRow(rowIdx);
+    row.height = 24;
+    const isEven = (sNum % 2 === 0);
+    const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
+
+    const rowVals = [sNum, themeName, vpSummary || 'TBD', teams.length];
+    rowVals.forEach((val, cIdx) => {
+      const cell = row.getCell(cIdx + 1);
+      cell.value = val;
+      cell.border = BORDER_CELL;
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+      cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
+      cell.alignment = { horizontal: (cIdx === 0 || cIdx === 3) ? 'center' : 'left', vertical: 'middle' };
+      if (cIdx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
+    });
+
+    sNum++;
+    rowIdx++;
+  }
+
+  // Summary Totals Row
+  const totalRow = wsSummary.getRow(rowIdx);
+  totalRow.height = 26;
+  const totCells = ['', 'TOTAL (ALL 12 THEMES)', '15 Evaluation Panels Across Campus', totalAllTeams];
+  totCells.forEach((val, cIdx) => {
+    const cell = totalRow.getCell(cIdx + 1);
+    cell.value = val;
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
+    cell.border = BORDER_CELL;
+    cell.alignment = { horizontal: (cIdx === 1 || cIdx === 2) ? 'left' : 'center', vertical: 'middle' };
+  });
+
+  sumCols.forEach((col, idx) => {
+    wsSummary.getColumn(idx + 1).width = col.width;
+  });
+
+  if (logoLeftId !== null) {
+    wsSummary.addImage(logoLeftId, {
+      tl: { col: 0.1, row: 0.1 },
+      ext: { width: 130, height: 50 }
+    });
+  }
+  if (logoRightId !== null) {
+    wsSummary.addImage(logoRightId, {
+      tl: { col: sumCols.length - 1.5, row: 0.1 },
+      ext: { width: 155, height: 50 }
+    });
+  }
+
+  // SHEETS 2..13: INDIVIDUAL THEME ROSTER SHEETS (8 COLUMNS)
+  const themeRosterCols = [
+    { header: 'Sl. No.', width: 8 },
+    { header: 'Junior Hackathon ID', width: 22 },
+    { header: 'Team Leader Name', width: 24 },
+    { header: 'Team Members', width: 34 },
+    { header: 'Team Name', width: 26 },
+    { header: 'Title of Your Project', width: 36 },
+    { header: 'Venue', width: 34 },
+    { header: 'School Name', width: 38 }
+  ];
+
+  function safeSheetName(name, index) {
+    let clean = name.replace(/[:\\/?*\[\]]/g, '').trim();
+    if (clean.length > 28) clean = clean.substring(0, 28);
+    return clean || `Theme ${index}`;
+  }
+
+  let themeIndex = 1;
+  for (const [themeName, info] of themesMap.entries()) {
+    const teams = info.teams || [];
+    const sheetTitle = safeSheetName(themeName, themeIndex);
+    const wsTheme = wb.addWorksheet(sheetTitle, {
+      views: [{ state: 'frozen', ySplit: 5, showGridLines: true }]
+    });
+
+    wsTheme.mergeCells(1, 1, 1, themeRosterCols.length);
+    const tTitle1 = wsTheme.getCell('A1');
+    tTitle1.value = 'R.M.K. GROUP OF INSTITUTIONS';
+    tTitle1.font = { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerTextGreen } };
+    tTitle1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+    tTitle1.alignment = { horizontal: 'center', vertical: 'bottom' };
+    wsTheme.getRow(1).height = 30;
+
+    wsTheme.mergeCells(2, 1, 2, themeRosterCols.length);
+    const tTitle2 = wsTheme.getCell('A2');
+    tTitle2.value = 'JUNIOR HACKATHON 2026';
+    tTitle2.font = { name: 'Calibri', size: 13, bold: true, color: { argb: PALETTE.headerTextDark } };
+    tTitle2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } };
+    tTitle2.alignment = { horizontal: 'center', vertical: 'top' };
+    wsTheme.getRow(2).height = 26;
+
+    const venuePanels = new Map();
+    for (const t of teams) {
+      const p = t.panel_no || 1;
+      const v = t.venue || 'TBD';
+      if (!venuePanels.has(p)) venuePanels.set(p, v);
+    }
+    const venuesSummary = [...venuePanels.entries()].map(([p, v]) => `Panel ${p}: ${v}`).join(' | ');
+
+    wsTheme.mergeCells(3, 1, 3, themeRosterCols.length);
+    const tSub = wsTheme.getCell('A3');
+    tSub.value = `THEME: ${themeName.toUpperCase()}      |      VENUES: ${venuesSummary.toUpperCase() || 'TBD'}      |      Teams: ${teams.length}`;
+    tSub.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
+    tSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
+    tSub.alignment = { horizontal: 'center', vertical: 'middle' };
+    tSub.border = BORDER_RIBBON;
+    wsTheme.getRow(3).height = 25;
+
+    wsTheme.getRow(4).height = 6;
+
+    const hRow = wsTheme.getRow(5);
+    hRow.height = 28;
+    themeRosterCols.forEach((col, idx) => {
+      const c = hRow.getCell(idx + 1);
+      c.value = col.header;
+      c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
+      c.alignment = { horizontal: (idx === 0 || idx === 1) ? 'center' : 'left', vertical: 'middle' };
+      c.border = BORDER_CELL;
+    });
+
+    wsTheme.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: themeRosterCols.length } };
+
+    teams.forEach((t, tIdx) => {
+      const rNum = 6 + tIdx;
+      const r = wsTheme.getRow(rNum);
+      r.height = 24;
+
+      const isEven = (tIdx % 2 === 0);
+      const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
+      const venueStr = `Panel ${t.panel_no || 1} — ${t.venue || 'TBD'}`;
+
+      const rowValues = [
+        tIdx + 1,
+        t.team_code || '—',
+        t.leader_name || '—',
+        t.members || '—',
+        t.team_name || '—',
+        t.project_title || '—',
+        venueStr,
+        t.college_name || '—'
+      ];
+
+      rowValues.forEach((val, cIdx) => {
+        const cell = r.getCell(cIdx + 1);
+        cell.value = val;
+        cell.font = { name: 'Calibri', size: 10, color: { argb: PALETTE.rowText } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        cell.border = BORDER_CELL;
+        cell.alignment = { horizontal: (cIdx === 0 || cIdx === 1) ? 'center' : 'left', vertical: 'middle' };
+        if (cIdx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
+      });
+    });
+
+    themeRosterCols.forEach((col, idx) => {
+      wsTheme.getColumn(idx + 1).width = col.width;
+    });
+
+    if (logoLeftId !== null) {
+      wsTheme.addImage(logoLeftId, {
+        tl: { col: 0.1, row: 0.1 },
+        ext: { width: 130, height: 50 }
+      });
+    }
+    if (logoRightId !== null) {
+      wsTheme.addImage(logoRightId, {
+        tl: { col: themeRosterCols.length - 1.5, row: 0.1 },
+        ext: { width: 155, height: 50 }
+      });
+    }
+
+    themeIndex++;
+  }
+
+  return wb;
+}
+
 module.exports = {
   buildPresenceExcel,
   buildVenueWiseWorkbook,
-  buildThemeWiseWorkbook
+  buildThemeWiseWorkbook,
+  buildVenueRosterWorkbook,
+  buildThemeRosterWorkbook
 };

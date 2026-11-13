@@ -45,8 +45,8 @@ async function generateVenueExcel(pool, outputPath) {
     pan.teams.push(r);
   }
 
-  const { buildVenueWiseWorkbook } = require('./excel-formatter');
-  const wb = await buildVenueWiseWorkbook(panels);
+  const { buildVenueRosterWorkbook } = require('./excel-formatter');
+  const wb = await buildVenueRosterWorkbook(panels);
 
   if (outputPath) {
     const dir = path.dirname(outputPath);

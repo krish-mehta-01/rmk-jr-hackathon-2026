@@ -32,8 +32,8 @@ async function generateThemeExcel(pool, outputPath, filterTheme = null) {
     themesMap.get(cat).teams.push(r);
   }
 
-  const { buildThemeWiseWorkbook } = require('./excel-formatter');
-  const wb = await buildThemeWiseWorkbook(themesMap);
+  const { buildThemeRosterWorkbook } = require('./excel-formatter');
+  const wb = await buildThemeRosterWorkbook(themesMap);
 
   if (outputPath) {
     const dir = path.dirname(outputPath);

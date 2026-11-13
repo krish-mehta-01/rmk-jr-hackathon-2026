@@ -582,8 +582,227 @@ function runDocGenScript(scriptPath, timeoutMs = 25000) {
   return false;
 }
 
+// ─────────────────────────────────────────────────────────────
+// ATTENDANCE EXPORTS (Comprehensive with status, timestamps, etc.)
+// ─────────────────────────────────────────────────────────────
+const { generateVenueAttendanceExcel } = require('./venue-attendance-export');
+const { generateThemeAttendanceExcel } = require('./theme-attendance-export');
+
+function findVenueAttendanceDocx() {
+  const candidatePaths = [
+    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Attendance.docx'),
+    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Venue_Attendance.docx'),
+    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Venue_Attendance.docx')
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
+  }
+  return null;
+}
+
+function findVenueAttendancePdf() {
+  const candidatePaths = [
+    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Attendance.pdf'),
+    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Venue_Attendance.pdf'),
+    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Venue_Attendance.pdf')
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
+  }
+  return null;
+}
+
+function findThemeAttendanceDocx() {
+  const candidatePaths = [
+    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Theme_Attendance.docx'),
+    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Theme_Attendance.docx'),
+    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Theme_Attendance.docx')
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
+  }
+  return null;
+}
+
+function findThemeAttendancePdf() {
+  const candidatePaths = [
+    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Theme_Attendance.pdf'),
+    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Theme_Attendance.pdf'),
+    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Theme_Attendance.pdf')
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
+  }
+  return null;
+}
+
+// Master Attendance Excel alias
+app.get('/api/admin/export/master-excel', authAdmin, async (req, res) => {
+  try {
+    const target = path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Master_Attendance.xlsx');
+    if (fs.existsSync(target) && fs.statSync(target).size > 0) {
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      return res.download(target, 'RMK_Junior_Hackathon_2026_Master_Attendance.xlsx');
+    }
+    const [rows] = await pool.execute(
+      `SELECT t.team_code, t.team_name, t.project_title, t.leader_name, t.members, t.mentor_name, t.mobile_no, t.email, t.college_name, t.category, t.is_present, t.check_in_time, t.marked_by, t.panel_no, COALESCE(t.venue, v.venue) AS venue
+       FROM teams t LEFT JOIN theme_venues v ON v.theme = t.category
+       ORDER BY t.team_code ASC, t.id ASC`
+    );
+    const { buildPresenceExcel } = require('./excel-formatter');
+    const wb = await buildPresenceExcel(rows);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="RMK_Junior_Hackathon_2026_Master_Attendance.xlsx"');
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/master-excel error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to export master attendance excel' });
+  }
+});
+
+// Venue Attendance Excel (14 columns, multi-sheet by panel)
+app.get('/api/admin/export/venue-attendance-excel', authAdmin, async (req, res) => {
+  try {
+    const target = path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Attendance.xlsx');
+    await generateVenueAttendanceExcel(pool, target);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.download(target, 'RMK_Junior_Hackathon_2026_Venue_Attendance.xlsx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] venue-attendance-excel download failed:', err);
+        res.status(500).json({ error: 'Failed to download venue attendance Excel' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/venue-attendance-excel error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate venue attendance Excel' });
+  }
+});
+
+// Venue Attendance DOCX (14 columns, summary + page break per panel)
+app.get('/api/admin/export/venue-attendance-doc', authAdmin, async (req, res) => {
+  try {
+    let filePath = findVenueAttendanceDocx();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_attendance_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findVenueAttendanceDocx();
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Venue Attendance Word document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Venue_Attendance.docx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] venue-attendance-doc download failed:', err);
+        res.status(500).json({ error: 'Failed to download venue attendance Word document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/venue-attendance-doc error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate venue attendance Word document' });
+  }
+});
+
+// Venue Attendance PDF (14 columns, summary + page break per panel)
+app.get('/api/admin/export/venue-attendance-pdf', authAdmin, async (req, res) => {
+  try {
+    let filePath = findVenueAttendancePdf();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_attendance_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findVenueAttendancePdf();
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Venue Attendance PDF document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Venue_Attendance.pdf', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] venue-attendance-pdf download failed:', err);
+        res.status(500).json({ error: 'Failed to download venue attendance PDF document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/venue-attendance-pdf error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate venue attendance PDF document' });
+  }
+});
+
+// Theme Attendance Excel (15 columns, multi-sheet by theme)
+app.get('/api/admin/export/theme-attendance-excel', authAdmin, async (req, res) => {
+  try {
+    const filterTheme = req.query.theme || null;
+    const filename = filterTheme 
+      ? `RMK_Junior_Hackathon_2026_${filterTheme.replace(/[^a-zA-Z0-9]/g, '_')}_Attendance.xlsx`
+      : 'RMK_Junior_Hackathon_2026_Theme_Attendance.xlsx';
+    const target = path.join(__dirname, '..', 'public', 'exports', filename);
+    await generateThemeAttendanceExcel(pool, target, filterTheme);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.download(target, filename, (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] theme-attendance-excel download failed:', err);
+        res.status(500).json({ error: 'Failed to download theme attendance Excel' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/theme-attendance-excel error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate theme attendance Excel' });
+  }
+});
+
+// Theme Attendance DOCX (15 columns, summary + page break per theme)
+app.get('/api/admin/export/theme-attendance-doc', authAdmin, async (req, res) => {
+  try {
+    let filePath = findThemeAttendanceDocx();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_attendance_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findThemeAttendanceDocx();
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Theme Attendance Word document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Theme_Attendance.docx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] theme-attendance-doc download failed:', err);
+        res.status(500).json({ error: 'Failed to download theme attendance Word document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/theme-attendance-doc error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate theme attendance Word document' });
+  }
+});
+
+// Theme Attendance PDF (15 columns, summary + page break per theme)
+app.get('/api/admin/export/theme-attendance-pdf', authAdmin, async (req, res) => {
+  try {
+    let filePath = findThemeAttendancePdf();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_attendance_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findThemeAttendancePdf();
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Theme Attendance PDF document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Theme_Attendance.pdf', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] theme-attendance-pdf download failed:', err);
+        res.status(500).json({ error: 'Failed to download theme attendance PDF document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/theme-attendance-pdf error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate theme attendance PDF document' });
+  }
+});
+
 // Download / generate venue-wise segregated Excel (.xlsx) - ALWAYS generated dynamically from DB
-app.get('/api/admin/export/venue-excel', authAdmin, async (req, res) => {
+app.get(['/api/admin/export/venue-excel', '/api/admin/export/venue-roster-excel'], authAdmin, async (req, res) => {
   try {
     const target = path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Venue_Wise_Teams.xlsx');
     await generateVenueExcel(pool, target);
@@ -603,11 +822,11 @@ app.get('/api/admin/export/venue-excel', authAdmin, async (req, res) => {
 });
 
 // Download / generate venue-wise segregated Word document (.docx)
-app.get('/api/admin/export/venue-doc', authAdmin, async (req, res) => {
+app.get(['/api/admin/export/venue-doc', '/api/admin/export/venue-roster-doc'], authAdmin, async (req, res) => {
   try {
     let filePath = findVenueDocx();
     if (!filePath) {
-      const genScript = path.join(__dirname, '..', 'scratch', 'generate_venue_docs.py');
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_roster_docs.py');
       runDocGenScript(genScript, 25000);
       filePath = findVenueDocx();
     }
@@ -631,9 +850,14 @@ app.get('/api/admin/export/venue-doc', authAdmin, async (req, res) => {
 
 
 // Download venue-wise segregated PDF document (.pdf)
-app.get('/api/admin/export/venue-pdf', authAdmin, async (req, res) => {
+app.get(['/api/admin/export/venue-pdf', '/api/admin/export/venue-roster-pdf'], authAdmin, async (req, res) => {
   try {
-    const filePath = findVenuePdf();
+    let filePath = findVenuePdf();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_roster_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findVenuePdf();
+    }
     if (!filePath) {
       return res.status(404).json({ error: 'Venue PDF document is currently being prepared. Please retry shortly.' });
     }
@@ -653,7 +877,7 @@ app.get('/api/admin/export/venue-pdf', authAdmin, async (req, res) => {
 });
 
 // Download / generate theme-wise segregated Excel (.xlsx) - ALWAYS generated dynamically from DB
-app.get('/api/admin/export/theme-excel', authAdmin, async (req, res) => {
+app.get(['/api/admin/export/theme-excel', '/api/admin/export/theme-roster-excel'], authAdmin, async (req, res) => {
   try {
     const filterTheme = req.query.theme || null;
     const filename = filterTheme 
@@ -677,11 +901,11 @@ app.get('/api/admin/export/theme-excel', authAdmin, async (req, res) => {
 });
 
 // Download / generate theme-wise segregated Word document (.docx)
-app.get('/api/admin/export/theme-doc', authAdmin, async (req, res) => {
+app.get(['/api/admin/export/theme-doc', '/api/admin/export/theme-roster-doc'], authAdmin, async (req, res) => {
   try {
     let filePath = findThemeDocx();
     if (!filePath) {
-      const genScript = path.join(__dirname, '..', 'scratch', 'build_theme_docx_pdf.py');
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_roster_docs.py');
       runDocGenScript(genScript, 25000);
       filePath = findThemeDocx();
     }
@@ -704,9 +928,14 @@ app.get('/api/admin/export/theme-doc', authAdmin, async (req, res) => {
 });
 
 // Download theme-wise segregated PDF document (.pdf) (Scanned / Attendance Sheet)
-app.get('/api/admin/export/theme-pdf', authAdmin, async (req, res) => {
+app.get(['/api/admin/export/theme-pdf', '/api/admin/export/theme-roster-pdf'], authAdmin, async (req, res) => {
   try {
-    const filePath = findThemePdf();
+    let filePath = findThemePdf();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'generate_all_roster_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findThemePdf();
+    }
     if (!filePath) {
       return res.status(404).json({ error: 'Theme PDF document is currently being prepared. Please retry shortly.' });
     }
