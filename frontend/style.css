@@ -6071,3 +6071,336 @@ section.hidden {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* ─── Admin Portal: Evaluation Reports & Rankings Styles ─── */
+.eval-subnav-card {
+  padding: 12px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.eval-subnav-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.eval-subnav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: 38px;
+}
+
+.eval-subnav-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-primary);
+}
+
+.eval-subnav-btn.active {
+  background: #ecfdf5;
+  color: var(--accent-green-dark);
+  border-color: #a7f3d0;
+  font-weight: 700;
+}
+
+.eval-stats-grid {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 1200px) {
+  .eval-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .eval-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.eval-subtab-pane.hidden {
+  display: none !important;
+}
+
+/* Rank Badges */
+.rank-badge-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.rank-badge-1 {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #f59e0b;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+}
+
+.rank-badge-2 {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1.5px solid #94a3b8;
+}
+
+.rank-badge-3 {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1.5px solid #ea580c;
+}
+
+.rank-badge-other {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.eval-mobile-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+@media (min-width: 769px) {
+  .eval-mobile-cards-list {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EVALUATION DASHBOARD & REPORT TABLES: SCROLLING & WIDTH RULES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1. Parent card overflow: prevent clipping horizontal scrollbar */
+.eval-report-card {
+  overflow: visible !important;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* 2. Scoped Scroll Wrapper: Enable horizontal scrolling and touch momentum */
+.eval-scroll-container {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+  padding-bottom: 6px;
+}
+
+.eval-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.eval-scroll-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.eval-scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.eval-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 3. Dedicated Scoped Table Styles for Evaluation Status */
+.eval-status-table {
+  width: 100%;
+  min-width: 1040px !important; /* Preserves column readability across viewports */
+  table-layout: auto !important; /* Allow natural cell distribution within set widths */
+  border-collapse: collapse;
+}
+
+/* Clear generic .glass-data-table fixed nth-child column width allocation */
+.eval-status-table th,
+.eval-status-table td {
+  width: auto !important;
+  padding: 11px 12px;
+  vertical-align: middle;
+  word-break: normal;
+}
+
+/* Optimized Column Widths & Alignments */
+/* Col 1: Team ID */
+.eval-status-table th:nth-child(1),
+.eval-status-table td:nth-child(1) {
+  width: 8% !important;
+  min-width: 95px !important;
+  white-space: nowrap !important;
+}
+
+/* Col 2: Team Name & Project */
+.eval-status-table th:nth-child(2),
+.eval-status-table td:nth-child(2) {
+  width: 20% !important;
+  min-width: 210px !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+}
+
+/* Col 3: Theme / Domain */
+.eval-status-table th:nth-child(3),
+.eval-status-table td:nth-child(3) {
+  width: 13% !important;
+  min-width: 130px !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+}
+
+/* Col 4: Panel */
+.eval-status-table th:nth-child(4),
+.eval-status-table td:nth-child(4) {
+  width: 12% !important;
+  min-width: 125px !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+}
+
+/* Col 5: Internal Marks (/50) */
+.eval-status-table th:nth-child(5),
+.eval-status-table td:nth-child(5) {
+  width: 10% !important;
+  min-width: 110px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* Col 6: External Marks (/50) */
+.eval-status-table th:nth-child(6),
+.eval-status-table td:nth-child(6) {
+  width: 10% !important;
+  min-width: 110px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* Col 7: Combined Marks (/100) */
+.eval-status-table th:nth-child(7),
+.eval-status-table td:nth-child(7) {
+  width: 13% !important;
+  min-width: 120px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* Col 8: Overall Status */
+.eval-status-table th:nth-child(8),
+.eval-status-table td:nth-child(8) {
+  width: 14% !important;
+  min-width: 130px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* 4. Dedicated Scoped Table Styles for Rankings & Pending Tables */
+.eval-ranking-table {
+  width: 100%;
+  min-width: 900px !important;
+  table-layout: auto !important;
+  border-collapse: collapse;
+}
+
+.eval-ranking-table th,
+.eval-ranking-table td {
+  width: auto !important;
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+.eval-pending-table {
+  width: 100%;
+  min-width: 850px !important;
+  table-layout: auto !important;
+  border-collapse: collapse;
+}
+
+.eval-pending-table th,
+.eval-pending-table td {
+  width: auto !important;
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+/* 5. Override generic .glass-data-table collapse on 769px–960px breakpoint */
+@media (min-width: 769px) and (max-width: 960px) {
+  #admin-sec-eval-reports .glass-data-table thead,
+  .eval-status-table thead,
+  .eval-ranking-table thead,
+  .eval-pending-table thead {
+    display: table-header-group !important;
+  }
+
+  #admin-sec-eval-reports .glass-data-table,
+  .eval-status-table,
+  .eval-ranking-table,
+  .eval-pending-table {
+    display: table !important;
+    width: 100% !important;
+  }
+
+  #admin-sec-eval-reports .glass-data-table tbody,
+  .eval-status-table tbody,
+  .eval-ranking-table tbody,
+  .eval-pending-table tbody {
+    display: table-row-group !important;
+  }
+
+  #admin-sec-eval-reports .glass-data-table tr,
+  .eval-status-table tr,
+  .eval-ranking-table tr,
+  .eval-pending-table tr {
+    display: table-row !important;
+  }
+
+  #admin-sec-eval-reports .glass-data-table th,
+  #admin-sec-eval-reports .glass-data-table td,
+  .eval-status-table th,
+  .eval-status-table td,
+  .eval-ranking-table th,
+  .eval-ranking-table td,
+  .eval-pending-table th,
+  .eval-pending-table td {
+    display: table-cell !important;
+  }
+}
+
+/* 6. Mobile (< 769px) preserves the mobile cards and hides desktop scroll container */
+@media (max-width: 768px) {
+  #eval-tab-pane-overview .eval-scroll-container,
+  #eval-tab-pane-overview .table-scroll-container {
+    display: none !important;
+  }
+  .eval-mobile-cards-list {
+    display: flex !important;
+  }
+}
