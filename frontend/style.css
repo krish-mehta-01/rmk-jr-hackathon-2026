@@ -2392,48 +2392,77 @@ h4 {
 }
 
 /* ─── Themewise Filter in Venue Action Header ─── */
-.theme-filter-select-wrapper {
-  display: flex;
+.theme-filter-custom-dropdown,
+.alloc-panel-custom-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.theme-filter-custom-dropdown .dropdown-trigger,
+.alloc-panel-custom-dropdown .dropdown-trigger {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 7px 14px !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.theme-filter-custom-dropdown .dropdown-trigger:hover,
+.alloc-panel-custom-dropdown .dropdown-trigger:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+.theme-filter-custom-dropdown.open .dropdown-trigger,
+.alloc-panel-custom-dropdown.open .dropdown-trigger {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+.theme-filter-custom-dropdown .custom-dropdown-menu,
+.alloc-panel-custom-dropdown .custom-dropdown-menu {
+  min-width: 280px !important;
+  max-width: 340px !important;
+  max-height: 380px !important;
+  overflow-y: auto !important;
+  z-index: 1050 !important;
+}
+
+.theme-filter-custom-dropdown .dropdown-item.active,
+.alloc-panel-custom-dropdown .dropdown-item.active {
+  background: #ecfdf5 !important;
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+
+.theme-filter-custom-dropdown .theme-active-filter-clear {
+  margin-left: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  border-radius: 999px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #f8fafc;
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-pill);
-  padding: 4px 12px;
-  flex-shrink: 0;
-  transition: var(--transition);
-}
-
-.theme-filter-select-wrapper:hover,
-.theme-filter-select-wrapper:focus-within {
-  border-color: var(--accent-green);
-  background: #ffffff;
-}
-
-.theme-filter-select-wrapper.has-active-filter {
-  border-color: #10b981;
-  background: #ecfdf5;
-  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .theme-filter-icon {
   color: #166534;
   flex-shrink: 0;
-}
-
-.theme-filter-label {
-  display: none;
-}
-
-.theme-select-dropdown {
-  background: transparent;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  outline: none;
-  cursor: pointer;
-  max-width: 240px;
 }
 
 .theme-active-filter-badge {
@@ -5174,27 +5203,36 @@ html.jury-theme-active body {
   background: #f8fafc !important;
 }
 
-/* Explicit non-colliding column widths */
+/* Explicit non-colliding column widths for 6-column table */
 .jury-projects-table th:nth-child(1),
-.jury-projects-table td:nth-child(1) { width: 110px !important; max-width: 110px !important; }
+.jury-projects-table td:nth-child(1) { width: 175px !important; min-width: 165px !important; }
 
 .jury-projects-table th:nth-child(2),
-.jury-projects-table td:nth-child(2) { width: 160px !important; min-width: 150px !important; }
+.jury-projects-table td:nth-child(2) { width: 250px !important; min-width: 220px !important; }
 
 .jury-projects-table th:nth-child(3),
-.jury-projects-table td:nth-child(3) { width: 200px !important; min-width: 180px !important; }
+.jury-projects-table td:nth-child(3) { width: 130px !important; min-width: 115px !important; }
 
 .jury-projects-table th:nth-child(4),
-.jury-projects-table td:nth-child(4) { width: 140px !important; min-width: 130px !important; }
+.jury-projects-table td:nth-child(4) { width: 230px !important; min-width: 210px !important; overflow: hidden !important; }
 
 .jury-projects-table th:nth-child(5),
-.jury-projects-table td:nth-child(5) { width: 200px !important; min-width: 190px !important; }
+.jury-projects-table td:nth-child(5) { width: 170px !important; min-width: 160px !important; text-align: center !important; }
 
 .jury-projects-table th:nth-child(6),
-.jury-projects-table td:nth-child(6) { width: 180px !important; min-width: 170px !important; }
+.jury-projects-table td:nth-child(6) { width: 105px !important; min-width: 95px !important; text-align: center !important; padding: 10px 6px !important; }
 
-.jury-projects-table th:nth-child(7),
-.jury-projects-table td:nth-child(7) { width: 130px !important; text-align: center !important; }
+.jury-projects-table td:nth-child(4) .status-pill-badge {
+  white-space: normal !important;
+  line-height: 1.3 !important;
+  text-align: left !important;
+  display: inline-block !important;
+  max-width: 100% !important;
+  padding: 5px 12px !important;
+  border-radius: 9999px !important;
+  word-break: break-word !important;
+  box-sizing: border-box !important;
+}
 
 .jury-projects-table .table-team-id {
   font-family: monospace !important;
@@ -5220,33 +5258,41 @@ html.jury-theme-active body {
   font-size: 12.5px !important;
 }
 
-/* Buttons in table */
+/* Compact Evaluate / Action Buttons in table */
+.jury-projects-table .glass-btn-primary,
+.jury-projects-table .glass-btn-secondary {
+  width: auto !important;
+  min-width: 78px !important;
+  max-width: 96px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  margin: 0 auto !important;
+}
+
 .jury-projects-table .glass-btn-primary {
   background: #059669 !important;
   color: #ffffff !important;
   border: none !important;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  padding: 7px 14px !important;
-  font-size: 12.5px !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease !important;
 }
 
 .jury-projects-table .glass-btn-primary:hover {
   background: #047857 !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.28) !important;
 }
 
 .jury-projects-table .glass-btn-secondary {
   background: #f1f5f9 !important;
   border: 1px solid #cbd5e1 !important;
   color: #334155 !important;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  padding: 7px 14px !important;
-  font-size: 12.5px !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease !important;
 }
 
 .jury-projects-table .glass-btn-secondary:hover {

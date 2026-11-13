@@ -30,7 +30,7 @@
     })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261113_team_stacked" />
+  <link rel="stylesheet" href="/style.css?v=20261113_custom_dropdowns_v2" />
 </head>
 <body>
 
@@ -384,16 +384,45 @@
                         <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                       </button>
                       <div class="custom-dropdown-menu custom-dropdown-menu-right" id="menu-attendance-export" role="menu">
-                        <div class="dropdown-group-header">ATTENDANCE ROSTERS</div>
+                        <div class="dropdown-group-header">MASTER ATTENDANCE</div>
                         <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportExcel();">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="16" y1="13" x2="8" y2="17"/></svg>
-                          <span class="dropdown-item-label">Presence Roster (TiDB Scans)</span>
+                          <span class="dropdown-item-label">Presence Roster (Original Excel)</span>
+                          <span class="file-tag tag-xlsx">XLSX</span>
+                        </button>
+
+                        <div class="dropdown-group-header">PANEL / VENUE-WISE ATTENDANCE</div>
+                        <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportVenueExcel();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="16" y1="13" x2="8" y2="17"/></svg>
+                          <span class="dropdown-item-label">Venue-wise Attendance</span>
+                          <span class="file-tag tag-xlsx">XLSX</span>
+                        </button>
+                        <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportVenuePdf();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                          <span class="dropdown-item-label">Venue-wise Attendance</span>
+                          <span class="file-tag tag-pdf">PDF</span>
+                        </button>
+                        <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportVenueDoc();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                          <span class="dropdown-item-label">Venue-wise Attendance</span>
+                          <span class="file-tag tag-docx">DOCX</span>
+                        </button>
+
+                        <div class="dropdown-group-header">THEME-WISE ATTENDANCE</div>
+                        <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportThemeExcel();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="16" y1="13" x2="8" y2="17"/></svg>
+                          <span class="dropdown-item-label">Theme-wise Attendance</span>
                           <span class="file-tag tag-xlsx">XLSX</span>
                         </button>
                         <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportThemePdf();">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                          <span class="dropdown-item-label">Themewise Attendance Sheet</span>
+                          <span class="dropdown-item-label">Theme-wise Attendance</span>
                           <span class="file-tag tag-pdf">PDF</span>
+                        </button>
+                        <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportThemeDoc();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                          <span class="dropdown-item-label">Theme-wise Attendance</span>
+                          <span class="file-tag tag-docx">DOCX</span>
                         </button>
                       </div>
                     </div>
@@ -448,9 +477,15 @@
                       <button type="button" class="filter-tab" id="btn-mode-theme" onclick="setVenueDisplayMode('theme')">12 Themes</button>
                     </div>
 
-                    <div class="theme-filter-select-wrapper" title="Filter venues by theme">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-filter-icon"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                      <select id="select-theme-filter" class="glass-select theme-select-dropdown" onchange="handleThemewiseFilter(this.value)">
+                    <div class="custom-dropdown theme-filter-custom-dropdown" id="dropdown-theme-filter-custom">
+                      <button type="button" class="glass-btn glass-btn-secondary btn-sm dropdown-trigger" id="btn-theme-filter-trigger" onclick="toggleThemeFilterCustomDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Filter venues by theme">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-filter-icon"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        <span id="theme-filter-selected-label">All 12 Themes (282 Teams)</span>
+                        <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <div class="custom-dropdown-menu" id="menu-theme-filter-custom" role="menu">
+                      </div>
+                      <select id="select-theme-filter" class="hidden" style="display:none;" onchange="handleThemewiseFilter(this.value)">
                         <option value="all">All 12 Themes (282 Teams)</option>
                       </select>
                       <button type="button" id="theme-active-filter-clear-btn" class="theme-active-filter-clear hidden" onclick="clearThemewiseFilter()" title="Clear Theme Filter" aria-label="Clear Theme Filter">✕</button>
@@ -689,8 +724,15 @@
                     <button type="button" class="filter-tab" data-alloc-filter="unassigned" onclick="setAllocFilter('unassigned', this)">Unassigned (<span id="pill-unassigned-count">0</span>)</button>
                   </div>
 
-                  <div class="alloc-panel-select-wrap">
-                    <select id="alloc-panel-filter" class="glass-select" onchange="handleAllocPanelFilterChange(this.value)">
+                  <div class="custom-dropdown alloc-panel-custom-dropdown" id="dropdown-alloc-panel-custom">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm dropdown-trigger" id="btn-alloc-panel-trigger" onclick="toggleAllocPanelCustomDropdown(event)" aria-haspopup="true" aria-expanded="false" title="Filter by Panel">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      <span id="alloc-panel-selected-label">All Panels (15)</span>
+                      <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="custom-dropdown-menu" id="menu-alloc-panel-custom" role="menu">
+                    </div>
+                    <select id="alloc-panel-filter" class="hidden" style="display:none;" onchange="handleAllocPanelFilterChange(this.value)">
                       <option value="all">All Panels (15)</option>
                     </select>
                   </div>
@@ -1188,7 +1230,6 @@
           <div class="table-action-header jdash-action-header">
             <div class="jdash-header-title-block">
               <h3>Assigned projects for evaluation</h3>
-              <p class="jdash-header-subtitle">Only projects from the active published allocation are listed.</p>
             </div>
             <div class="table-btn-cluster">
               <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJudgeProjects()">
@@ -1232,11 +1273,11 @@
               <table class="glass-data-table jury-projects-table">
                 <thead>
                   <tr>
-                    <th style="min-width: 140px;">Team</th>
-                    <th style="min-width: 220px;">Project Title</th>
+                    <th>Team</th>
+                    <th>Project Title</th>
                     <th>Leader Name</th>
                     <th>Theme</th>
-                    <th>Evaluation Status</th>
+                    <th style="text-align: center;">Evaluation Status</th>
                     <th style="text-align: center;">Action</th>
                   </tr>
                 </thead>
@@ -1492,6 +1533,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261113_jury_pass_reset"></script>
+  <script src="/app.js?v=20261113_custom_dropdowns_v2"></script>
 </body>
 </html>

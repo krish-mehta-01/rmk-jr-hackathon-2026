@@ -819,29 +819,106 @@ let currentThemewiseFilter = 'all';
 let currentThemeSearch = '';
 const expandedThemes = new Set();
 
+function toggleThemeFilterCustomDropdown(event) {
+  if (event) event.stopPropagation();
+  const dropdown = document.getElementById('dropdown-theme-filter-custom');
+  const menu = document.getElementById('menu-theme-filter-custom');
+  const btn = document.getElementById('btn-theme-filter-trigger');
+  const wasOpen = dropdown ? dropdown.classList.contains('open') : false;
+  closeDropdowns();
+  if (dropdown && !wasOpen) {
+    dropdown.classList.add('open');
+    if (menu) menu.classList.add('show');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  }
+}
+window.toggleThemeFilterCustomDropdown = toggleThemeFilterCustomDropdown;
+
+function selectThemewiseCustomFilter(theme, label) {
+  currentThemewiseFilter = theme || 'all';
+  const labelEl = document.getElementById('theme-filter-selected-label');
+  if (labelEl) labelEl.textContent = label || (theme === 'all' ? 'All 12 Themes (282 Teams)' : theme);
+
+  const select = document.getElementById('select-theme-filter');
+  if (select) select.value = currentThemewiseFilter;
+
+  // Clear button visibility
+  const clearBtn = document.getElementById('theme-active-filter-clear-btn');
+  if (clearBtn) {
+    if (currentThemewiseFilter !== 'all') clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+
+  // Highlight active dropdown item
+  const items = document.querySelectorAll('#menu-theme-filter-custom .dropdown-item');
+  items.forEach(item => {
+    if (item.dataset.theme === currentThemewiseFilter) item.classList.add('active');
+    else item.classList.remove('active');
+  });
+
+  handleThemewiseFilter(currentThemewiseFilter);
+  closeDropdowns();
+}
+window.selectThemewiseCustomFilter = selectThemewiseCustomFilter;
+
 function populateThemewiseFilter() {
   const select = document.getElementById('select-theme-filter');
+  const menu = document.getElementById('menu-theme-filter-custom');
   const chipsContainer = document.getElementById('theme-quick-chips');
-  if (!select) return;
 
   const currentVal = currentThemewiseFilter;
   const sortedThemes = [...rawThemesData].sort((a, b) => (a.theme || '').localeCompare(b.theme || ''));
   const totalTeams = sortedThemes.reduce((acc, t) => acc + (t.total || 0), 0);
 
-  // Populate Dropdown
-  select.innerHTML = `<option value="all">All 12 Themes (${totalTeams} Teams)</option>` +
-    sortedThemes.map(t => `<option value="${escapeHtml(t.theme)}">${escapeHtml(t.theme)} (${t.total} Teams)</option>`).join('');
-  select.value = currentVal;
+  // Hidden Select Update
+  if (select) {
+    select.innerHTML = `<option value="all">All 12 Themes (${totalTeams} Teams)</option>` +
+      sortedThemes.map(t => `<option value="${escapeHtml(t.theme)}">${escapeHtml(t.theme)} (${t.total} Teams)</option>`).join('');
+    select.value = currentVal;
+  }
+
+  // Custom Dropdown Menu Update
+  if (menu) {
+    let itemsHtml = `
+      <div class="dropdown-group-header">FILTER BY THEME</div>
+      <button type="button" class="dropdown-item ${currentVal === 'all' ? 'active' : ''}" data-theme="all" onclick="selectThemewiseCustomFilter('all', 'All 12 Themes (${totalTeams} Teams)')">
+        <span class="dropdown-item-label">All 12 Themes</span>
+        <span class="file-tag tag-xlsx" style="background:#f1f5f9; color:#475569; border-color:#cbd5e1;">${totalTeams} Teams</span>
+      </button>
+    `;
+    sortedThemes.forEach(t => {
+      const isAct = currentVal === t.theme;
+      const safeTheme = escapeHtml(t.theme).replace(/'/g, "\\'");
+      itemsHtml += `
+        <button type="button" class="dropdown-item ${isAct ? 'active' : ''}" data-theme="${escapeHtml(t.theme)}" onclick="selectThemewiseCustomFilter('${safeTheme}', '${safeTheme} (${t.total} Teams)')">
+          <span class="dropdown-item-label">${escapeHtml(t.theme)}</span>
+          <span class="file-tag tag-xlsx" style="background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;">${t.total}</span>
+        </button>
+      `;
+    });
+    menu.innerHTML = itemsHtml;
+  }
 
   // Populate Quick Clickable Chips
   if (chipsContainer) {
     chipsContainer.innerHTML = `
-      <button type="button" class="theme-chip ${currentVal === 'all' ? 'active' : ''}" data-theme="all" onclick="handleThemewiseFilter('all')">All Themes (12)</button>
+      <button type="button" class="theme-chip ${currentVal === 'all' ? 'active' : ''}" data-theme="all" onclick="selectThemewiseCustomFilter('all', 'All 12 Themes (${totalTeams} Teams)')">All Themes (12)</button>
     ` + sortedThemes.map(t => `
-      <button type="button" class="theme-chip ${currentVal === t.theme ? 'active' : ''}" data-theme="${escapeHtml(t.theme)}" onclick="handleThemewiseFilter(this.dataset.theme)">
+      <button type="button" class="theme-chip ${currentVal === t.theme ? 'active' : ''}" data-theme="${escapeHtml(t.theme)}" onclick="selectThemewiseCustomFilter(this.dataset.theme, '${escapeHtml(t.theme).replace(/'/g, "\\'")} (${t.total} Teams)')">
         ${escapeHtml(t.theme)} (${t.total})
       </button>
     `).join('');
+  }
+
+  // Update selected button label
+  const labelEl = document.getElementById('theme-filter-selected-label');
+  if (labelEl) {
+    if (currentVal === 'all') {
+      labelEl.textContent = `All 12 Themes (${totalTeams} Teams)`;
+    } else {
+      const found = sortedThemes.find(t => t.theme === currentVal);
+      labelEl.textContent = `${currentVal} (${found ? found.total : 0} Teams)`;
+    }
   }
 
   updateThemewiseFilterBadge();
@@ -857,6 +934,16 @@ function handleThemewiseFilter(theme) {
   chips.forEach(chip => {
     chip.classList.toggle('active', chip.getAttribute('data-theme') === currentThemewiseFilter);
   });
+
+  // Update label
+  const labelEl = document.getElementById('theme-filter-selected-label');
+  if (labelEl && currentThemewiseFilter === 'all') {
+    const totalTeams = rawThemesData.reduce((acc, t) => acc + (t.total || 0), 0);
+    labelEl.textContent = `All 12 Themes (${totalTeams || 282} Teams)`;
+  } else if (labelEl) {
+    const found = rawThemesData.find(t => t.theme === currentThemewiseFilter);
+    labelEl.textContent = `${currentThemewiseFilter} (${found ? found.total : 0} Teams)`;
+  }
 
   updateThemewiseFilterBadge();
 
@@ -877,7 +964,7 @@ function handleThemewiseFilter(theme) {
 window.handleThemewiseFilter = handleThemewiseFilter;
 
 function clearThemewiseFilter() {
-  handleThemewiseFilter('all');
+  selectThemewiseCustomFilter('all', 'All 12 Themes (282 Teams)');
 }
 window.clearThemewiseFilter = clearThemewiseFilter;
 
@@ -1319,6 +1406,10 @@ function closeDropdowns() {
   if (exportBtn) exportBtn.setAttribute('aria-expanded', 'false');
   const filterBtn = document.getElementById('btn-theme-filter-dropdown');
   if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
+  const themeFilterBtn = document.getElementById('btn-theme-filter-trigger');
+  if (themeFilterBtn) themeFilterBtn.setAttribute('aria-expanded', 'false');
+  const allocPanelBtn = document.getElementById('btn-alloc-panel-trigger');
+  if (allocPanelBtn) allocPanelBtn.setAttribute('aria-expanded', 'false');
 }
 
 function toggleAttendanceExportDropdown(event) {
@@ -3158,10 +3249,10 @@ function renderJudgeProjects() {
         <td data-label="Project Title"><div class="table-project-title">${escapeHtml(p.project_title || '—')}</div></td>
         <td data-label="Leader Name"><div class="table-leader-name">${escapeHtml(p.leader_name || '—')}</div></td>
         <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>
-        <td data-label="Evaluation Status">${statusPill}</td>
+        <td data-label="Evaluation Status" style="text-align: center;">${statusPill}</td>
         <td data-label="Action" style="text-align: center;">
-          <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm" onclick="openEvaluationModal(${p.team_id})">
-            ${isSubmitted ? 'View Evaluation' : (isDraft ? 'Resume Evaluation' : 'Evaluate')}
+          <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm btn-eval-compact" onclick="openEvaluationModal(${p.team_id})">
+            ${isSubmitted ? 'View' : (isDraft ? 'Resume' : 'Evaluate')}
           </button>
         </td>
       </tr>
@@ -3831,19 +3922,90 @@ function updateAllocStats(stats) {
   }
 }
 
+function toggleAllocPanelCustomDropdown(event) {
+  if (event) event.stopPropagation();
+  const dropdown = document.getElementById('dropdown-alloc-panel-custom');
+  const menu = document.getElementById('menu-alloc-panel-custom');
+  const btn = document.getElementById('btn-alloc-panel-trigger');
+  const wasOpen = dropdown ? dropdown.classList.contains('open') : false;
+  closeDropdowns();
+  if (dropdown && !wasOpen) {
+    dropdown.classList.add('open');
+    if (menu) menu.classList.add('show');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  }
+}
+window.toggleAllocPanelCustomDropdown = toggleAllocPanelCustomDropdown;
+
+function selectAllocPanelCustomFilter(val, label) {
+  const labelEl = document.getElementById('alloc-panel-selected-label');
+  if (labelEl) labelEl.textContent = label;
+
+  const select = document.getElementById('alloc-panel-filter');
+  if (select) select.value = val;
+
+  const items = document.querySelectorAll('#menu-alloc-panel-custom .dropdown-item');
+  items.forEach(item => {
+    if (item.dataset.panelId === String(val)) item.classList.add('active');
+    else item.classList.remove('active');
+  });
+
+  handleAllocPanelFilterChange(val);
+  closeDropdowns();
+}
+window.selectAllocPanelCustomFilter = selectAllocPanelCustomFilter;
+
 function populateAllocPanelFilter() {
   const select = document.getElementById('alloc-panel-filter');
-  if (!select) return;
+  const menu = document.getElementById('menu-alloc-panel-custom');
+  if (!allocState || !allocState.panels) return;
 
-  const currentVal = select.value || 'all';
-  select.innerHTML = '<option value="all">All Panels (' + allocState.panels.length + ')</option>';
-  allocState.panels.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = `${p.panel_code} — ${p.panel_name} (${p.count || (p.teams ? p.teams.length : 0)})`;
-    select.appendChild(opt);
-  });
-  select.value = currentVal;
+  const currentVal = select ? (select.value || 'all') : 'all';
+
+  if (select) {
+    select.innerHTML = '<option value="all">All Panels (' + allocState.panels.length + ')</option>';
+    allocState.panels.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.panel_code} — ${p.panel_name} (${p.count || (p.teams ? p.teams.length : 0)})`;
+      select.appendChild(opt);
+    });
+    select.value = currentVal;
+  }
+
+  if (menu) {
+    let itemsHtml = `
+      <div class="dropdown-group-header">FILTER BY PANEL</div>
+      <button type="button" class="dropdown-item ${currentVal === 'all' ? 'active' : ''}" data-panel-id="all" onclick="selectAllocPanelCustomFilter('all', 'All Panels (${allocState.panels.length})')">
+        <span class="dropdown-item-label">All Panels</span>
+        <span class="file-tag tag-xlsx" style="background:#f1f5f9; color:#475569; border-color:#cbd5e1;">${allocState.panels.length}</span>
+      </button>
+    `;
+    allocState.panels.forEach(p => {
+      const count = p.count || (p.teams ? p.teams.length : 0);
+      const isAct = String(currentVal) === String(p.id);
+      const safeLabel = `${p.panel_code} — ${p.panel_name} (${count})`.replace(/'/g, "\\'");
+      itemsHtml += `
+        <button type="button" class="dropdown-item ${isAct ? 'active' : ''}" data-panel-id="${p.id}" onclick="selectAllocPanelCustomFilter('${p.id}', '${safeLabel}')">
+          <span class="dropdown-item-label">${escapeHtml(p.panel_code)} — ${escapeHtml(p.panel_name)}</span>
+          <span class="file-tag tag-xlsx" style="background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;">${count}</span>
+        </button>
+      `;
+    });
+    menu.innerHTML = itemsHtml;
+  }
+
+  const labelEl = document.getElementById('alloc-panel-selected-label');
+  if (labelEl) {
+    if (currentVal === 'all') {
+      labelEl.textContent = `All Panels (${allocState.panels.length})`;
+    } else {
+      const found = allocState.panels.find(p => String(p.id) === String(currentVal));
+      if (found) {
+        labelEl.textContent = `${found.panel_code} — ${found.panel_name} (${found.count || (found.teams ? found.teams.length : 0)})`;
+      }
+    }
+  }
 }
 
 function renderAllocationWorkspace() {
