@@ -5546,8 +5546,27 @@ html.jury-theme-active body {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  gap: 10px !important;
+  gap: 12px !important;
   margin-top: 16px !important;
+  flex-wrap: wrap !important;
+}
+
+.eval-modal-footer button,
+.eval-modal-footer .glass-btn {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  line-height: 1 !important;
+  padding: 0 20px !important;
+  font-size: 14px !important;
+  border-radius: 10px !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
 }
 
 .eval-modal-footer .glass-btn-primary {
@@ -5555,10 +5574,6 @@ html.jury-theme-active body {
   color: #ffffff !important;
   border: none !important;
   font-weight: 700 !important;
-  border-radius: 10px !important;
-  min-height: 44px !important;
-  padding: 10px 20px !important;
-  cursor: pointer !important;
   box-shadow: 0 3px 10px rgba(5, 150, 105, 0.25) !important;
 }
 
@@ -5568,18 +5583,15 @@ html.jury-theme-active body {
 
 .eval-modal-footer .glass-btn-secondary {
   background: #f1f5f9 !important;
-  border: 1px solid #cbd5e1 !important;
+  border: 1.5px solid #cbd5e1 !important;
   color: #334155 !important;
   font-weight: 600 !important;
-  border-radius: 10px !important;
-  min-height: 44px !important;
-  padding: 10px 16px !important;
-  cursor: pointer !important;
 }
 
 .eval-modal-footer .glass-btn-secondary:hover {
   background: #e2e8f0 !important;
   color: #0f172a !important;
+  border-color: #94a3b8 !important;
 }
 
 /* Mobile Sticky Footer inside Modal */
