@@ -150,6 +150,9 @@ function showView(viewId) {
     }
   });
 
+  const isJuryView = Boolean(viewId && viewId.startsWith('view-jury'));
+  document.documentElement.classList.toggle('jury-theme-active', isJuryView);
+
   if (viewId !== 'view-team') {
     closeScanner();
   }
@@ -883,12 +886,18 @@ window.clearThemewiseFilter = clearThemewiseFilter;
 function updateThemewiseFilterBadge() {
   const badge = document.getElementById('theme-active-filter-badge');
   const text = document.getElementById('theme-active-filter-text');
-  if (!badge) return;
+  const clearBtn = document.getElementById('theme-active-filter-clear-btn');
+  const wrapper = document.querySelector('.theme-filter-select-wrapper');
+
   if (currentThemewiseFilter && currentThemewiseFilter !== 'all') {
-    badge.classList.remove('hidden');
+    if (badge) badge.classList.remove('hidden');
     if (text) text.textContent = `Theme: ${currentThemewiseFilter}`;
+    if (clearBtn) clearBtn.classList.remove('hidden');
+    if (wrapper) wrapper.classList.add('has-active-filter');
   } else {
-    badge.classList.add('hidden');
+    if (badge) badge.classList.add('hidden');
+    if (clearBtn) clearBtn.classList.add('hidden');
+    if (wrapper) wrapper.classList.remove('has-active-filter');
   }
 }
 
@@ -2545,33 +2554,33 @@ async function openAdminEvalDetail(evalId) {
     const scores = data.criteria_scores || [];
 
     body.innerHTML = `
-      <div style="background:#f8fafc; padding:16px; border-radius:10px; border:1px solid #e2e8f0;">
-        <div style="font-size:12px; font-weight:700; color:var(--accent-green-dark);">${escapeHtml(ev.panel_code)} • ${escapeHtml(ev.judge_type)} EVALUATION</div>
-        <h3 style="font-size:18px; margin:4px 0;">${escapeHtml(ev.team_name)} (${escapeHtml(ev.team_code)})</h3>
-        <p style="font-size:13px; color:var(--text-muted);">${escapeHtml(ev.project_title || '—')}</p>
-        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+      <div class="admin-eval-detail-summary">
+        <div class="admin-eval-badge-line">${escapeHtml(ev.panel_code)} • ${escapeHtml(ev.judge_type)} EVALUATION</div>
+        <h3 class="admin-eval-team-title">${escapeHtml(ev.team_name)} (${escapeHtml(ev.team_code)})</h3>
+        <p class="admin-eval-proj-desc">${escapeHtml(ev.project_title || '—')}</p>
+        <div class="admin-eval-judge-score-row">
           <span>Judge: <strong>${escapeHtml(ev.judge_name || ev.judge_username)}</strong></span>
-          <span class="score-summary-val" style="font-size:20px;">${ev.total_score} / 50</span>
+          <span class="score-summary-val">${ev.total_score} / 50</span>
         </div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <h4 style="font-size:14px; font-weight:700;">Criteria Marks Breakdown</h4>
+      <div class="admin-eval-crit-list">
+        <h4 class="admin-eval-section-title">Criteria marks breakdown</h4>
         ${scores.map(s => `
-          <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; border:1px solid #e2e8f0; padding:10px 14px; border-radius:8px;">
+          <div class="admin-eval-crit-item">
             <div>
-              <div style="font-size:13px; font-weight:700;">${escapeHtml(s.title)}</div>
-              <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(s.criterion_code)} • Max ${s.max_score} marks</div>
+              <div class="admin-eval-crit-name">${escapeHtml(s.title)}</div>
+              <div class="admin-eval-crit-meta">${escapeHtml(s.criterion_code)} • Max ${s.max_score} marks</div>
             </div>
-            <div class="mono" style="font-size:16px; font-weight:800; color:var(--accent-green);">${s.score}</div>
+            <div class="mono admin-eval-crit-score">${s.score}</div>
           </div>
         `).join('')}
       </div>
 
-      <div style="margin-top:10px;">
-        <h4 style="font-size:13px; font-weight:700; margin-bottom:6px;">Written Remarks / Feedback</h4>
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; font-size:13px; line-height:1.5;">
-          ${ev.remarks ? escapeHtml(ev.remarks) : '<span style="color:var(--text-muted); font-style:italic;">No remarks submitted.</span>'}
+      <div class="admin-eval-remarks-section">
+        <h4 class="admin-eval-section-title">Written remarks & feedback</h4>
+        <div class="admin-eval-remarks-content">
+          ${ev.remarks ? escapeHtml(ev.remarks) : '<span class="text-muted font-italic">No remarks submitted.</span>'}
         </div>
       </div>
     `;
@@ -3053,22 +3062,20 @@ function renderJudgeProjects() {
 
     let statusPill = '<span class="status-pill-badge pill-absent">Not Evaluated</span>';
     if (isSubmitted) {
-      statusPill = `<span class="status-pill-badge pill-present">Submitted (${p.evaluation.total_score} pts)</span>`;
+      statusPill = `<span class="status-pill-badge pill-present">✓ Evaluated (${p.evaluation.total_score} pts)</span>`;
     } else if (isDraft) {
       statusPill = `<span class="status-pill-badge pill-amber">Draft Saved (${p.evaluation.total_score} pts)</span>`;
     }
 
     return `
       <tr>
-        <td data-label="Team ID"><span class="table-team-id mono">${escapeHtml(p.team_code)}</span></td>
-        <td data-label="Project">
-          <div class="table-team-title">${escapeHtml(p.project_title || p.team_name)}</div>
-          <div style="font-size:12px; color:var(--text-muted);">${escapeHtml(p.team_name)}</div>
-        </td>
+        <td data-label="Team ID"><span class="table-team-id mono">${escapeHtml(p.team_code || '')}</span></td>
+        <td data-label="Team Name"><strong class="table-team-name">${escapeHtml(p.team_name || '—')}</strong></td>
+        <td data-label="Project Title"><div class="table-project-title">${escapeHtml(p.project_title || '—')}</div></td>
+        <td data-label="Leader Name"><div class="table-leader-name">${escapeHtml(p.leader_name || '—')}</div></td>
         <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>
-        <td data-label="School">${escapeHtml(p.college_name || '—')}</td>
         <td data-label="Evaluation Status">${statusPill}</td>
-        <td data-label="Action">
+        <td data-label="Action" style="text-align: center;">
           <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm" onclick="openEvaluationModal(${p.team_id})">
             ${isSubmitted ? 'View Evaluation' : (isDraft ? 'Resume Evaluation' : 'Evaluate')}
           </button>
@@ -3077,21 +3084,21 @@ function renderJudgeProjects() {
     `;
   }).join('');
 
-  // 2. Mobile Touch Cards List (Touch target >= 44px, clean typography)
+  // 2. Mobile Touch Cards List (Touch target >= 48px, optimized for mobile judges)
   mobileList.innerHTML = projects.map(p => {
     const isSubmitted = p.evaluation && p.evaluation.status === 'SUBMITTED';
     const isDraft = p.evaluation && p.evaluation.status === 'DRAFT';
 
     let statusPill = '<span class="status-pill-badge pill-absent">Not Evaluated</span>';
     if (isSubmitted) {
-      statusPill = `<span class="status-pill-badge pill-present">Submitted (${p.evaluation.total_score} pts)</span>`;
+      statusPill = `<span class="status-pill-badge pill-present">✓ Evaluated (${p.evaluation.total_score} pts)</span>`;
     } else if (isDraft) {
       statusPill = `<span class="status-pill-badge pill-amber">Draft Saved (${p.evaluation.total_score} pts)</span>`;
     }
 
     let btnLabel = `
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <span>Evaluate Project</span>
+      <span>Evaluate Team</span>
     `;
     let btnClass = 'glass-btn-primary';
 
@@ -3110,21 +3117,27 @@ function renderJudgeProjects() {
     }
 
     return `
-      <div class="jdash-project-card">
+      <div class="jdash-project-card ${isSubmitted ? 'card-evaluated' : ''}">
         <div class="jdash-card-top">
-          <span class="jdash-card-id">${escapeHtml(p.team_code)}</span>
+          <span class="jdash-card-id mono">${escapeHtml(p.team_code || '')}</span>
           ${statusPill}
         </div>
-        <div>
-          <h4 class="jdash-card-title">${escapeHtml(p.project_title || p.team_name)}</h4>
-          <div class="jdash-card-teamname">${escapeHtml(p.team_name)}</div>
+        <div class="jdash-card-content">
+          <h4 class="jdash-card-teamname">${escapeHtml(p.team_name || '—')}</h4>
+          <div class="jdash-card-detail-row">
+            <span class="detail-label">Project:</span>
+            <span class="detail-value">${escapeHtml(p.project_title || '—')}</span>
+          </div>
+          <div class="jdash-card-detail-row">
+            <span class="detail-label">Leader:</span>
+            <span class="detail-value">${escapeHtml(p.leader_name || '—')}</span>
+          </div>
+          <div class="jdash-card-detail-row">
+            <span class="detail-label">Theme:</span>
+            <span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span>
+          </div>
         </div>
-        <div class="jdash-card-tags">
-          <span class="jdash-card-theme">${escapeHtml(p.category || 'General')}</span>
-          <span class="jdash-card-school" title="${escapeHtml(p.college_name || '—')}">${escapeHtml(p.college_name || '—')}</span>
-        </div>
-        ${p.members ? `<div class="jdash-card-members"><strong>Members:</strong> ${escapeHtml(p.members)}</div>` : ''}
-        <button type="button" class="glass-btn ${btnClass} jdash-card-btn" onclick="openEvaluationModal(${p.team_id})">
+        <button type="button" class="glass-btn ${btnClass} jdash-touch-btn" onclick="openEvaluationModal(${p.team_id})">
           ${btnLabel}
         </button>
       </div>
@@ -3140,6 +3153,19 @@ async function openEvaluationModal(teamId) {
   document.getElementById('eval-modal-team-code').textContent = project.team_code;
   document.getElementById('eval-modal-team-name').textContent = project.team_name;
   document.getElementById('eval-modal-proj-title').textContent = `${project.project_title || '—'} • ${project.category || 'Innovation'}`;
+
+  const schoolEl = document.getElementById('eval-modal-school');
+  if (schoolEl) schoolEl.textContent = project.college_name || 'Institution / School';
+
+  const membersEl = document.getElementById('eval-modal-members');
+  if (membersEl) {
+    if (project.members) {
+      membersEl.textContent = `Members: ${project.members}`;
+      membersEl.classList.remove('hidden');
+    } else {
+      membersEl.classList.add('hidden');
+    }
+  }
 
   const criteriaBox = document.getElementById('eval-criteria-container');
   criteriaBox.innerHTML = '<div class="qr-loading">Loading scoring criteria...</div>';
@@ -3325,25 +3351,48 @@ async function saveEvaluationDraft() {
   }
 }
 
-async function submitEvaluationFinal() {
+function submitEvaluationFinal() {
   if (!currentEvalTeamId) return;
   const errBox = document.getElementById('eval-error');
-  errBox.classList.add('hidden');
+  if (errBox) errBox.classList.add('hidden');
 
   // Enforce mandatory written remarks before submission
   const remarks = (document.getElementById('eval-remarks').value || '').trim();
   if (!remarks) {
-    errBox.textContent = 'Written evaluation remarks and feedback are mandatory for final submission.';
-    errBox.classList.remove('hidden');
-    document.getElementById('eval-remarks').focus();
+    if (errBox) {
+      errBox.textContent = 'Written evaluation remarks and feedback are mandatory for final submission.';
+      errBox.classList.remove('hidden');
+    }
+    document.getElementById('eval-remarks')?.focus();
     return;
   }
 
-  if (!confirm('Are you sure you want to final-submit this evaluation? Once submitted, your scores and feedback will be locked and cannot be edited.')) {
+  // Open dedicated in-app confirmation popup modal
+  const confirmModal = document.getElementById('modal-eval-confirm');
+  if (confirmModal) {
+    confirmModal.classList.remove('hidden');
+  } else if (!confirm('Are you sure you want to final-submit this evaluation? Once submitted, your scores and feedback will be locked and cannot be edited.')) {
     return;
+  } else {
+    executeFinalEvaluationSubmit();
   }
+}
 
+function closeEvalConfirmModal() {
+  const confirmModal = document.getElementById('modal-eval-confirm');
+  if (confirmModal) confirmModal.classList.add('hidden');
+}
+
+async function executeFinalEvaluationSubmit() {
+  closeEvalConfirmModal();
+  if (!currentEvalTeamId) return;
+  const errBox = document.getElementById('eval-error');
+  if (errBox) errBox.classList.add('hidden');
+
+  const remarks = (document.getElementById('eval-remarks').value || '').trim();
   const scores = collectEvaluationScores();
+  const submitBtn = document.getElementById('btn-confirm-final-submit') || document.getElementById('btn-eval-submit');
+  if (submitBtn) submitBtn.disabled = true;
 
   try {
     const res = await fetch(`/api/jury/evaluations/${currentEvalTeamId}/submit`, {
@@ -3357,19 +3406,57 @@ async function submitEvaluationFinal() {
 
     const data = await res.json();
     if (!res.ok) {
-      errBox.textContent = data.error || 'Failed to submit evaluation';
-      errBox.classList.remove('hidden');
+      if (errBox) {
+        errBox.textContent = data.error || 'Failed to submit evaluation';
+        errBox.classList.remove('hidden');
+      }
+      if (submitBtn) submitBtn.disabled = false;
       return;
     }
 
-    showToast('Final evaluation submitted and locked successfully!', 'info');
+    showToast('Final evaluation submitted and locked successfully!', 'success');
     closeEvaluationModal();
     loadJudgeProjects();
   } catch (err) {
     console.error('[ERROR] submitEvaluationFinal:', err);
-    errBox.textContent = 'Server connection error';
-    errBox.classList.remove('hidden');
+    if (errBox) {
+      errBox.textContent = 'Server connection error';
+      errBox.classList.remove('hidden');
+    }
+    if (submitBtn) submitBtn.disabled = false;
   }
+}
+window.submitEvaluationFinal = submitEvaluationFinal;
+window.closeEvalConfirmModal = closeEvalConfirmModal;
+window.executeFinalEvaluationSubmit = executeFinalEvaluationSubmit;
+
+function exportJuryEvaluationsCSV() {
+  if (!rawJuryEvalsData || rawJuryEvalsData.length === 0) {
+    showToast('No evaluations to export yet.', 'error');
+    return;
+  }
+  const headers = ['Panel', 'Team Code', 'Team Name', 'Project Title', 'School/College', 'Internal Score (/50)', 'External Score (/50)', 'Combined Score (/100)', 'Status'];
+  const rows = rawJuryEvalsData.map(e => [
+    e.panel_code || '',
+    e.team_code || '',
+    `"${(e.team_name || '').replace(/"/g, '""')}"`,
+    `"${(e.project_title || '').replace(/"/g, '""')}"`,
+    `"${(e.school || '').replace(/"/g, '""')}"`,
+    e.internal_eval ? e.internal_eval.score : '',
+    e.external_eval ? e.external_eval.score : '',
+    e.combined_score !== null ? e.combined_score : '',
+    e.is_complete ? 'Completed' : (e.internal_eval || e.external_eval ? 'Partial' : 'Pending')
+  ]);
+
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `RMK_Jr_Hackathon_2026_Jury_Evaluations_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('Evaluation CSV exported successfully', 'info');
 }
 
 // ─── Attach to global window scope for inline HTML handlers ───
@@ -3383,6 +3470,7 @@ window.toggleJudgeStatus = toggleJudgeStatus;
 window.logoutJuryAdmin = logoutJuryAdmin;
 window.loadJuryAdminEvaluations = loadJuryAdminEvaluations;
 window.handleJuryEvalsSearch = handleJuryEvalsSearch;
+window.exportJuryEvaluationsCSV = exportJuryEvaluationsCSV;
 window.openAdminEvalDetail = openAdminEvalDetail;
 window.closeAdminEvalModal = closeAdminEvalModal;
 
@@ -3415,6 +3503,30 @@ let allocState = {
   panelFilter: 'all',
   searchQuery: ''
 };
+
+let expandedAllocPanels = new Set();
+
+function toggleAllocPanel(panelId) {
+  if (expandedAllocPanels.has(panelId)) {
+    expandedAllocPanels.delete(panelId);
+  } else {
+    expandedAllocPanels.add(panelId);
+  }
+  renderAllocationWorkspace();
+}
+
+function toggleAllAllocPanels() {
+  const allIds = allocState.panels.map(p => p.id);
+  const allExpanded = allIds.length > 0 && allIds.every(id => expandedAllocPanels.has(id));
+  if (allExpanded) {
+    expandedAllocPanels.clear();
+  } else {
+    allIds.forEach(id => expandedAllocPanels.add(id));
+  }
+  renderAllocationWorkspace();
+}
+window.toggleAllocPanel = toggleAllocPanel;
+window.toggleAllAllocPanels = toggleAllAllocPanels;
 
 async function loadAdminAllocations() {
   if (!adminToken) return;
@@ -3629,6 +3741,11 @@ function renderAllocationWorkspace() {
     return;
   }
 
+  const allIds = displayPanels.map(p => p.id);
+  const isAllExpanded = allIds.length > 0 && allIds.every(id => expandedAllocPanels.has(id));
+  const toggleBtnText = document.getElementById('btn-toggle-all-alloc-text');
+  if (toggleBtnText) toggleBtnText.textContent = isAllExpanded ? 'Collapse All' : 'Expand All';
+
   panelsGrid.innerHTML = displayPanels.map(p => {
     let teams = p.teams || [];
     if (query) {
@@ -3645,6 +3762,9 @@ function renderAllocationWorkspace() {
     let badgeClass = 'count-badge-optimal';
     if (count === 0) badgeClass = 'count-badge-empty';
     else if (count < 12) badgeClass = 'count-badge-low';
+
+    // Auto-expand if active query matches teams in this panel
+    const isExpanded = query ? (teams.length > 0) : expandedAllocPanels.has(p.id);
 
     const panelOptions = allocState.panels.filter(other => other.id !== p.id).map(other =>
       `<option value="${other.id}">${escapeHtml(other.panel_code)} (${escapeHtml(other.panel_name)})</option>`
@@ -3680,23 +3800,33 @@ function renderAllocationWorkspace() {
         }).join('');
 
     return `
-      <div class="alloc-panel-card" id="alloc-panel-${p.id}">
-        <div class="alloc-panel-header">
-          <div class="alloc-panel-title-group">
-            <div class="alloc-panel-code-row">
-              <span class="alloc-panel-code-badge">${escapeHtml(p.panel_code)}</span>
+      <div class="alloc-panel-row-card ${isExpanded ? 'expanded' : ''}" id="alloc-panel-${p.id}">
+        <div class="alloc-panel-row-header" onclick="toggleAllocPanel(${p.id})">
+          <div class="alloc-panel-row-left">
+            <span class="alloc-panel-code-badge">${escapeHtml(p.panel_code)}</span>
+            <div class="alloc-panel-info">
               <h4 class="alloc-panel-name">${escapeHtml(p.panel_name)}</h4>
-            </div>
-            <div class="alloc-panel-venue-pill" title="${escapeHtml(p.venue || 'No venue configured')}">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span>${escapeHtml(p.venue || 'Venue pending')}</span>
+              <div class="alloc-panel-venue-pill" title="${escapeHtml(p.venue || 'No venue configured')}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>${escapeHtml(p.venue || 'Venue pending')}</span>
+              </div>
             </div>
           </div>
-          <span class="alloc-panel-count-badge ${badgeClass}">${count} Teams</span>
+          <div class="alloc-panel-row-right">
+            <span class="alloc-panel-count-badge ${badgeClass}">${count} Teams</span>
+            <button type="button" class="glass-btn btn-xs alloc-expand-btn" onclick="event.stopPropagation(); toggleAllocPanel(${p.id});" aria-label="Toggle Panel">
+              <span class="expand-btn-text">${isExpanded ? 'Collapse' : 'Expand'}</span>
+              <svg class="chevron-icon ${isExpanded ? 'rotate-180' : ''}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
         </div>
-        <div class="alloc-panel-teams-list">
-          ${teamsHtml}
-        </div>
+        ${isExpanded ? `
+          <div class="alloc-panel-row-body">
+            <div class="alloc-panel-teams-grid">
+              ${teamsHtml}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   }).join('');

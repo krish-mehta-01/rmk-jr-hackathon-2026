@@ -5,6 +5,7 @@
   "scripts": {
     "start": "npm --prefix backend start",
     "dev": "npm --prefix backend run dev",
+    "dev:frontend": "node frontend-server.js",
     "import": "npm --prefix backend run import --"
   }
 }

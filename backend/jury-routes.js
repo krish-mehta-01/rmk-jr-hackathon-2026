@@ -667,7 +667,7 @@ router.get('/jury/projects', authJudge, enforceJudgeReady, async (req, res) => {
     const [assigned] = await pool.execute(`
       SELECT 
         a.id AS assignment_id, a.team_id, a.notes,
-        t.team_code, t.team_name, t.project_title, t.category, t.college_name, t.members,
+        t.team_code, t.team_name, t.project_title, t.leader_name, t.category, t.college_name, t.members,
         e.id AS evaluation_id, e.status AS evaluation_status, e.total_score, e.submitted_at
       FROM panel_project_assignments a
       JOIN allocation_revisions rev ON rev.id = a.revision_id AND rev.is_active = TRUE AND rev.status = 'PUBLISHED'
@@ -683,6 +683,7 @@ router.get('/jury/projects', authJudge, enforceJudgeReady, async (req, res) => {
       team_code: row.team_code,
       team_name: row.team_name,
       project_title: row.project_title,
+      leader_name: row.leader_name || 'Leader',
       category: row.category,
       college_name: row.college_name,
       members: row.members,

@@ -12,7 +12,7 @@
     const p = location.pathname.replace(/\/+$/, '');
     if (p === '/rmkjrhackathon2026-adminlogin') document.documentElement.classList.add('admin-page');
     else if (p === '/rmkjrhackathon2026-jury-admin') document.documentElement.classList.add('jury-admin-page');
-    else if (p === '/rmkjrhackathon2026-jurylogin') document.documentElement.classList.add('jury-page');
+    else if (p === '/j8k2m9q7w4' || p === '/rmkjrhackathon2026-jurylogin') document.documentElement.classList.add('jury-page');
   </script>
   <script src="/assets/jsQR.js"></script>
   <link rel="stylesheet" href="/style.css?v=20261115_r1" />
@@ -400,28 +400,7 @@
             <div id="admin-sec-themes" class="admin-tab-pane hidden">
               <!-- Unified Compact Venue & Themes Control Bar -->
               <div class="glass-card theme-control-card theme-top-bar">
-                <!-- Row 1: Themewise Filter at the Top -->
-                <div class="theme-filter-row">
-                  <div class="theme-filter-select-wrapper">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-filter-icon"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                    <span class="theme-filter-label">Themewise Filter:</span>
-                    <select id="select-theme-filter" class="glass-select theme-select-dropdown" onchange="handleThemewiseFilter(this.value)">
-                      <option value="all">All 12 Themes (282 Teams)</option>
-                    </select>
-                  </div>
-
-                  <div id="theme-active-filter-badge" class="theme-active-filter-badge hidden">
-                    <span id="theme-active-filter-text">Theme: All</span>
-                    <button type="button" class="theme-active-filter-clear" onclick="clearThemewiseFilter()" title="Clear Theme Filter" aria-label="Clear Theme Filter">✕</button>
-                  </div>
-
-                  <!-- Quick Clickable Theme Chips -->
-                  <div class="theme-quick-chips" id="theme-quick-chips">
-                    <button type="button" class="theme-chip active" data-theme="all" onclick="handleThemewiseFilter('all')">All Themes (12)</button>
-                  </div>
-                </div>
-
-                <!-- Row 2: Search, Mode Switcher, and Export Actions -->
+                <!-- Unified Search, Mode Switcher, Theme Filter, and Actions Header -->
                 <div class="table-action-header theme-action-header">
                   
                   <div class="table-search-pill theme-search-pill">
@@ -433,6 +412,14 @@
                     <div class="venue-mode-pill">
                       <button type="button" class="filter-tab active" id="btn-mode-venue" onclick="setVenueDisplayMode('venue')">15 Venues</button>
                       <button type="button" class="filter-tab" id="btn-mode-theme" onclick="setVenueDisplayMode('theme')">12 Themes</button>
+                    </div>
+
+                    <div class="theme-filter-select-wrapper" title="Filter venues by theme">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-filter-icon"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                      <select id="select-theme-filter" class="glass-select theme-select-dropdown" onchange="handleThemewiseFilter(this.value)">
+                        <option value="all">All 12 Themes (282 Teams)</option>
+                      </select>
+                      <button type="button" id="theme-active-filter-clear-btn" class="theme-active-filter-clear hidden" onclick="clearThemewiseFilter()" title="Clear Theme Filter" aria-label="Clear Theme Filter">✕</button>
                     </div>
 
                     <button type="button" class="glass-btn glass-btn-secondary btn-sm" id="btn-toggle-all-themes" onclick="toggleAllThemes()">
@@ -462,7 +449,7 @@
                             <path d="M9 15h6"/>
                             <path d="M12 12v6"/>
                           </svg>
-                          <span class="dropdown-item-label">Themewise PDF (Scanned Sheet)</span>
+                          <span class="dropdown-item-label">Themewise PDF</span>
                           <span class="file-tag tag-pdf">PDF</span>
                         </button>
                         <button type="button" class="dropdown-item" id="btn-export-theme-doc" onclick="closeDropdowns(); exportThemeDoc();">
@@ -472,7 +459,7 @@
                             <line x1="16" y1="13" x2="8" y2="13"/>
                             <line x1="16" y1="17" x2="8" y2="17"/>
                           </svg>
-                          <span class="dropdown-item-label">Themewise Word Sheet</span>
+                          <span class="dropdown-item-label">Themewise Word</span>
                           <span class="file-tag tag-docx">DOCX</span>
                         </button>
                         <button type="button" class="dropdown-item" id="btn-export-theme-excel" onclick="closeDropdowns(); exportThemeExcel();">
@@ -482,7 +469,7 @@
                             <line x1="8" y1="13" x2="16" y2="17"/>
                             <line x1="16" y1="13" x2="8" y2="17"/>
                           </svg>
-                          <span class="dropdown-item-label">Themewise Excel Sheet</span>
+                          <span class="dropdown-item-label">Themewise Excel</span>
                           <span class="file-tag tag-xlsx">XLSX</span>
                         </button>
 
@@ -497,7 +484,7 @@
                             <path d="M9 15h6"/>
                             <path d="M12 12v6"/>
                           </svg>
-                          <span class="dropdown-item-label">Venue PDF (15 Panels)</span>
+                          <span class="dropdown-item-label">Venue PDF</span>
                           <span class="file-tag tag-pdf">PDF</span>
                         </button>
                         <button type="button" class="dropdown-item" id="btn-export-venue-doc" onclick="closeDropdowns(); exportVenueDoc();">
@@ -507,7 +494,7 @@
                             <line x1="16" y1="13" x2="8" y2="13"/>
                             <line x1="16" y1="17" x2="8" y2="17"/>
                           </svg>
-                          <span class="dropdown-item-label">Venue Word Document</span>
+                          <span class="dropdown-item-label">Venue Word</span>
                           <span class="file-tag tag-docx">DOCX</span>
                         </button>
                         <button type="button" class="dropdown-item" id="btn-export-venue-excel" onclick="closeDropdowns(); exportVenueExcel();">
@@ -517,7 +504,7 @@
                             <line x1="8" y1="13" x2="16" y2="17"/>
                             <line x1="16" y1="13" x2="8" y2="17"/>
                           </svg>
-                          <span class="dropdown-item-label">Venue Excel (15 Sheets)</span>
+                          <span class="dropdown-item-label">Venue Excel</span>
                           <span class="file-tag tag-xlsx">XLSX</span>
                         </button>
                       </div>
@@ -659,7 +646,7 @@
                 <div class="table-action-header alloc-action-header">
                   <div class="table-search-pill">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="alloc-search-input" placeholder="Search by Team ID, Name, Domain, School..." oninput="handleAllocFilterSearch()" />
+                    <input type="text" id="alloc-search-input" placeholder="Search teams, IDs, themes..." oninput="handleAllocFilterSearch()" />
                   </div>
 
                   <div class="table-filter-pill">
@@ -675,6 +662,10 @@
                   </div>
 
                   <div class="table-btn-cluster">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="toggleAllAllocPanels()" id="btn-toggle-all-alloc">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+                      <span id="btn-toggle-all-alloc-text">Expand All</span>
+                    </button>
                     <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadAdminAllocations()">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                       Refresh
@@ -718,7 +709,7 @@
     <!-- ═══════════════════════════════════════════ -->
     <div id="view-jury-admin-login" class="app-view hidden">
       <div class="auth-center-shell">
-        <div class="glass-card auth-glass-box">
+        <div class="glass-card auth-glass-box jury-auth-card">
           <div class="auth-brand-head">
             <div class="auth-logos-capsule">
               <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="rmk-group-banner-logo" />
@@ -727,25 +718,25 @@
             </div>
             <div class="auth-title-block">
               <h2 class="auth-event-title">RMK Junior Hackathon 2026</h2>
-              <p class="auth-portal-sub">Jury Administrator Portal</p>
+              <p class="auth-portal-sub">Jury administration portal</p>
             </div>
           </div>
 
           <form id="form-jury-admin-login" class="glass-form">
             <div class="form-group">
-              <label for="jury-admin-username">Administrator Username</label>
+              <label for="jury-admin-username">Administrator username</label>
               <input type="text" id="jury-admin-username" placeholder="Username" required autocomplete="username" />
             </div>
 
             <div class="form-group">
-              <label for="jury-admin-password">Administrator Password</label>
+              <label for="jury-admin-password">Administrator password</label>
               <input type="password" id="jury-admin-password" placeholder="Password" required autocomplete="current-password" />
             </div>
 
             <div id="jury-admin-login-error" class="glass-alert-error hidden" role="alert"></div>
 
             <button type="submit" class="glass-btn glass-btn-primary" id="btn-jury-admin-login">
-              <span class="btn-text">Sign in to Jury Management</span>
+              <span class="btn-text">Sign in to jury administration</span>
               <div class="btn-spinner hidden"></div>
             </button>
           </form>
@@ -772,7 +763,7 @@
                 </div>
               </div>
 
-              <div class="sidebar-portal-badge">Jury Administration</div>
+              <div class="sidebar-portal-badge">Jury administration</div>
 
               <nav class="laptop-nav">
                 <button type="button" class="laptop-nav-item active" id="jlink-panels" onclick="switchJuryAdminSection('panels')">
@@ -781,7 +772,7 @@
                 </button>
                 <button type="button" class="laptop-nav-item" id="jlink-evals" onclick="switchJuryAdminSection('evals')">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  <span>Evaluation Monitoring</span>
+                  <span>Evaluation monitoring</span>
                 </button>
               </nav>
             </div>
@@ -803,32 +794,32 @@
               <!-- Bento Stats Cards -->
               <div class="laptop-stats-grid">
                 <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">TOTAL PANELS</span>
+                  <span class="stat-tag">Total panels</span>
                   <div class="stat-number" id="jstat-panels">15</div>
                 </div>
 
                 <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">JUDGE ACCOUNTS</span>
+                  <span class="stat-tag">Judge accounts</span>
                   <div class="stat-number" id="jstat-judges">30</div>
                 </div>
 
                 <div class="glass-card stat-bento-card stat-green">
-                  <span class="stat-tag">REGISTERED</span>
+                  <span class="stat-tag">Registered</span>
                   <div class="stat-number" id="jstat-registered">0</div>
                 </div>
 
                 <div class="glass-card stat-bento-card stat-amber">
-                  <span class="stat-tag">PENDING REGISTRATION</span>
+                  <span class="stat-tag">Pending registration</span>
                   <div class="stat-number" id="jstat-pending">0</div>
                 </div>
 
                 <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">ACTIVE ACCOUNTS</span>
+                  <span class="stat-tag">Active accounts</span>
                   <div class="stat-number" id="jstat-active">30</div>
                 </div>
 
                 <div class="glass-card stat-bento-card stat-green">
-                  <span class="stat-tag">EVALUATIONS DONE</span>
+                  <span class="stat-tag">Evaluations completed</span>
                   <div class="stat-number" id="jstat-evals">0</div>
                 </div>
               </div>
@@ -850,7 +841,7 @@
                   <div class="table-btn-cluster">
                     <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJuryAdminPanels(); loadJuryAdminStats();">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                      Refresh
+                      <span>Refresh</span>
                     </button>
                   </div>
                 </div>
@@ -873,9 +864,13 @@
                   </div>
 
                   <div class="table-btn-cluster">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="exportJuryEvaluationsCSV()" title="Export evaluation results to CSV">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      <span>Export CSV</span>
+                    </button>
                     <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJuryAdminEvaluations();">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                      Refresh
+                      <span>Refresh</span>
                     </button>
                   </div>
                 </div>
@@ -912,7 +907,7 @@
     <!-- ═══════════════════════════════════════════ -->
     <div id="view-jury-login" class="app-view hidden">
       <div class="auth-center-shell">
-        <div class="glass-card auth-glass-box">
+        <div class="glass-card auth-glass-box jury-auth-card">
           <div class="auth-brand-head">
             <div class="auth-logos-capsule">
               <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="rmk-group-banner-logo" />
@@ -921,25 +916,25 @@
             </div>
             <div class="auth-title-block">
               <h2 class="auth-event-title">RMK Junior Hackathon 2026</h2>
-              <p class="auth-portal-sub">Jury Evaluation Portal</p>
+              <p class="auth-portal-sub">Jury evaluation portal</p>
             </div>
           </div>
 
           <form id="form-judge-login" class="glass-form">
             <div class="form-group">
-              <label for="judge-username">Judge Account Identifier</label>
+              <label for="judge-username">Judge account identifier</label>
               <input type="text" id="judge-username" placeholder="e.g. P1-IN, P1-EX" required autocomplete="username" />
             </div>
 
             <div class="form-group">
-              <label for="judge-password">Account Password</label>
+              <label for="judge-password">Account password</label>
               <input type="password" id="judge-password" placeholder="Password" required autocomplete="current-password" />
             </div>
 
             <div id="judge-login-error" class="glass-alert-error hidden" role="alert"></div>
 
             <button type="submit" class="glass-btn glass-btn-primary" id="btn-judge-login">
-              <span class="btn-text">Sign in to Evaluation Portal</span>
+              <span class="btn-text">Sign in to evaluation portal</span>
               <div class="btn-spinner hidden"></div>
             </button>
           </form>
@@ -970,7 +965,7 @@
         <div class="glass-card jury-register-card">
           <div class="register-header-strip">
             <div class="register-panel-tag" id="reg-badge-panel">Panel P1</div>
-            <h1 class="register-title" id="reg-title">Judge Profile Registration</h1>
+            <h1 class="register-title" id="reg-title">Judge profile registration</h1>
             <p class="register-subtitle">Please complete your official credentials before beginning project evaluations.</p>
           </div>
 
@@ -978,12 +973,12 @@
           <div id="reg-step-form">
             <form id="form-judge-register" class="glass-form">
               <div class="form-group">
-                <label for="reg-fullname">Full Name</label>
+                <label for="reg-fullname">Full name</label>
                 <input type="text" id="reg-fullname" placeholder="Enter full name" required />
               </div>
 
               <div class="form-group">
-                <label for="reg-phone">Phone Number</label>
+                <label for="reg-phone">Phone number</label>
                 <div class="input-prefix-group">
                   <span class="input-prefix">+91</span>
                   <input type="tel" id="reg-phone" placeholder="10-digit mobile number" required />
@@ -991,7 +986,7 @@
               </div>
 
               <div class="form-group">
-                <label for="reg-email">Official Email Address</label>
+                <label for="reg-email">Official email address</label>
                 <input type="email" id="reg-email" placeholder="name@domain.com" required />
               </div>
 
@@ -1002,20 +997,28 @@
 
               <!-- Internal Judge Field -->
               <div class="form-group" id="reg-group-institution">
-                <label for="reg-institution">College / Institution Name</label>
+                <label for="reg-institution">College / Institution name</label>
                 <input type="text" id="reg-institution" placeholder="College or University name" />
               </div>
 
               <!-- External Judge Field -->
               <div class="form-group hidden" id="reg-group-company">
-                <label for="reg-company">Company / Organization Name</label>
+                <label for="reg-company">Company / Organization name</label>
                 <input type="text" id="reg-company" placeholder="Company or Enterprise name" />
+              </div>
+
+              <!-- Academic Integrity & Evaluation Consent -->
+              <div class="form-group register-consent-group">
+                <label class="register-consent-label">
+                  <input type="checkbox" id="reg-consent-chk" required checked />
+                  <span>I confirm my evaluation panel assignment and declare that I will evaluate assigned projects with academic integrity and objective scoring.</span>
+                </label>
               </div>
 
               <div id="reg-error" class="glass-alert-error hidden" role="alert"></div>
 
               <button type="button" class="glass-btn glass-btn-primary" onclick="reviewJudgeRegistration()">
-                <span>Review Profile Details</span>
+                <span>Review profile details</span>
               </button>
             </form>
           </div>
@@ -1023,14 +1026,14 @@
           <!-- Step 2: Confirmation / Review Screen -->
           <div id="reg-step-review" class="hidden">
             <div class="review-details-card">
-              <h3 class="review-heading">Review Profile Details</h3>
+              <h3 class="review-heading">Review profile details</h3>
               <dl class="pass-details-list">
                 <div class="pass-detail-row">
-                  <dt>Full Name</dt>
+                  <dt>Full name</dt>
                   <dd id="rev-fullname">—</dd>
                 </div>
                 <div class="pass-detail-row">
-                  <dt>Phone Number</dt>
+                  <dt>Phone number</dt>
                   <dd id="rev-phone">—</dd>
                 </div>
                 <div class="pass-detail-row">
@@ -1045,15 +1048,19 @@
                   <dt id="rev-org-label">Institution</dt>
                   <dd id="rev-org-val">—</dd>
                 </div>
+                <div class="pass-detail-row">
+                  <dt>Declaration</dt>
+                  <dd><span class="status-pill-badge pill-present">Confirmed & Signed</span></dd>
+                </div>
               </dl>
             </div>
 
             <div class="review-btn-row">
               <button type="button" class="glass-btn glass-btn-secondary" onclick="editJudgeRegistration()">
-                Edit Information
+                Edit information
               </button>
               <button type="button" class="glass-btn glass-btn-primary" id="btn-confirm-register" onclick="submitJudgeRegistration()">
-                <span class="btn-text">Confirm & Submit Registration</span>
+                <span class="btn-text">Confirm & submit registration</span>
                 <div class="btn-spinner hidden"></div>
               </button>
             </div>
@@ -1114,22 +1121,22 @@
         <!-- Evaluation Overview Bento Grid -->
         <div class="laptop-stats-grid">
           <div class="glass-card stat-bento-card">
-            <span class="stat-tag">ASSIGNED PROJECTS</span>
+            <span class="stat-tag">Assigned projects</span>
             <div class="stat-number" id="jdash-stat-total">0</div>
           </div>
 
           <div class="glass-card stat-bento-card stat-green">
-            <span class="stat-tag">COMPLETED</span>
+            <span class="stat-tag">Completed</span>
             <div class="stat-number" id="jdash-stat-completed">0</div>
           </div>
 
           <div class="glass-card stat-bento-card stat-amber">
-            <span class="stat-tag">PENDING EVALUATION</span>
+            <span class="stat-tag">Pending evaluation</span>
             <div class="stat-number" id="jdash-stat-pending">0</div>
           </div>
 
           <div class="glass-card stat-bento-card">
-            <span class="stat-tag">PROGRESS</span>
+            <span class="stat-tag">Progress</span>
             <div class="stat-number" id="jdash-stat-progress">0%</div>
           </div>
         </div>
@@ -1137,7 +1144,7 @@
         <!-- Progress Bar Card -->
         <div class="glass-card jdash-progress-card">
           <div class="jdash-progress-label-row">
-            <span class="jdash-progress-title">Panel Evaluation Completion</span>
+            <span class="jdash-progress-title">Panel evaluation completion</span>
             <span class="jdash-progress-ratio" id="jdash-progress-ratio">0 of 0 evaluated (0%)</span>
           </div>
           <div class="jdash-progress-track">
@@ -1149,13 +1156,13 @@
         <div class="glass-card jury-projects-card">
           <div class="table-action-header jdash-action-header">
             <div class="jdash-header-title-block">
-              <h3>Assigned Projects for Evaluation</h3>
+              <h3>Assigned projects for evaluation</h3>
               <p class="jdash-header-subtitle">Only projects from the active published allocation are listed.</p>
             </div>
             <div class="table-btn-cluster">
               <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJudgeProjects()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                Refresh
+                <span>Refresh</span>
               </button>
             </div>
           </div>
@@ -1164,7 +1171,7 @@
           <div class="jdash-search-filter-row">
             <div class="table-search-pill jdash-search-pill">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" id="jdash-search-input" placeholder="Search by Team ID, Name, Domain, School..." oninput="handleJudgeProjectSearch()" />
+              <input type="text" id="jdash-search-input" placeholder="Search by team ID, name, theme, school..." oninput="handleJudgeProjectSearch()" />
             </div>
             <div class="table-filter-pill jdash-filter-pill">
               <button type="button" class="filter-tab active" data-jdash-filter="all" onclick="setJudgeProjectFilter('all', this)">All (<span id="jdash-count-all">0</span>)</button>
@@ -1178,7 +1185,7 @@
             <div class="empty-state-icon-box">
               <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
             </div>
-            <h3 class="empty-state-title">No Projects Assigned Yet</h3>
+            <h3 class="empty-state-title">No projects assigned yet</h3>
             <p class="empty-state-desc" id="jdash-empty-msg">Project allocations for your panel will be published by the hackathon coordinators. Once teams are assigned to your panel, your evaluation sheets will appear here automatically.</p>
           </div>
 
@@ -1194,12 +1201,13 @@
               <table class="glass-data-table">
                 <thead>
                   <tr>
-                    <th>Team ID</th>
-                    <th>Team & Project Title</th>
-                    <th>Theme</th>
-                    <th>Institution / School</th>
-                    <th>Evaluation Status</th>
-                    <th>Action</th>
+                    <th style="width: 120px;">Team ID</th>
+                    <th style="min-width: 150px;">Team Name</th>
+                    <th style="min-width: 180px;">Project Title</th>
+                    <th style="min-width: 140px;">Leader Name</th>
+                    <th style="width: 160px;">Theme</th>
+                    <th style="width: 140px;">Evaluation Status</th>
+                    <th style="width: 120px; text-align: center;">Action</th>
                   </tr>
                 </thead>
                 <tbody id="jdash-projects-table-body">
@@ -1218,72 +1226,120 @@
   <div id="modal-jury-password" class="jury-modal hidden">
     <div class="jury-modal-box glass-card">
       <div class="modal-header">
-        <h3 class="modal-title">First Time Login - Update Password</h3>
+        <h3 class="modal-title">First-time login: update password</h3>
         <p class="modal-subtitle">For your security, please update your default panel password to a private password of your choice (minimum 8 characters).</p>
       </div>
       <form id="form-judge-change-password" class="glass-form">
         <div class="form-group">
-          <label for="pwd-current">Current Password</label>
+          <label for="pwd-current">Current password</label>
           <input type="password" id="pwd-current" placeholder="Current default password" required autocomplete="current-password" />
         </div>
         <div class="form-group">
-          <label for="pwd-new">New Password (min. 8 characters)</label>
+          <label for="pwd-new">New password (min. 8 characters)</label>
           <input type="password" id="pwd-new" placeholder="Enter new secure password" required minlength="8" autocomplete="new-password" />
         </div>
         <div class="form-group">
-          <label for="pwd-confirm">Confirm New Password</label>
+          <label for="pwd-confirm">Confirm new password</label>
           <input type="password" id="pwd-confirm" placeholder="Re-enter new password" required minlength="8" autocomplete="new-password" />
         </div>
         <div id="pwd-error" class="glass-alert-error hidden" role="alert"></div>
         <button type="submit" class="glass-btn glass-btn-primary" id="btn-save-pwd">
-          <span class="btn-text">Save New Password & Continue</span>
+          <span class="btn-text">Save new password & continue</span>
           <div class="btn-spinner hidden"></div>
         </button>
       </form>
     </div>
   </div>
 
-  <!-- Evaluation Modal for Judge -->
+  <!-- Evaluation Modal for Judge (Master-Detail on Desktop, Stacked with Sticky Actions on Mobile) -->
   <div id="modal-jury-evaluation" class="jury-modal hidden">
     <div class="jury-modal-box glass-card jury-eval-modal-content">
       <div class="modal-header eval-modal-header">
-        <div>
-          <div class="eval-team-code mono" id="eval-modal-team-code">RMKJH261001</div>
+        <div class="eval-modal-header-info">
+          <div class="eval-modal-meta-pills">
+            <span class="eval-team-code mono" id="eval-modal-team-code">RMKJH261001</span>
+            <span class="status-pill-badge pill-absent" id="eval-modal-status-pill">Draft</span>
+          </div>
           <h2 class="eval-team-title" id="eval-modal-team-name">Team Name</h2>
           <p class="eval-team-subtitle" id="eval-modal-proj-title">Project Title • Category</p>
+          <div class="eval-modal-chips-row" id="eval-modal-chips-row">
+            <span class="eval-chip-institution" id="eval-modal-school">—</span>
+            <span class="eval-chip-members hidden" id="eval-modal-members"></span>
+          </div>
         </div>
-        <button type="button" class="modal-close-btn" onclick="closeEvaluationModal()" aria-label="Close Evaluation">✕</button>
+        <button type="button" class="modal-close-btn" onclick="closeEvaluationModal()" aria-label="Close evaluation">✕</button>
       </div>
 
-      <div class="eval-modal-body">
-        <div class="eval-score-summary-bar">
-          <span class="score-summary-label">Total Score</span>
-          <span class="score-summary-val" id="eval-modal-total-score">0 / 50</span>
-          <span class="status-pill-badge pill-absent" id="eval-modal-status-pill">Draft</span>
+      <!-- Split Layout for Tablet & Desktop / Adaptive Stacked for Mobile -->
+      <div class="eval-modal-split-layout">
+        <!-- Rubric Scoring Column -->
+        <div class="eval-rubric-column">
+          <div class="eval-column-title-strip">
+            <h4 class="eval-column-title">Scoring rubric</h4>
+            <span class="eval-column-hint">Evaluate each criterion objectively</span>
+          </div>
+
+          <div id="eval-criteria-container" class="eval-criteria-list">
+            <!-- Dynamic criteria injected here -->
+          </div>
         </div>
 
-        <div id="eval-criteria-container" class="eval-criteria-list">
-          <!-- Dynamic criteria injected here -->
-        </div>
+        <!-- Summary & Feedback Sidebar Column -->
+        <div class="eval-summary-column">
+          <div class="eval-score-summary-bar">
+            <div>
+              <span class="score-summary-label">Total score</span>
+              <span class="score-summary-sub">50 maximum marks</span>
+            </div>
+            <span class="score-summary-val" id="eval-modal-total-score">0 / 50</span>
+          </div>
 
-        <div class="form-group eval-remarks-group">
-          <label for="eval-remarks">Written Evaluation Remarks / Feedback <span class="required-star" style="color:var(--accent-red); font-weight:700;">*</span></label>
-          <textarea id="eval-remarks" rows="4" placeholder="Enter constructive feedback, strengths, and areas of improvement..."></textarea>
-        </div>
+          <div class="form-group eval-remarks-group">
+            <label for="eval-remarks">Written evaluation remarks & feedback <span class="required-star">*</span></label>
+            <p class="eval-remarks-hint">Constructive feedback, core strengths, and improvement suggestions.</p>
+            <textarea id="eval-remarks" rows="5" placeholder="Enter constructive feedback, observed strengths, and recommendations for improvement..."></textarea>
+          </div>
 
-        <div id="eval-error" class="glass-alert-error hidden" role="alert"></div>
+          <div id="eval-error" class="glass-alert-error hidden" role="alert"></div>
+
+          <div class="eval-modal-footer">
+            <button type="button" class="glass-btn glass-btn-secondary" onclick="closeEvaluationModal()">
+              Close
+            </button>
+            <button type="button" class="glass-btn glass-btn-secondary" id="btn-eval-draft" onclick="saveEvaluationDraft()">
+              Save draft
+            </button>
+            <button type="button" class="glass-btn glass-btn-primary" id="btn-eval-submit" onclick="submitEvaluationFinal()">
+              Submit final evaluation
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="eval-modal-footer">
-        <button type="button" class="glass-btn glass-btn-secondary" onclick="closeEvaluationModal()">
-          Close
-        </button>
-        <button type="button" class="glass-btn glass-btn-secondary" id="btn-eval-draft" onclick="saveEvaluationDraft()">
-          Save Draft
-        </button>
-        <button type="button" class="glass-btn glass-btn-primary" id="btn-eval-submit" onclick="submitEvaluationFinal()">
-          Submit Final Evaluation
-        </button>
+    </div>
+  </div>
+
+  <!-- Modal: Confirm Final Evaluation Submission -->
+  <div id="modal-eval-confirm" class="jury-modal hidden">
+    <div class="jury-modal-box glass-card eval-confirm-box" style="max-width: 460px;">
+      <div class="modal-header">
+        <div class="confirm-icon-wrap" style="display: flex; align-items: center; gap: 10px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <h3 class="modal-title" style="margin: 0; font-size: 17px; font-weight: 700;">Submit & Lock Evaluation?</h3>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeEvalConfirmModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 0;">
+        <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
+          Once submitted, this evaluation is <span style="color: #dc2626;">final and cannot be edited again</span>.
+        </p>
+        <p class="text-muted" style="font-size: 13px; line-height: 1.5; margin: 0;">
+          All scores and written remarks will be permanently recorded and submitted. Are you sure you want to proceed?
+        </p>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+        <button type="button" class="glass-btn glass-btn-secondary" onclick="closeEvalConfirmModal()">Cancel</button>
+        <button type="button" class="glass-btn glass-btn-primary" id="btn-confirm-final-submit" onclick="executeFinalEvaluationSubmit()">Yes, Submit & Lock</button>
       </div>
     </div>
   </div>
