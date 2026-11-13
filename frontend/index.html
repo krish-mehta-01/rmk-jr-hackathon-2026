@@ -30,7 +30,7 @@
     })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261113_pills_uniform" />
+  <link rel="stylesheet" href="/style.css?v=20261113_team_stacked" />
 </head>
 <body>
 
@@ -1131,18 +1131,21 @@
         <div class="glass-card judge-profile-card">
           <div class="judge-profile-left">
             <div class="judge-avatar-capsule" id="jdash-avatar">J</div>
+            <div class="judge-avatar-divider"></div>
             <div class="judge-profile-meta">
-              <div class="judge-profile-badges">
-                <span class="status-pill-badge pill-present" id="jdash-badge-panel">Panel P1</span>
-                <span class="status-pill-badge pill-blue" id="jdash-badge-type">Internal Judge</span>
-                <span class="status-pill-badge pill-venue" id="jdash-badge-venue">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <span id="jdash-venue-text">Venue Pending</span>
-                </span>
-              </div>
               <h2 class="judge-name-title" id="jdash-name">Judge Name</h2>
               <p class="judge-title-sub" id="jdash-sub">Designation • Organization</p>
             </div>
+          </div>
+          <div class="judge-profile-badges">
+            <div class="judge-badges-row-top">
+              <span class="status-pill-badge pill-present" id="jdash-badge-panel">Panel P1</span>
+              <span class="status-pill-badge pill-blue" id="jdash-badge-type">Internal Judge</span>
+            </div>
+            <span class="status-pill-badge pill-venue" id="jdash-badge-venue">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span id="jdash-venue-text">Venue Pending</span>
+            </span>
           </div>
         </div>
 
@@ -1229,9 +1232,8 @@
               <table class="glass-data-table jury-projects-table">
                 <thead>
                   <tr>
-                    <th>Team ID</th>
-                    <th>Team Name</th>
-                    <th>Project Title</th>
+                    <th style="min-width: 140px;">Team</th>
+                    <th style="min-width: 220px;">Project Title</th>
                     <th>Leader Name</th>
                     <th>Theme</th>
                     <th>Evaluation Status</th>
@@ -1490,6 +1492,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261113_pills_uniform"></script>
+  <script src="/app.js?v=20261113_team_stacked"></script>
 </body>
 </html>

@@ -3125,8 +3125,12 @@ function renderJudgeProjects() {
 
     return `
       <tr>
-        <td data-label="Team ID"><span class="table-team-id mono">${escapeHtml(p.team_code || '')}</span></td>
-        <td data-label="Team Name"><strong class="table-team-name">${escapeHtml(p.team_name || '—')}</strong></td>
+        <td data-label="Team">
+          <div class="team-id-name-stacked">
+            <span class="table-team-code-sub mono">${escapeHtml(p.team_code || '')}</span>
+            <strong class="table-team-name-main">${escapeHtml(p.team_name || '—')}</strong>
+          </div>
+        </td>
         <td data-label="Project Title"><div class="table-project-title">${escapeHtml(p.project_title || '—')}</div></td>
         <td data-label="Leader Name"><div class="table-leader-name">${escapeHtml(p.leader_name || '—')}</div></td>
         <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>

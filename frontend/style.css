@@ -4793,24 +4793,24 @@ html.jury-theme-active body {
   box-sizing: border-box !important;
 }
 
-/* ─── Judge Profile Hero Card (No Email, No Phone) ─── */
+/* ─── Judge Profile Hero Card (Balanced Split Layout) ─── */
 .judge-profile-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 18px !important;
-  padding: 20px 24px !important;
+  padding: 18px 26px !important;
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  flex-wrap: wrap !important;
-  gap: 16px !important;
+  gap: 20px !important;
 }
 
 .judge-profile-left {
   display: flex !important;
   align-items: center !important;
   gap: 16px !important;
+  flex: 1 !important;
 }
 
 .judge-avatar-capsule {
@@ -4828,21 +4828,21 @@ html.jury-theme-active body {
   flex-shrink: 0 !important;
 }
 
+.judge-avatar-divider {
+  width: 1.5px !important;
+  height: 42px !important;
+  background: #e2e8f0 !important;
+  flex-shrink: 0 !important;
+}
+
 .judge-profile-meta {
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;
-}
-
-.judge-profile-badges {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
+  gap: 3px !important;
 }
 
 .judge-name-title {
-  font-size: 22px !important;
+  font-size: 21px !important;
   font-weight: 800 !important;
   color: #0f172a !important;
   margin: 0 !important;
@@ -4854,6 +4854,55 @@ html.jury-theme-active body {
   color: #64748b !important;
   font-weight: 500 !important;
   margin: 0 !important;
+}
+
+.judge-profile-badges {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.judge-badges-row-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+@media (max-width: 640px) {
+  .judge-profile-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  .judge-profile-badges {
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+}
+
+/* ─── Stacked Team Code & Name on Jury Projects Table ─── */
+.team-id-name-stacked {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.table-team-code-sub {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.2 !important;
+}
+
+.table-team-name-main {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
 }
 
 /* Hide contacts pill container */
