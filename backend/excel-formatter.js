@@ -707,19 +707,20 @@ async function buildThemeWiseWorkbook(themesMap) {
 
   // ─────────────────────────────────────────────────────────────
   // SHEETS 2..13: INDIVIDUAL THEME SHEETS (ONE PER THEME)
+  // Matching Venue-Wise Columns with Theme-Based Split
   // ─────────────────────────────────────────────────────────────
   const themeCols = [
     { header: 'Sl. No.', width: 8 },
-    { header: 'Team Code', width: 16 },
-    { header: 'Team Name', width: 28 },
-    { header: 'Project Title', width: 36 },
-    { header: 'School / College Name', width: 32 },
-    { header: 'Student Members', width: 30 },
-    { header: 'Mentor Name', width: 20 },
-    { header: 'Panel No.', width: 12 },
-    { header: 'Allocated Venue', width: 34 },
+    { header: 'Junior Hackathon ID', width: 20 },
+    { header: 'Team Leader Name', width: 24 },
+    { header: 'Team Members', width: 34 },
+    { header: 'Team Name', width: 26 },
+    { header: 'Title of Your Project', width: 38 },
+    { header: 'Allocated Venue & Panel', width: 36 },
+    { header: 'School Name', width: 34 },
     { header: 'Attendance Status', width: 18 },
-    { header: 'Jury / Evaluator Signature', width: 28 }
+    { header: 'Marked By', width: 16 },
+    { header: 'Jury / Coordinator Signature', width: 26 }
   ];
 
   // Helper for safe Excel worksheet tab names (max 31 chars, no invalid chars : \ / ? * [ ])
@@ -770,7 +771,7 @@ async function buildThemeWiseWorkbook(themesMap) {
     // Row 3: Ribbon Banner with Theme Name & Venues
     wsTheme.mergeCells(3, 1, 3, themeCols.length);
     const tSub = wsTheme.getCell('A3');
-    tSub.value = `THEME: ${themeName.toUpperCase()}  •  Venues: ${venuesSummary || 'TBD'}  •  ${teams.length} Registered Teams`;
+    tSub.value = `THEME: ${themeName.toUpperCase()}      |      VENUES: ${venuesSummary.toUpperCase() || 'TBD'}      |      Teams: ${teams.length}`;
     tSub.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: PALETTE.ribbonText } };
     tSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.ribbonBg } };
     tSub.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -788,9 +789,11 @@ async function buildThemeWiseWorkbook(themesMap) {
       c.value = col.header;
       c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
       c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
-      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 9) ? 'center' : 'left', vertical: 'middle' };
+      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 8 || idx === 9 || idx === 10) ? 'center' : 'left', vertical: 'middle' };
       c.border = BORDER_CELL;
     });
+
+    wsTheme.autoFilter = { from: { row: 5, column: 1 }, to: { row: 5, column: themeCols.length } };
 
     // Team Rows
     teams.forEach((t, tIdx) => {
@@ -800,18 +803,19 @@ async function buildThemeWiseWorkbook(themesMap) {
 
       const isScanned = Boolean(t.is_present);
       const rowBg = (tIdx % 2 === 0) ? PALETTE.rowEven : PALETTE.rowOdd;
+      const venuePanelStr = `Panel ${t.panel_no || 1} — ${t.venue || 'TBD'}`;
 
       const rowValues = [
         tIdx + 1,
         t.team_code || '',
+        t.leader_name || '',
+        t.members || '',
         t.team_name || '',
         t.project_title || '',
+        venuePanelStr,
         t.college_name || '',
-        t.members || '',
-        t.mentor_name || '',
-        t.panel_no ? `Panel ${t.panel_no}` : 'TBD',
-        t.venue || 'TBD',
         isScanned ? 'PRESENT' : 'PENDING',
+        t.marked_by || (isScanned ? 'SELF (QR)' : '—'),
         '' // Signature blank
       ];
 
@@ -822,21 +826,18 @@ async function buildThemeWiseWorkbook(themesMap) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
         cell.border = BORDER_CELL;
 
-        if (cIdx === 0) {
+        if (cIdx === 0 || cIdx === 1) {
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        } else if (cIdx === 1) {
-          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-          cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        } else if (cIdx === 2) {
+          if (cIdx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
+        } else if (cIdx === 2 || cIdx === 4) {
           cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
           cell.alignment = { horizontal: 'left', vertical: 'middle' };
-        } else if (cIdx === 7) {
-          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-          cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        } else if (cIdx === 9) {
+        } else if (cIdx === 8) {
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
           cell.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: isScanned ? PALETTE.scannedText : PALETTE.pendingText } };
           cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isScanned ? PALETTE.scannedBg : PALETTE.pendingBg } };
+        } else if (cIdx === 9 || cIdx === 10) {
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
         } else {
           cell.alignment = { horizontal: 'left', vertical: 'middle' };
         }
