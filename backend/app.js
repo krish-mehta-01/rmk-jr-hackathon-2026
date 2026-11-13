@@ -459,13 +459,107 @@ app.get('/api/admin/export', authAdmin, async (req, res) => {
     const { buildPresenceExcel } = require('./excel-formatter');
     const wb = await buildPresenceExcel(rows);
 
-    res.setHeader('Content-Disposition', 'attachment; filename="RMK_Jr_Hackathon_2026_Presence_Roster.xlsx"');
+    res.setHeader('Content-Disposition', 'attachment; filename="RMK_Junior_Hackathon_2026_Master_Attendance.xlsx"');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     await wb.xlsx.write(res);
     res.end();
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Export failed' });
+  }
+});
+
+function findMasterDocx() {
+  const candidatePaths = [
+    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Master_Attendance.docx'),
+    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Master_Attendance.docx'),
+    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Master_Attendance.docx')
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
+  }
+  return null;
+}
+
+function findMasterPdf() {
+  const candidatePaths = [
+    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Master_Attendance.pdf'),
+    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Master_Attendance.pdf'),
+    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Master_Attendance.pdf')
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
+  }
+  return null;
+}
+
+// Download Master Attendance Word document (.docx)
+app.get('/api/admin/export/master-doc', authAdmin, async (req, res) => {
+  try {
+    let filePath = findMasterDocx();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'build_master_attendance_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findMasterDocx();
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Master Attendance Word document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Master_Attendance.docx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] master-doc download failed:', err);
+        res.status(500).json({ error: 'Failed to download Master Attendance Word document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/master-doc error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate Master Attendance Word document' });
+  }
+});
+
+// Download Master Attendance PDF document (.pdf)
+app.get('/api/admin/export/master-pdf', authAdmin, async (req, res) => {
+  try {
+    let filePath = findMasterPdf();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'build_master_attendance_docs.py');
+      runDocGenScript(genScript, 35000);
+      filePath = findMasterPdf();
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Master Attendance PDF is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Master_Attendance.pdf', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] master-pdf download failed:', err);
+        res.status(500).json({ error: 'Failed to download Master Attendance PDF' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/master-pdf error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to generate Master Attendance PDF' });
+  }
+});
+
+// Download Duplicates Audit Sheet (.xlsx)
+app.get('/api/admin/export/duplicates-audit', authAdmin, async (req, res) => {
+  try {
+    const target = path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Duplicates_Audit.xlsx');
+    if (!fs.existsSync(target)) {
+      return res.status(404).json({ error: 'Duplicate audit file not found' });
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.download(target, 'RMK_Junior_Hackathon_2026_Duplicates_Audit.xlsx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] duplicates-audit download failed:', err);
+        res.status(500).json({ error: 'Failed to download audit file' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/duplicates-audit error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to download audit file' });
   }
 });
 
