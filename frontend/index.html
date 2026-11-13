@@ -30,7 +30,7 @@
     })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261113_custom_dropdowns_v2" />
+  <link rel="stylesheet" href="/style.css?v=20261114_eval_rankings_fixed_v3" />
 </head>
 <body>
 
@@ -444,7 +444,7 @@
                 </div>
 
                 <div class="table-scroll-container">
-                  <table class="glass-data-table">
+                  <table class="glass-data-table" id="teams-status-table">
                     <colgroup>
                       <col style="width: 25%;">
                       <col style="width: 18%;">
@@ -756,10 +756,6 @@
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
                       <span id="btn-toggle-all-alloc-text">Expand All</span>
                     </button>
-                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadAdminAllocations()">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                      Refresh
-                    </button>
                   </div>
                 </div>
               </div>
@@ -826,7 +822,7 @@
                 <div class="laptop-stats-grid eval-stats-grid">
                   <div class="glass-card stat-bento-card">
                     <span class="stat-tag">TOTAL REGISTERED</span>
-                    <div class="stat-number" id="stat-eval-total">282</div>
+                    <div class="stat-number" id="stat-eval-total">294</div>
                   </div>
                   <div class="glass-card stat-bento-card stat-green">
                     <span class="stat-tag">FULLY EVALUATED</span>
@@ -901,7 +897,17 @@
                 <!-- Complete Evaluation Status Table -->
                 <div class="glass-card laptop-table-card eval-report-card">
                   <div class="table-scroll-container eval-scroll-container">
-                    <table class="glass-data-table eval-status-table" id="eval-status-table">
+                    <table class="eval-table eval-status-table" id="eval-status-table">
+                      <colgroup>
+                        <col style="width: 115px;">
+                        <col style="width: auto;">
+                        <col style="width: 180px;">
+                        <col style="width: 120px;">
+                        <col style="width: 110px;">
+                        <col style="width: 110px;">
+                        <col style="width: 125px;">
+                        <col style="width: 135px;">
+                      </colgroup>
                       <thead>
                         <tr>
                           <th>Team ID</th>
@@ -929,18 +935,18 @@
 
               <!-- Sub-Pane 2: Theme-wise Rankings -->
               <div id="eval-tab-pane-themes" class="eval-subtab-pane hidden">
-                <div class="glass-card eval-report-card" style="padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div class="glass-card eval-report-card eval-filter-card" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
                   <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <label for="rank-theme-selector" style="font-size: 13.5px; font-weight: 700;">Theme / Domain:</label>
-                      <select id="rank-theme-selector" class="alloc-panel-select" onchange="handleThemeSelectorChange()" style="min-width: 220px; font-weight: 700;">
+                      <select id="rank-theme-selector" class="alloc-panel-select" onchange="handleThemeSelectorChange()" style="min-width: 240px; font-weight: 700;">
                         <!-- Populated dynamically -->
                       </select>
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <label for="rank-topn-selector" style="font-size: 13.5px; font-weight: 700;">Leaderboard Scope:</label>
-                      <select id="rank-topn-selector" class="alloc-panel-select" onchange="handleTopNChange()" style="min-width: 120px; font-weight: 700;">
+                      <select id="rank-topn-selector" class="alloc-panel-select" onchange="handleTopNChange()" style="min-width: 130px; font-weight: 700;">
                         <option value="ALL">All Eligible</option>
                         <option value="1">Top 1</option>
                         <option value="2">Top 2</option>
@@ -951,11 +957,11 @@
                     </div>
                   </div>
 
-                  <div style="display: flex; align-items: center; gap: 10px;">
-                    <div id="theme-rank-meta-badge" class="alloc-stat-badge">
+                  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <div id="theme-rank-meta-badge" class="eval-stat-pill">
                       Loading theme stats...
                     </div>
-                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="downloadCurrentThemeExcel()">
+                    <button type="button" class="glass-btn glass-btn-primary btn-sm" onclick="downloadCurrentThemeExcel()">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                       <span>Export Theme (.xlsx)</span>
                     </button>
@@ -964,7 +970,7 @@
 
                 <!-- Theme Leaderboard -->
                 <div class="glass-card laptop-table-card eval-report-card" style="margin-bottom: 24px;">
-                  <div class="alloc-section-header" style="margin-bottom: 12px;">
+                  <div class="alloc-section-header" style="margin-bottom: 14px;">
                     <div>
                       <h3 class="alloc-section-title" id="theme-leaderboard-title">Theme Leaderboard</h3>
                       <span class="alloc-section-sub" id="theme-leaderboard-subtitle">Standard Competition Ranking (1, 2, 2, 4) • Top 3 Eligible Teams</span>
@@ -972,10 +978,19 @@
                   </div>
 
                   <div class="table-scroll-container eval-scroll-container">
-                    <table class="glass-data-table eval-ranking-table" id="theme-rankings-table">
+                    <table class="eval-table eval-ranking-table" id="theme-rankings-table">
+                      <colgroup>
+                        <col style="width: 80px;">
+                        <col style="width: 125px;">
+                        <col style="width: 220px;">
+                        <col style="width: auto;">
+                        <col style="width: 115px;">
+                        <col style="width: 115px;">
+                        <col style="width: 135px;">
+                      </colgroup>
                       <thead>
                         <tr>
-                          <th style="width: 80px; text-align: center;">Rank</th>
+                          <th style="text-align: center;">Rank</th>
                           <th>Team ID</th>
                           <th>Team Name</th>
                           <th>Project Title</th>
@@ -993,7 +1008,7 @@
 
                 <!-- Pending Incomplete Teams in Theme -->
                 <div class="glass-card eval-report-card" id="theme-pending-container" style="padding: 20px;">
-                  <div class="alloc-section-header" style="margin-bottom: 12px;">
+                  <div class="alloc-section-header" style="margin-bottom: 14px;">
                     <h4 style="font-size: 15px; font-weight: 800; color: #b45309; display: flex; align-items: center; gap: 8px;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                       Pending Incomplete Teams (Not Eligible For Ranking Until Both Complete)
@@ -1002,7 +1017,16 @@
                   </div>
 
                   <div class="table-scroll-container eval-scroll-container">
-                    <table class="glass-data-table eval-pending-table" id="theme-pending-table">
+                    <table class="eval-table eval-pending-table" id="theme-pending-table">
+                      <colgroup>
+                        <col style="width: 125px;">
+                        <col style="width: 200px;">
+                        <col style="width: auto;">
+                        <col style="width: 90px;">
+                        <col style="width: 120px;">
+                        <col style="width: 120px;">
+                        <col style="width: 135px;">
+                      </colgroup>
                       <thead>
                         <tr>
                           <th>Team ID</th>
@@ -1030,16 +1054,26 @@
                       <h3 class="alloc-section-title">Overall Grand Leaderboard</h3>
                       <span class="alloc-section-sub">Comprehensive Ranking Across All 12 Themes • Standard Competition Ties (1, 2, 2, 4)</span>
                     </div>
-                    <div id="overall-rank-meta-badge" class="alloc-stat-badge">
+                    <div id="overall-rank-meta-badge" class="eval-stat-pill">
                       0 Fully Evaluated Teams
                     </div>
                   </div>
 
                   <div class="table-scroll-container eval-scroll-container">
-                    <table class="glass-data-table eval-ranking-table" id="overall-rankings-table">
+                    <table class="eval-table eval-ranking-table" id="overall-rankings-table">
+                      <colgroup>
+                        <col style="width: 85px;">
+                        <col style="width: 125px;">
+                        <col style="width: 200px;">
+                        <col style="width: auto;">
+                        <col style="width: 180px;">
+                        <col style="width: 115px;">
+                        <col style="width: 115px;">
+                        <col style="width: 135px;">
+                      </colgroup>
                       <thead>
                         <tr>
-                          <th style="width: 100px; text-align: center;">Overall Rank</th>
+                          <th style="text-align: center;">Overall Rank</th>
                           <th>Team ID</th>
                           <th>Team Name</th>
                           <th>Project Title</th>
@@ -1058,7 +1092,7 @@
 
                 <!-- Overall Pending Incomplete Teams -->
                 <div class="glass-card eval-report-card" id="overall-pending-container" style="padding: 20px;">
-                  <div class="alloc-section-header" style="margin-bottom: 12px;">
+                  <div class="alloc-section-header" style="margin-bottom: 14px;">
                     <h4 style="font-size: 15px; font-weight: 800; color: #b45309; display: flex; align-items: center; gap: 8px;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                       Overall Pending Evaluations Roster
@@ -1067,7 +1101,17 @@
                   </div>
 
                   <div class="table-scroll-container eval-scroll-container">
-                    <table class="glass-data-table eval-pending-table" id="overall-pending-table">
+                    <table class="eval-table eval-pending-table" id="overall-pending-table">
+                      <colgroup>
+                        <col style="width: 125px;">
+                        <col style="width: 180px;">
+                        <col style="width: auto;">
+                        <col style="width: 175px;">
+                        <col style="width: 85px;">
+                        <col style="width: 115px;">
+                        <col style="width: 115px;">
+                        <col style="width: 135px;">
+                      </colgroup>
                       <thead>
                         <tr>
                           <th>Team ID</th>
@@ -1093,37 +1137,37 @@
                 <div class="alloc-panels-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                   
                   <!-- Card 1: Complete Status -->
-                  <div class="glass-card alloc-panel-card" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                  <div class="glass-card eval-export-card">
                     <div>
                       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <div style="background: #ecfdf5; color: #047857; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <div style="background: #ecfdf5; color: #047857; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                         </div>
                         <div>
-                          <h4 style="font-size: 16px; font-weight: 800; margin: 0;">Evaluation Status Report</h4>
-                          <span style="font-size: 12px; color: var(--text-muted);">Workbook A • Multi-Sheet</span>
+                          <h4 style="font-size: 16px; font-weight: 800; margin: 0; color: #0f172a;">Evaluation Status Report</h4>
+                          <span style="font-size: 12px; font-weight: 600; color: #059669;">Workbook A • Multi-Sheet</span>
                         </div>
                       </div>
                       <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
-                        Exports all 282 registered teams with panel details, internal & external jury marks (/50), combined scores (/100), completion statuses, and an executive summary sheet with theme metrics.
+                        Exports all 294 registered teams with panel details, internal & external jury marks (/50), combined scores (/100), completion statuses, and an executive summary sheet with theme metrics.
                       </p>
                     </div>
-                    <button type="button" class="glass-btn glass-btn-primary" id="btn-export-status" onclick="downloadEvaluationExcel('status-excel')">
+                    <button type="button" class="glass-btn glass-btn-primary eval-export-btn" id="btn-export-status" onclick="downloadEvaluationExcel('status-excel')">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                       <span>Download Status Report (.xlsx)</span>
                     </button>
                   </div>
 
                   <!-- Card 2: Theme Rankings -->
-                  <div class="glass-card alloc-panel-card" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                  <div class="glass-card eval-export-card">
                     <div>
                       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <div style="background: #eff6ff; color: #1d4ed8; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <div style="background: #eff6ff; color: #1d4ed8; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         </div>
                         <div>
-                          <h4 style="font-size: 16px; font-weight: 800; margin: 0;">Theme-wise Ranking Report</h4>
-                          <span style="font-size: 12px; color: var(--text-muted);">Workbook B • 13 Sheets</span>
+                          <h4 style="font-size: 16px; font-weight: 800; margin: 0; color: #0f172a;">Theme-wise Ranking Report</h4>
+                          <span style="font-size: 12px; font-weight: 600; color: #2563eb;">Workbook B • 13 Sheets</span>
                         </div>
                       </div>
                       <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
@@ -1131,8 +1175,8 @@
                       </p>
 
                       <div style="display: flex; align-items: center; gap: 8px; margin-top: 14px;">
-                        <label for="export-theme-topn-select" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Ranking Scope:</label>
-                        <select id="export-theme-topn-select" class="alloc-panel-select" onchange="syncExportTopNToRankSelector()" style="padding: 4px 10px; font-size: 13px; font-weight: 600;">
+                        <label for="export-theme-topn-select" style="font-size: 13px; font-weight: 700; color: #334155;">Ranking Scope:</label>
+                        <select id="export-theme-topn-select" class="alloc-panel-select" onchange="syncExportTopNToRankSelector()" style="padding: 5px 12px; font-size: 13px; font-weight: 600;">
                           <option value="ALL">All Eligible Teams</option>
                           <option value="1">Top 1 Teams</option>
                           <option value="2">Top 2 Teams</option>
@@ -1142,29 +1186,29 @@
                         </select>
                       </div>
                     </div>
-                    <button type="button" class="glass-btn glass-btn-primary" id="btn-export-theme" onclick="downloadEvaluationExcel('theme-excel')">
+                    <button type="button" class="glass-btn glass-btn-primary eval-export-btn" id="btn-export-theme" onclick="downloadEvaluationExcel('theme-excel')">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                       <span>Download Theme Rankings (.xlsx)</span>
                     </button>
                   </div>
 
                   <!-- Card 3: Overall Rankings -->
-                  <div class="glass-card alloc-panel-card" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                  <div class="glass-card eval-export-card">
                     <div>
                       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <div style="background: #fef3c7; color: #b45309; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <div style="background: #fef3c7; color: #b45309; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
                         </div>
                         <div>
-                          <h4 style="font-size: 16px; font-weight: 800; margin: 0;">Overall Hackathon Leaderboard</h4>
-                          <span style="font-size: 12px; color: var(--text-muted);">Workbook C • 3 Sheets</span>
+                          <h4 style="font-size: 16px; font-weight: 800; margin: 0; color: #0f172a;">Overall Hackathon Leaderboard</h4>
+                          <span style="font-size: 12px; font-weight: 600; color: #d97706;">Workbook C • 3 Sheets</span>
                         </div>
                       </div>
                       <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
                         Official Grand Leaderboard evaluating all fully evaluated projects across all domains with standard competition rankings (1, 2, 2, 4), marks breakdown, and pending rosters.
                       </p>
                     </div>
-                    <button type="button" class="glass-btn glass-btn-primary" id="btn-export-overall" onclick="downloadEvaluationExcel('overall-excel')">
+                    <button type="button" class="glass-btn glass-btn-primary eval-export-btn" id="btn-export-overall" onclick="downloadEvaluationExcel('overall-excel')">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                       <span>Download Overall Leaderboard (.xlsx)</span>
                     </button>
@@ -1268,38 +1312,6 @@
             <!-- Pane 1: Panels & Judges Management -->
             <div id="jury-admin-sec-panels" class="admin-tab-pane active">
               
-              <!-- Bento Stats Cards -->
-              <div class="laptop-stats-grid">
-                <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">Total panels</span>
-                  <div class="stat-number" id="jstat-panels">15</div>
-                </div>
-
-                <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">Judge accounts</span>
-                  <div class="stat-number" id="jstat-judges">30</div>
-                </div>
-
-                <div class="glass-card stat-bento-card stat-green">
-                  <span class="stat-tag">Registered</span>
-                  <div class="stat-number" id="jstat-registered">0</div>
-                </div>
-
-                <div class="glass-card stat-bento-card stat-amber">
-                  <span class="stat-tag">Pending registration</span>
-                  <div class="stat-number" id="jstat-pending">0</div>
-                </div>
-
-                <div class="glass-card stat-bento-card">
-                  <span class="stat-tag">Active accounts</span>
-                  <div class="stat-number" id="jstat-active">30</div>
-                </div>
-
-                <div class="glass-card stat-bento-card stat-green">
-                  <span class="stat-tag">Evaluations completed</span>
-                  <div class="stat-number" id="jstat-evals">0</div>
-                </div>
-              </div>
 
               <!-- Control Header -->
               <div class="glass-card theme-control-card">
@@ -1778,12 +1790,14 @@
             <button type="button" class="glass-btn glass-btn-secondary" onclick="closeEvaluationModal()">
               Close
             </button>
-            <button type="button" class="glass-btn glass-btn-secondary" id="btn-eval-draft" onclick="saveEvaluationDraft()">
-              Save draft
-            </button>
-            <button type="button" class="glass-btn glass-btn-primary" id="btn-eval-submit" onclick="submitEvaluationFinal()">
-              Submit final evaluation
-            </button>
+            <div class="eval-footer-right-actions">
+              <button type="button" class="glass-btn glass-btn-secondary" id="btn-eval-draft" onclick="saveEvaluationDraft()">
+                Save draft
+              </button>
+              <button type="button" class="glass-btn glass-btn-primary" id="btn-eval-submit" onclick="submitEvaluationFinal()">
+                Submit final evaluation
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1934,6 +1948,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261113_custom_dropdowns_v2"></script>
+  <script src="/app.js?v=20261114_eval_rankings_fixed_v3"></script>
 </body>
 </html>

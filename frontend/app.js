@@ -2655,12 +2655,13 @@ async function loadJuryAdminStats() {
     if (!res.ok) return;
 
     const data = await res.json();
-    document.getElementById('jstat-panels').textContent = data.total_panels ?? 15;
-    document.getElementById('jstat-judges').textContent = data.total_judges ?? 30;
-    document.getElementById('jstat-registered').textContent = data.registered_judges ?? 0;
-    document.getElementById('jstat-pending').textContent = data.pending_registrations ?? 0;
-    document.getElementById('jstat-active').textContent = data.active_judges ?? 30;
-    document.getElementById('jstat-evals').textContent = data.evaluations_completed ?? 0;
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setTxt('jstat-panels', data.total_panels ?? 15);
+    setTxt('jstat-judges', data.total_judges ?? 30);
+    setTxt('jstat-registered', data.registered_judges ?? 0);
+    setTxt('jstat-pending', data.pending_registrations ?? 0);
+    setTxt('jstat-active', data.active_judges ?? 30);
+    setTxt('jstat-evals', data.evaluations_completed ?? 0);
   } catch (err) {
     console.warn('[WARN] loadJuryAdminStats:', err);
   }
@@ -2820,7 +2821,7 @@ function renderJudgeSubcard(judge, type) {
 }
 
 async function resetJudgePassword(judgeId, username) {
-  if (!confirm(`Are you sure you want to reset credentials for ${username} back to default convention (e.g. PanelX-IN)? The judge will be forced to change password on next login.`)) {
+  if (!confirm(`Are you sure you want to reset password for ${username} back to default password (rmkjrh2026)? The judge will be required to change password on next login.`)) {
     return;
   }
 
@@ -5277,16 +5278,16 @@ function renderEvaluationStatusTable(teams) {
 
       return `
         <tr>
-          <td><span class="table-team-id mono">${escapeHtml(t.team_code)}</span></td>
+          <td><span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span></td>
           <td>
-            <div class="table-team-title">${escapeHtml(t.team_name)}</div>
-            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${escapeHtml(t.project_title)}</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:1px;">${escapeHtml(t.school || '')}</div>
+            <div class="table-team-name-main">${escapeHtml(t.team_name)}</div>
+            <div style="font-size:12px; color:#475569; margin-top:2px;">${escapeHtml(t.project_title)}</div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:1px;">${escapeHtml(t.school || '')}</div>
           </td>
-          <td><span class="table-theme-badge">${escapeHtml(t.theme)}</span></td>
+          <td><span class="status-pill-badge pill-blue">${escapeHtml(t.theme)}</span></td>
           <td>
             <span class="table-panel-badge">${escapeHtml(t.panel_code)}</span>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${escapeHtml(t.panel_venue || '')}</div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">${escapeHtml(t.panel_venue || '')}</div>
           </td>
           <td style="text-align:center;">${inScoreHtml}</td>
           <td style="text-align:center;">${exScoreHtml}</td>
@@ -5418,12 +5419,12 @@ function renderThemeLeaderboard() {
         return `
           <tr>
             <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
-            <td><span class="table-team-id mono">${escapeHtml(t.team_code)}</span></td>
-            <td><strong>${escapeHtml(t.team_name)}</strong></td>
-            <td>${escapeHtml(t.project_title)}</td>
+            <td><span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span></td>
+            <td><div class="table-team-name-main">${escapeHtml(t.team_name)}</div></td>
+            <td style="color:#334155;">${escapeHtml(t.project_title)}</td>
             <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
             <td style="text-align:center;" class="mono">${t.external_marks} / 50</td>
-            <td style="text-align:center;"><strong class="mono" style="font-size:16px; color:var(--accent-green-dark);">${t.combined_score} / 100</strong></td>
+            <td style="text-align:center;"><strong class="mono score-combined-badge">${t.combined_score} / 100</strong></td>
           </tr>
         `;
       }).join('');
@@ -5441,13 +5442,13 @@ function renderThemeLeaderboard() {
       pendBody.innerHTML = group.pending_teams.map(pt => {
         return `
           <tr>
-            <td><span class="table-team-id mono">${escapeHtml(pt.team_code)}</span></td>
-            <td>${escapeHtml(pt.team_name)}</td>
-            <td>${escapeHtml(pt.project_title)}</td>
-            <td><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
-            <td>${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
-            <td>${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
-            <td><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
+            <td><span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span></td>
+            <td><div class="table-team-name-main">${escapeHtml(pt.team_name)}</div></td>
+            <td style="color:#475569;">${escapeHtml(pt.project_title)}</td>
+            <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
+            <td style="text-align:center;">${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+            <td style="text-align:center;">${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+            <td style="text-align:center;"><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
           </tr>
         `;
       }).join('');
@@ -5568,13 +5569,13 @@ async function loadOverallRankings() {
           return `
             <tr>
               <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
-              <td><span class="table-team-id mono">${escapeHtml(t.team_code)}</span></td>
-              <td><strong>${escapeHtml(t.team_name)}</strong></td>
-              <td>${escapeHtml(t.project_title)}</td>
-              <td><span class="table-theme-badge">${escapeHtml(t.theme)}</span></td>
+              <td><span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span></td>
+              <td><div class="table-team-name-main">${escapeHtml(t.team_name)}</div></td>
+              <td style="color:#334155;">${escapeHtml(t.project_title)}</td>
+              <td><span class="status-pill-badge pill-blue">${escapeHtml(t.theme)}</span></td>
               <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
               <td style="text-align:center;" class="mono">${t.external_marks} / 50</td>
-              <td style="text-align:center;"><strong class="mono" style="font-size:16px; color:var(--accent-green-dark);">${t.combined_score} / 100</strong></td>
+              <td style="text-align:center;"><strong class="mono score-combined-badge">${t.combined_score} / 100</strong></td>
             </tr>
           `;
         }).join('');
@@ -5589,14 +5590,14 @@ async function loadOverallRankings() {
         pendBody.innerHTML = data.pending_teams.map(pt => {
           return `
             <tr>
-              <td><span class="table-team-id mono">${escapeHtml(pt.team_code)}</span></td>
-              <td>${escapeHtml(pt.team_name)}</td>
-              <td>${escapeHtml(pt.project_title)}</td>
-              <td><span class="table-theme-badge">${escapeHtml(pt.theme)}</span></td>
-              <td><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
-              <td>${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
-              <td>${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
-              <td><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
+              <td><span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span></td>
+              <td><div class="table-team-name-main">${escapeHtml(pt.team_name)}</div></td>
+              <td style="color:#475569;">${escapeHtml(pt.project_title)}</td>
+              <td><span class="status-pill-badge pill-blue">${escapeHtml(pt.theme)}</span></td>
+              <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
+              <td style="text-align:center;">${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+              <td style="text-align:center;">${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+              <td style="text-align:center;"><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
             </tr>
           `;
         }).join('');

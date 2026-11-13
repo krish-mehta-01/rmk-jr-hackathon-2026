@@ -46,3 +46,4 @@ async function generateVenueAttendanceExcel(pool, outputPath) {
 module.exports = {
   generateVenueAttendanceExcel
 };
+

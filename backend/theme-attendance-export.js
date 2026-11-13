@@ -48,3 +48,4 @@ async function generateThemeAttendanceExcel(pool, outputPath, filterTheme = null
 module.exports = {
   generateThemeAttendanceExcel
 };
+
