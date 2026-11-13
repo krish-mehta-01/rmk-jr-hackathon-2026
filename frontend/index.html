@@ -362,10 +362,26 @@
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                       Refresh
                     </button>
-                    <button type="button" class="glass-btn glass-btn-primary btn-sm" onclick="exportExcel()">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      Export Excel
-                    </button>
+                    <div class="custom-dropdown" id="dropdown-attendance-export">
+                      <button type="button" class="glass-btn glass-btn-primary btn-sm dropdown-trigger" onclick="toggleAttendanceExportDropdown(event)" aria-haspopup="true" aria-expanded="false">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>Export Attendance</span>
+                        <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <div class="custom-dropdown-menu custom-dropdown-menu-right" id="menu-attendance-export" role="menu">
+                        <div class="dropdown-group-header">ATTENDANCE ROSTERS</div>
+                        <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportExcel();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="16" y1="13" x2="8" y2="17"/></svg>
+                          <span class="dropdown-item-label">Presence Roster (TiDB Scans)</span>
+                          <span class="file-tag tag-xlsx">XLSX</span>
+                        </button>
+                        <button type="button" class="dropdown-item" onclick="closeDropdowns(); exportThemePdf();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                          <span class="dropdown-item-label">Themewise Attendance Sheet</span>
+                          <span class="file-tag tag-pdf">PDF</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1085,9 +1101,7 @@
             <div class="topbar-logo-divider"></div>
             <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="topbar-logo-hackathon" />
           </div>
-          <div class="topbar-judge-meta">
-            <span class="topbar-badge badge-panel" id="jdash-topbar-panel">Panel P1</span>
-            <span class="topbar-badge badge-type" id="jdash-topbar-type">Internal Judge</span>
+          <div class="topbar-judge-actions">
             <button type="button" class="topbar-logout" onclick="logoutJudge()" aria-label="Logout" title="Logout">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               <span>Logout</span>
@@ -1114,10 +1128,6 @@
               <h2 class="judge-name-title" id="jdash-name">Judge Name</h2>
               <p class="judge-title-sub" id="jdash-sub">Designation • Organization</p>
             </div>
-          </div>
-          <div class="judge-profile-contacts">
-            <div class="contact-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span id="jdash-email">—</span></div>
-            <div class="contact-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span id="jdash-phone">—</span></div>
           </div>
         </div>
 
@@ -1201,16 +1211,16 @@
 
             <!-- Desktop Table View (Visible on larger screens) -->
             <div class="table-scroll-container jdash-desktop-table-wrap">
-              <table class="glass-data-table jury-projects-table" id="jdash-projects-table">
+              <table class="glass-data-table jury-projects-table">
                 <thead>
                   <tr>
-                    <th style="width: 110px;">Team ID</th>
-                    <th style="min-width: 150px;">Team Name</th>
-                    <th style="min-width: 200px;">Project Title</th>
-                    <th style="min-width: 140px;">Leader Name</th>
-                    <th style="width: 175px; min-width: 165px;">Theme</th>
-                    <th style="width: 170px; min-width: 160px;">Evaluation Status</th>
-                    <th style="width: 140px; min-width: 130px; text-align: center;">Action</th>
+                    <th>Team ID</th>
+                    <th>Team Name</th>
+                    <th>Project Title</th>
+                    <th>Leader Name</th>
+                    <th>Theme</th>
+                    <th>Evaluation Status</th>
+                    <th style="text-align: center;">Action</th>
                   </tr>
                 </thead>
                 <tbody id="jdash-projects-table-body">
@@ -1298,9 +1308,9 @@
           </div>
 
           <div class="form-group eval-remarks-group">
-            <label for="eval-remarks">Written evaluation remarks & feedback <span class="required-star">*</span></label>
+            <label for="eval-remarks">Written evaluation remarks & feedback (Optional)</label>
             <p class="eval-remarks-hint">Constructive feedback, core strengths, and improvement suggestions.</p>
-            <textarea id="eval-remarks" rows="5" placeholder="Enter constructive feedback, observed strengths, and recommendations for improvement..."></textarea>
+            <textarea id="eval-remarks" rows="5" placeholder="Enter constructive feedback, observed strengths, and recommendations for improvement (optional)..."></textarea>
           </div>
 
           <div id="eval-error" class="glass-alert-error hidden" role="alert"></div>
@@ -1324,23 +1334,23 @@
 
   <!-- Modal: Confirm Final Evaluation Submission -->
   <div id="modal-eval-confirm" class="jury-modal hidden">
-    <div class="jury-modal-box glass-card eval-confirm-box" style="max-width: 460px;">
+    <div class="jury-modal-box glass-card eval-confirm-box">
       <div class="modal-header">
         <div class="confirm-icon-wrap" style="display: flex; align-items: center; gap: 10px;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <h3 class="modal-title" style="margin: 0; font-size: 17px; font-weight: 700;">Submit & Lock Evaluation?</h3>
+          <h3 class="modal-title">Submit & Lock Evaluation?</h3>
         </div>
         <button type="button" class="modal-close-btn" onclick="closeEvalConfirmModal()" aria-label="Close">✕</button>
       </div>
-      <div class="modal-body" style="padding: 16px 0;">
-        <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
-          Once submitted, this evaluation is <span style="color: #dc2626;">final and cannot be edited again</span>.
-        </p>
-        <p class="text-muted" style="font-size: 13px; line-height: 1.5; margin: 0;">
-          All scores and written remarks will be permanently recorded and submitted. Are you sure you want to proceed?
+      <div class="modal-body">
+        <div class="eval-confirm-warning-pill">
+          ⚠️ Once submitted, this evaluation is final and cannot be edited again.
+        </div>
+        <p class="eval-confirm-subtext">
+          All scores and evaluation details will be permanently submitted and locked for this team. Are you sure you want to proceed?
         </p>
       </div>
-      <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+      <div class="eval-confirm-footer">
         <button type="button" class="glass-btn glass-btn-secondary" onclick="closeEvalConfirmModal()">Cancel</button>
         <button type="button" class="glass-btn glass-btn-primary" id="btn-confirm-final-submit" onclick="executeFinalEvaluationSubmit()">Yes, Submit & Lock</button>
       </div>

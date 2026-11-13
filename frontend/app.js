@@ -1318,6 +1318,19 @@ function closeDropdowns() {
   if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
 }
 
+function toggleAttendanceExportDropdown(event) {
+  if (event) event.stopPropagation();
+  const dropdown = document.getElementById('dropdown-attendance-export');
+  const menu = document.getElementById('menu-attendance-export');
+  const wasOpen = dropdown ? dropdown.classList.contains('open') : false;
+  closeDropdowns();
+  if (dropdown && !wasOpen) {
+    dropdown.classList.add('open');
+    if (menu) menu.classList.add('show');
+  }
+}
+window.toggleAttendanceExportDropdown = toggleAttendanceExportDropdown;
+
 function toggleVenueExportDropdown(event) {
   if (event) {
     event.stopPropagation();
@@ -2941,22 +2954,34 @@ async function initJudgeDashboard() {
     const isInternal = me.judge_type === 'INTERNAL';
     const typeLabel = isInternal ? 'Internal Judge' : 'External Judge';
 
-    document.getElementById('jdash-topbar-panel').textContent = `Panel ${me.panel_code}`;
-    document.getElementById('jdash-topbar-type').textContent = typeLabel;
-    document.getElementById('jdash-badge-panel').textContent = `Panel ${me.panel_code}`;
-    document.getElementById('jdash-badge-type').textContent = typeLabel;
-    document.getElementById('jdash-badge-type').className = `status-pill-badge ${isInternal ? 'pill-blue' : 'pill-purple'}`;
+    const topPanel = document.getElementById('jdash-topbar-panel');
+    if (topPanel) topPanel.textContent = `Panel ${me.panel_code}`;
+    const topType = document.getElementById('jdash-topbar-type');
+    if (topType) topType.textContent = typeLabel;
+
+    const badgePanel = document.getElementById('jdash-badge-panel');
+    if (badgePanel) badgePanel.textContent = `Panel ${me.panel_code}`;
+    const badgeType = document.getElementById('jdash-badge-type');
+    if (badgeType) {
+      badgeType.textContent = typeLabel;
+      badgeType.className = `status-pill-badge ${isInternal ? 'pill-blue' : 'pill-purple'}`;
+    }
 
     const venueTextEl = document.getElementById('jdash-venue-text');
     if (venueTextEl) venueTextEl.textContent = me.panel_venue || 'Venue Pending';
 
     if (me.profile) {
-      document.getElementById('jdash-name').textContent = me.profile.full_name || me.username;
-      document.getElementById('jdash-avatar').textContent = (me.profile.full_name || me.username).charAt(0).toUpperCase();
+      const nameEl = document.getElementById('jdash-name');
+      if (nameEl) nameEl.textContent = me.profile.full_name || me.username;
+      const avatarEl = document.getElementById('jdash-avatar');
+      if (avatarEl) avatarEl.textContent = (me.profile.full_name || me.username).charAt(0).toUpperCase();
       const org = isInternal ? me.profile.institution_name : me.profile.company_name;
-      document.getElementById('jdash-sub').textContent = `${me.profile.designation || 'Judge'} • ${org || 'RMK Hackathon'}`;
-      document.getElementById('jdash-email').textContent = me.profile.email || '—';
-      document.getElementById('jdash-phone').textContent = me.profile.phone_no || '—';
+      const subEl = document.getElementById('jdash-sub');
+      if (subEl) subEl.textContent = `${me.profile.designation || 'Judge'} • ${org || 'RMK Hackathon'}`;
+      const emailEl = document.getElementById('jdash-email');
+      if (emailEl) emailEl.textContent = me.profile.email || '—';
+      const phoneEl = document.getElementById('jdash-phone');
+      if (phoneEl) phoneEl.textContent = me.profile.phone_no || '—';
     }
 
     loadJudgeProjects();
@@ -3060,7 +3085,7 @@ function renderJudgeProjects() {
   }
 
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center loading-cell">No projects match the current filter or search query.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center loading-cell">No projects match the current filter or search query.</td></tr>';
     mobileList.innerHTML = '<div class="text-center loading-cell" style="padding: 24px;">No projects match the current filter or search query.</div>';
     return;
   }
@@ -3083,7 +3108,7 @@ function renderJudgeProjects() {
         <td data-label="Team Name"><strong class="table-team-name">${escapeHtml(p.team_name || '—')}</strong></td>
         <td data-label="Project Title"><div class="table-project-title">${escapeHtml(p.project_title || '—')}</div></td>
         <td data-label="Leader Name"><div class="table-leader-name">${escapeHtml(p.leader_name || '—')}</div></td>
-        <td data-label="Theme"><span class="status-pill-badge pill-blue" title="${escapeHtml(p.category || 'General')}">${escapeHtml(p.category || 'General')}</span></td>
+        <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>
         <td data-label="Evaluation Status">${statusPill}</td>
         <td data-label="Action" style="text-align: center;">
           <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm" onclick="openEvaluationModal(${p.team_id})">
@@ -3366,17 +3391,6 @@ function submitEvaluationFinal() {
   const errBox = document.getElementById('eval-error');
   if (errBox) errBox.classList.add('hidden');
 
-  // Enforce mandatory written remarks before submission
-  const remarks = (document.getElementById('eval-remarks').value || '').trim();
-  if (!remarks) {
-    if (errBox) {
-      errBox.textContent = 'Written evaluation remarks and feedback are mandatory for final submission.';
-      errBox.classList.remove('hidden');
-    }
-    document.getElementById('eval-remarks')?.focus();
-    return;
-  }
-
   // Open dedicated in-app confirmation popup modal
   const confirmModal = document.getElementById('modal-eval-confirm');
   if (confirmModal) {
@@ -3501,6 +3515,115 @@ window.submitEvaluationFinal = submitEvaluationFinal;
 // ════════════════════════════════════════════════════════════════
 //  ADMIN PANEL ALLOCATION MANAGEMENT (Milestone 2)
 // ════════════════════════════════════════════════════════════════
+
+
+const OFFICIAL_PANEL_JURY = {
+  1: {
+    panel: 'Panel 1',
+    external: { name: 'Mr S. Gowtham', designation: 'Deputy Manager', organisation: 'Ashok Leyland' },
+    internal: { name: 'Dr. T. Suresh', designation: 'HoD/ECE', organisation: 'RMKEC' },
+    assistance: { name: 'Ms.M.Naveena', designation: 'Assistant Professor / ECE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.T D Subha / ECE, Dr.Deepa D / CSE', organisation: 'RMKEC' }
+  },
+  2: {
+    panel: 'Panel 2',
+    external: { name: 'Mr. Kumar Krishnamoorthy', designation: 'Technical Lead', organisation: 'DXC Technology' },
+    internal: { name: 'Dr. B.Prathushalaxmi', designation: 'HoD/AIDS', organisation: 'RMKCET' },
+    assistance: { name: 'Mr. D. Senthil Kumar', designation: 'Assistant Professor / CSE (CS)', organisation: 'RMKCET' },
+    committee: { name: 'Dr.Hema Jyothi, Dr.Sesha Vidhya S', organisation: 'RMKCET' }
+  },
+  3: {
+    panel: 'Panel 3',
+    external: { name: 'Ms. Aparna Karthik', designation: 'Associate Test Manager', organisation: 'EY-GDS' },
+    internal: { name: 'Dr.K. Helen Prabha', designation: 'HoD/ECE', organisation: 'RMDEC' },
+    assistance: { name: 'Ms. P. Illampirai', designation: 'Assistant Professor / CSE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.D Abithakumari Prof/CSE, Ms.Latha AP/CSE', organisation: 'RMKEC' }
+  },
+  4: {
+    panel: 'Panel 4',
+    external: { name: 'Mr. R. Harish', designation: 'Technical Lead', organisation: 'HCL Technologies Limited' },
+    internal: { name: 'Dr. R. Raja Guru', designation: 'HoD / CSE', organisation: 'RMKCET' },
+    assistance: { name: 'Ms.C. Vimala Roshni', designation: 'Assistant Professor / AIDS', organisation: 'RMKEC' },
+    committee: { name: 'Dr.R.Poornima / IT, Dr.G.Nagarajan / IT', organisation: 'RMKEC' }
+  },
+  5: {
+    panel: 'Panel 5',
+    external: { name: 'Mr. G.K. Bhaskar', designation: 'Security Analyst', organisation: 'Securin' },
+    internal: { name: 'Dr. J. Jasmine Hephzipa', designation: 'HoD/ECA', organisation: 'RMKEC' },
+    assistance: { name: 'Ms.Renuga Devi', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Mr.S.Vijayakumar / CSE', organisation: 'RMKEC' }
+  },
+  6: {
+    panel: 'Panel 6',
+    external: { name: 'Mr. Raj Kisan Sathiyan', designation: 'AI Vision Team Lead', organisation: 'Intech Systems Pvt Ltd' },
+    internal: { name: 'Dr. Subadra Murugan', designation: 'HoD/EEE', organisation: 'RMKCET' },
+    assistance: { name: 'Mr.AnandRaj', designation: 'Assistant Professor / CSBS', organisation: 'RMKEC' },
+    committee: { name: 'Mrs.Gayathri Priya S, Mr. Bharathi Dhasan D', organisation: 'RMDEC' }
+  },
+  7: {
+    panel: 'Panel 7',
+    external: { name: 'Mr. T. Dellibabu', designation: 'Principal Technical Professional', organisation: 'Kellogg Brown and Root Engineering' },
+    internal: { name: 'Dr.Gangatharan', designation: 'HoD/ECE', organisation: 'RMKCET' },
+    assistance: { name: 'Ms.V.Haritha', designation: 'Assistant Professor / CSE', organisation: 'RMKEC' },
+    committee: { name: 'Ms. M. Rekha / IT, Mr. S.Nagarajan / IT', organisation: 'RMKEC' }
+  },
+  8: {
+    panel: 'Panel 8',
+    external: { name: 'Mr. C. Shivarajkumar', designation: 'Principal Technical Professional', organisation: 'Kellogg Brown and Root Engineering' },
+    internal: { name: 'Dr. A. Swarnalatha', designation: 'HoD/EEE', organisation: 'RMKEC' },
+    assistance: { name: 'Ms. Jhansi Ida', designation: 'Associate Professor / CSBS', organisation: 'RMKEC' },
+    committee: { name: 'Dr.V.Kali Raj, Mr.Karthick Murugan S', organisation: 'RMDEC' }
+  },
+  9: {
+    panel: 'Panel 9',
+    external: { name: 'Mr. J. Veeramani', designation: 'Engineering Manager', organisation: 'Honeywell Automation India Ltd' },
+    internal: { name: 'Dr. G. Amudha', designation: 'HoD/CSBS', organisation: 'RMDEC' },
+    assistance: { name: 'Dr.R.Sheeja', designation: 'Associate Professor / CSE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.Devan P K', organisation: 'RMKCET' }
+  },
+  10: {
+    panel: 'Panel 10',
+    external: { name: 'Ms. Nithya Chandrashekar', designation: 'Assistant Manager', organisation: 'QX Global Ltd' },
+    internal: { name: 'Dr.Sandra Johnson', designation: 'HoD/AIDS', organisation: 'RMKEC' },
+    assistance: { name: 'Ms.T.Kanmani', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Dr.K.B. Aruna, Ms. Anandhi K', organisation: 'RMDEC' }
+  },
+  11: {
+    panel: 'Panel 11',
+    external: { name: 'Mr. Frederick Swartz', designation: 'Software Architect', organisation: 'Squad Software Inc' },
+    internal: { name: 'Dr.G.Anandha Mala', designation: 'Professor / IT', organisation: 'RMKEC' },
+    assistance: { name: 'Ms. Nandhini', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Dr.A.Anna Lakshmi / IT (RMKEC), Ms.L.Sudha (RMKDEC)', organisation: 'RMKEC / RMDEC' }
+  },
+  12: {
+    panel: 'Panel 12',
+    external: { name: 'Ms. Monisha Rajendran', designation: 'Team Lead', organisation: 'QX Global Ltd' },
+    internal: { name: 'Dr. C.S. Anita', designation: 'HoD/AIML', organisation: 'RMDEC' },
+    assistance: { name: 'Ms. S. Deepa', designation: 'Assistant Professor / CSBS', organisation: 'RMDEC' },
+    committee: { name: 'Mr.M.Vengateswaran / CSE', organisation: 'RMKEC' }
+  },
+  13: {
+    panel: 'Panel 13',
+    external: { name: 'Mr. R. Harish', designation: 'Technical Lead', organisation: 'HCL Technologies Limited' },
+    internal: { name: 'Dr. K. Balasubadra', designation: 'HoD / IT', organisation: 'RMDEC' },
+    assistance: { name: 'Ms. T. Akila', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Dr A. Nivas Ahamed / EEE, Ms.M.Kanniga Parameshwari / IT', organisation: 'RMKEC' }
+  },
+  14: {
+    panel: 'Panel 14',
+    external: { name: 'Mr.P. Dhilip Kumar', designation: 'Consultant', organisation: 'Deloitte' },
+    internal: { name: 'Dr. P. Valarmathie', designation: 'HoD / CSE', organisation: 'RMDEC' },
+    assistance: { name: 'Ms.J.Divya', designation: 'Assistant Professor / IT', organisation: 'RMKEC' },
+    committee: { name: 'Ms.K.Selvi / IT, Mr.L.Vinoth Kumar / IT', organisation: 'RMKEC' }
+  },
+  15: {
+    panel: 'Panel 15',
+    external: { name: 'Mr. S.S Venkatasubramanian', designation: 'Founder & CEO', organisation: 'LabnBox (Steam Troops Innovation)' },
+    internal: { name: 'Dr.Y. Sukhi', designation: 'HoD/EEE', organisation: 'RMKEC' },
+    assistance: { name: 'Dr. K. Naresh Kumar', designation: 'Assistant Professor / EEE', organisation: 'RMKEC' },
+    committee: { name: 'Dr.Vendhan D, Dr.Arun Manicka Raja M', organisation: 'RMKCET' }
+  }
+};
 
 let allocState = {
   activeRevision: null,
@@ -3801,6 +3924,9 @@ function renderAllocationWorkspace() {
           `;
         }).join('');
 
+    const panelNum = parseInt(String(p.panel_code || '').replace(/[^0-9]/g, ''), 10) || 1;
+    const juryInfo = (typeof OFFICIAL_PANEL_JURY !== 'undefined') ? OFFICIAL_PANEL_JURY[panelNum] : null;
+
     return `
       <div class="alloc-panel-row-card ${isExpanded ? 'expanded' : ''}" id="alloc-panel-${p.id}">
         <div class="alloc-panel-row-header" onclick="toggleAllocPanel(${p.id})">
@@ -3822,6 +3948,32 @@ function renderAllocationWorkspace() {
             </button>
           </div>
         </div>
+        ${juryInfo ? `
+          <div class="alloc-panel-jury-box">
+            <div class="alloc-panel-jury-grid">
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-external">External Jury</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.external.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.external.designation)} • ${escapeHtml(juryInfo.external.organisation)}</span>
+              </div>
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-internal">Internal Jury</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.internal.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.internal.designation)} • ${escapeHtml(juryInfo.internal.organisation)}</span>
+              </div>
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-assistance">Panel Assistance</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.assistance.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.assistance.designation)} • ${escapeHtml(juryInfo.assistance.organisation)}</span>
+              </div>
+              <div class="pjury-cell">
+                <span class="pjury-tag tag-committee">Committee Incharge</span>
+                <span class="pjury-name">${escapeHtml(juryInfo.committee.name)}</span>
+                <span class="pjury-meta">${escapeHtml(juryInfo.committee.organisation)}</span>
+              </div>
+            </div>
+          </div>
+        ` : ''}
         ${isExpanded ? `
           <div class="alloc-panel-row-body">
             <div class="alloc-panel-teams-grid">
