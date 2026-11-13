@@ -5316,15 +5316,35 @@ html.jury-theme-active body {
   gap: 12px !important;
 }
 
-.eval-team-code {
-  font-family: monospace !important;
-  font-size: 12px !important;
+.eval-modal-meta-pills {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.eval-modal-meta-pills .eval-team-code,
+.eval-modal-meta-pills .status-pill-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  max-height: 26px !important;
+  padding: 0 12px !important;
+  border-radius: 9999px !important;
+  font-size: 11.5px !important;
   font-weight: 700 !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+}
+
+.eval-team-code {
+  font-family: 'JetBrains Mono', monospace !important;
   color: #0284c7 !important;
   background: #eff6ff !important;
   border: 1px solid #bfdbfe !important;
-  padding: 2px 8px !important;
-  border-radius: 6px !important;
 }
 
 .eval-team-title {
