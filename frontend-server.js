@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.FRONTEND_PORT || 5173;
-const BACKEND_PORT = process.env.BACKEND_PORT || 3000;
+const BACKEND_PORT = process.env.BACKEND_PORT || 30000;
 const FRONTEND_DIR = path.join(__dirname, 'frontend');
 
 const MIME_TYPES = {
