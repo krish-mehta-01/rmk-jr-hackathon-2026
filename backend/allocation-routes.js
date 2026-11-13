@@ -42,6 +42,31 @@ router.get('/allocations/summary', authAdmin, async (req, res) => {
   }
 });
 
+// 1b. Get active published allocation revision details directly
+router.get('/allocations/active', authAdmin, async (req, res) => {
+  try {
+    const active = await allocService.getActivePublishedRevision();
+    if (!active) return res.status(404).json({ error: 'No active published revision found' });
+    const details = await allocService.getRevisionDetails(active.id);
+    res.json({
+      ok: true,
+      active_revision: active,
+      revision: details.revision,
+      panels: details.panels,
+      assigned: details.assigned,
+      unassigned: details.unassigned,
+      total_panels: details.panels.length,
+      total_teams: details.stats.total_teams,
+      assigned_count: details.stats.assigned_count,
+      unassigned_count: details.stats.unassigned_count,
+      stats: details.stats
+    });
+  } catch (err) {
+    console.error('[ERROR] GET /allocations/active:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
+  }
+});
+
 // 2. Get all panels with physical venues
 router.get('/allocations/panels', authAdmin, async (req, res) => {
   try {
@@ -78,14 +103,43 @@ router.get('/allocations/revisions/:id', authAdmin, async (req, res) => {
 });
 
 // 5. Create a new DRAFT revision branched from the active published revision
+// (Also handles POST discard if { action: 'discard' } is passed)
 router.post('/allocations/draft', authAdmin, async (req, res) => {
   try {
-    const { notes } = req.body || {};
+    const { notes, action } = req.body || {};
+    if (action === 'discard') {
+      let draftId = req.body?.draft_id;
+      if (!draftId) {
+        const draft = await allocService.getDraftRevision();
+        if (!draft) return res.status(404).json({ error: 'No draft revision found to discard' });
+        draftId = draft.id;
+      }
+      const result = await allocService.discardDraft(parseInt(draftId, 10), req.user.username || 'admin');
+      return res.json(result);
+    }
+
     const draft = await allocService.createDraftFromPublished(req.user.username || 'admin', notes);
     res.json({ ok: true, draft });
   } catch (err) {
     console.error('[ERROR] POST /allocations/draft:', err);
     res.status(400).json({ error: err.message || 'Failed to create draft' });
+  }
+});
+
+// 5b. Discard draft revision via DELETE /allocations/draft
+router.delete('/allocations/draft', authAdmin, async (req, res) => {
+  try {
+    let draftId = req.body?.draft_id || req.query?.draft_id;
+    if (!draftId) {
+      const draft = await allocService.getDraftRevision();
+      if (!draft) return res.status(404).json({ error: 'No active draft revision found to discard' });
+      draftId = draft.id;
+    }
+    const result = await allocService.discardDraft(parseInt(draftId, 10), req.user.username || 'admin');
+    res.json(result);
+  } catch (err) {
+    console.error('[ERROR] DELETE /allocations/draft:', err);
+    res.status(400).json({ error: err.message || 'Failed to discard draft' });
   }
 });
 
@@ -130,7 +184,7 @@ router.post('/allocations/draft/remove', authAdmin, async (req, res) => {
   }
 });
 
-// 8. Validate a DRAFT revision before publishing
+// 8. Validate a DRAFT revision before publishing (GET with ID)
 router.get('/allocations/draft/:id/validate', authAdmin, async (req, res) => {
   try {
     const draftId = parseInt(req.params.id, 10);
@@ -138,6 +192,35 @@ router.get('/allocations/draft/:id/validate', authAdmin, async (req, res) => {
     res.json(validation);
   } catch (err) {
     console.error('[ERROR] GET /allocations/draft/:id/validate:', err);
+    res.status(400).json({ error: err.message || 'Validation failed' });
+  }
+});
+
+// 8b. Validate draft revision via POST /allocations/validate (supports checking panel balance 18-22, duplicates, unassigned)
+router.post('/allocations/validate', authAdmin, async (req, res) => {
+  try {
+    let draftId = req.body?.draft_id || req.body?.revision_id;
+    if (!draftId) {
+      const draft = await allocService.getDraftRevision();
+      if (draft) {
+        draftId = draft.id;
+      } else {
+        const active = await allocService.getActivePublishedRevision();
+        if (active) draftId = active.id;
+      }
+    }
+    if (!draftId) {
+      return res.status(404).json({ error: 'No draft or active revision found to validate' });
+    }
+
+    const validation = await allocService.validateRevision(parseInt(draftId, 10));
+    res.json({
+      ok: true,
+      revision_id: parseInt(draftId, 10),
+      ...validation
+    });
+  } catch (err) {
+    console.error('[ERROR] POST /allocations/validate:', err);
     res.status(400).json({ error: err.message || 'Validation failed' });
   }
 });
@@ -165,11 +248,15 @@ router.post('/allocations/draft/publish', authAdmin, async (req, res) => {
 // 10. Discard a DRAFT revision
 router.post('/allocations/draft/discard', authAdmin, async (req, res) => {
   try {
-    const { draft_id } = req.body || {};
-    if (!draft_id) return res.status(400).json({ error: 'draft_id is required' });
+    let draftId = req.body?.draft_id;
+    if (!draftId) {
+      const draft = await allocService.getDraftRevision();
+      if (!draft) return res.status(404).json({ error: 'No active draft revision found to discard' });
+      draftId = draft.id;
+    }
 
     const result = await allocService.discardDraft(
-      parseInt(draft_id, 10),
+      parseInt(draftId, 10),
       req.user.username || 'admin'
     );
     res.json(result);

@@ -2243,31 +2243,139 @@ h4 {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   SITTING PLACE — team pass (after scanning) and admin Themes tab
+   SITTING PLACE & VENUE ALLOCATION HERO BENTO — team leader pass
    ════════════════════════════════════════════════════════════════ */
-.pass-detail-row.pass-venue-row {
-  background: var(--accent-green-soft);
-  border: 1px solid var(--accent-green-border);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  margin: 12px 0 4px;
+.pass-alloc-hero-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border: 1.5px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 16px 0 18px;
+  box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06);
+  animation: fadeIn 0.2s ease-out;
 }
 
-.pass-venue-row dt {
-  color: var(--accent-green-dark);
+.pass-alloc-hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dcfce7;
 }
 
-#pass-venue {
-  font-size: 18px;
+.pass-alloc-hero-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
   font-weight: 800;
-  color: var(--accent-green-dark);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #166534;
 }
 
-.pass-venue-theme {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-top: 2px;
+.pass-alloc-hero-title .alloc-pin-icon {
+  color: #16a34a;
+}
+
+.pass-alloc-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #dcfce7;
+  color: #15803d;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pass-alloc-tiles-grid {
+  display: grid;
+  grid-template-columns: 140px 1.5fr 1.2fr;
+  gap: 10px;
+}
+
+.pass-alloc-tile {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s ease;
+}
+
+.pass-alloc-tile:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.alloc-tile-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.alloc-tile-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.alloc-tile-hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Tile specifics */
+.alloc-tile-panel {
+  border-left: 3.5px solid #16a34a;
+  background: #f8fafc;
+}
+
+.alloc-tile-panel .alloc-tile-value {
+  font-size: 18px;
+  font-weight: 900;
+  color: #166534;
+}
+
+.alloc-tile-venue {
+  border-left: 3.5px solid #0284c7;
+  background: #f0f9ff;
+}
+
+.alloc-tile-venue .alloc-tile-value {
+  color: #0369a1;
+}
+
+.alloc-tile-theme {
+  border-left: 3.5px solid #8b5cf6;
+  background: #faf5ff;
+}
+
+.alloc-tile-theme .alloc-tile-value {
+  color: #6b21a8;
+  font-size: 13.5px;
+}
+
+@media (max-width: 640px) {
+  .pass-alloc-tiles-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .alloc-tile-venue {
+    grid-column: span 2;
+    order: -1; /* Show venue prominently first on mobile! */
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -5476,7 +5584,7 @@ html.jury-theme-active body {
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
 }
@@ -5499,17 +5607,49 @@ html.jury-theme-active body {
   border-radius: 4px;
 }
 
+.jdash-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jdash-card-teamname {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 2px 0;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.jdash-card-detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.jdash-card-detail-row .detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 54px;
+  flex-shrink: 0;
+}
+
+.jdash-card-detail-row .detail-value {
+  color: #e2e8f0;
+  font-weight: 500;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .jdash-card-title {
   font-size: 15px;
   font-weight: 700;
   color: #f8fafc;
   line-height: 1.35;
-}
-
-.jdash-card-teamname {
-  font-size: 12.5px;
-  color: #94a3b8;
-  margin-top: 2px;
 }
 
 .jdash-card-tags {
@@ -5553,19 +5693,21 @@ html.jury-theme-active body {
   line-height: 1.4;
 }
 
-.jdash-card-btn {
-  width: 100%;
-  min-height: 44px;
-  font-size: 13.5px;
-  font-weight: 600;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+.jdash-card-btn,
+.jdash-touch-btn {
+  width: 100% !important;
+  min-height: 48px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
   cursor: pointer;
   touch-action: manipulation;
   border: none;
+  box-sizing: border-box;
 }
 
 /* ─── 4. EVALUATION MODAL (#modal-jury-evaluation) ─── */
@@ -5942,12 +6084,70 @@ html.jury-theme-active body {
   }
   .eval-modal-footer .glass-btn {
     width: 100%;
-    min-height: 44px;
+    min-height: 48px;
+    font-size: 14px;
+    font-weight: 700;
     justify-content: center;
   }
+  .criterion-score-presets {
+    gap: 4px;
+  }
+  .criterion-score-presets .presets-label {
+    display: none;
+  }
   .score-preset-pill {
-    min-height: 42px;
+    min-height: 44px;
+    min-width: 44px;
+    flex: 1 1 0px;
     font-size: 13px;
+    border-radius: 8px;
+  }
+  .criterion-number-input {
+    min-height: 44px;
+    font-size: 16px;
+    width: 76px;
+  }
+  .eval-remarks-group textarea {
+    font-size: 16px;
+    min-height: 120px;
+  }
+  #jdash-search-input {
+    font-size: 16px;
+  }
+  .filter-tab {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+  .topbar-logout {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+  }
+  .modal-close-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  /* Confirmation Dialog (#modal-eval-confirm) Touch Ergonomics */
+  .eval-confirm-box {
+    padding: 20px 16px !important;
+  }
+  .eval-confirm-box .modal-footer {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-top: 20px !important;
+  }
+  .eval-confirm-box .modal-footer .glass-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
   }
 }
 
@@ -5955,8 +6155,8 @@ html.jury-theme-active body {
   background: #182238;
   border: 1px solid #25334d;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5965,6 +6165,7 @@ html.jury-theme-active body {
   color: #94a3b8;
   transition: all 0.15s ease;
   flex-shrink: 0;
+  touch-action: manipulation;
 }
 
 .modal-close-btn:hover {
@@ -6318,41 +6519,146 @@ html.jury-theme-active body {
   background: rgba(239, 68, 68, 0.2);
 }
 
-/* Glass Data Table in Jury Mode */
-.table-scroll-container {
-  overflow-x: auto;
+/* Glass Data Table in Jury Mode & Collision Prevention */
+.jdash-desktop-table-wrap {
+  width: 100%;
+  overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
   margin-top: 14px;
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 8px;
+  background: #0d1527;
 }
 
-.glass-data-table {
+.jury-projects-table,
+.jdash-desktop-table-wrap .glass-data-table {
   width: 100%;
+  min-width: 1040px; /* Guarantees no column compression on 1024px-1280px desktops; triggers clean horizontal scroll */
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
+  table-layout: auto; /* Fluid proportional distribution without crushing columns */
 }
 
-.glass-data-table th {
+/* Dedicated Column Styling & Resets for Jury Table (Overrides global 6-col nth-child rules) */
+.jdash-desktop-table-wrap .glass-data-table th,
+.jury-projects-table th {
   background: #090d16;
   color: #94a3b8;
-  padding: 10px 14px;
+  padding: 12px 14px;
   font-weight: 600;
   font-size: 11.5px;
   border-bottom: 1px solid #25334d;
   white-space: nowrap;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.glass-data-table td {
+.jdash-desktop-table-wrap .glass-data-table td,
+.jury-projects-table td {
   padding: 12px 14px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
   color: #f8fafc;
   vertical-align: middle;
+  overflow: visible;
 }
 
-.glass-data-table tbody tr:hover {
+.jdash-desktop-table-wrap .glass-data-table tbody tr:hover,
+.jury-projects-table tbody tr:hover {
   background: #182238;
+}
+
+/* 1. Team ID Column */
+.jdash-desktop-table-wrap .glass-data-table th:nth-child(1),
+.jdash-desktop-table-wrap .glass-data-table td:nth-child(1),
+.jury-projects-table th:nth-child(1),
+.jury-projects-table td:nth-child(1) {
+  width: 110px;
+  min-width: 100px;
+  max-width: 130px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 2. Team Name Column */
+.jdash-desktop-table-wrap .glass-data-table th:nth-child(2),
+.jdash-desktop-table-wrap .glass-data-table td:nth-child(2),
+.jury-projects-table th:nth-child(2),
+.jury-projects-table td:nth-child(2) {
+  width: auto;
+  min-width: 150px;
+  text-align: left;
+}
+
+/* 3. Project Title Column */
+.jdash-desktop-table-wrap .glass-data-table th:nth-child(3),
+.jdash-desktop-table-wrap .glass-data-table td:nth-child(3),
+.jury-projects-table th:nth-child(3),
+.jury-projects-table td:nth-child(3) {
+  width: auto;
+  min-width: 200px;
+  color: #f8fafc; /* Reset from attendance grey */
+  font-size: 13px;
+  text-align: left;
+}
+
+/* 4. Leader Name Column */
+.jdash-desktop-table-wrap .glass-data-table th:nth-child(4),
+.jdash-desktop-table-wrap .glass-data-table td:nth-child(4),
+.jury-projects-table th:nth-child(4),
+.jury-projects-table td:nth-child(4) {
+  width: auto;
+  min-width: 140px;
+  text-align: left;
+  color: #cbd5e1;
+}
+
+/* 5. Theme Column & Collision Prevention */
+.jdash-desktop-table-wrap .glass-data-table th:nth-child(5),
+.jdash-desktop-table-wrap .glass-data-table td:nth-child(5),
+.jury-projects-table th:nth-child(5),
+.jury-projects-table td:nth-child(5) {
+  width: 175px;
+  min-width: 165px;
+  text-align: left;
+  white-space: normal;
+}
+
+/* 6. Evaluation Status Column */
+.jdash-desktop-table-wrap .glass-data-table th:nth-child(6),
+.jdash-desktop-table-wrap .glass-data-table td:nth-child(6),
+.jury-projects-table th:nth-child(6),
+.jury-projects-table td:nth-child(6) {
+  width: 170px;
+  min-width: 160px;
+  text-align: left;
+  white-space: nowrap;
+  padding: 12px 14px;
+}
+
+/* 7. Action Column */
+.jdash-desktop-table-wrap .glass-data-table th:nth-child(7),
+.jdash-desktop-table-wrap .glass-data-table td:nth-child(7),
+.jury-projects-table th:nth-child(7),
+.jury-projects-table td:nth-child(7) {
+  width: 140px;
+  min-width: 130px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Prevent Theme Badge from overflowing or colliding into adjacent columns */
+.jury-projects-table td[data-label="Theme"] .status-pill-badge,
+.jdash-desktop-table-wrap td[data-label="Theme"] .status-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  padding: 4px 10px;
+  box-sizing: border-box;
 }
 
 .table-team-id {
@@ -6362,9 +6668,22 @@ html.jury-theme-active body {
   font-size: 12px;
 }
 
-.table-team-title {
-  font-weight: 600;
+.table-team-name {
+  font-weight: 700;
   color: #f8fafc;
+  font-size: 13.5px;
+}
+
+.table-project-title {
+  font-weight: 500;
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.table-leader-name {
+  font-weight: 500;
+  color: #cbd5e1;
   font-size: 13px;
 }
 

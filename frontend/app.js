@@ -323,12 +323,6 @@ function renderVenueMap(team) {
   if (badge) {
     badge.textContent = blockName ? `Allocated Block: ${blockName}` : 'RMK Engineering College Campus';
   }
-
-  document.querySelectorAll('.pass-block-card').forEach(c => c.classList.remove('block-highlight'));
-  if (activeBlockId) {
-    const activeEl = document.getElementById(activeBlockId);
-    if (activeEl) activeEl.classList.add('block-highlight');
-  }
 }
 
 function openMapModal() {
@@ -349,21 +343,22 @@ function renderTeamDetails(team) {
   document.getElementById('pass-school-name').textContent = team.college_name || '—';
   document.getElementById('pass-mentor-name').textContent = team.mentor_name || '—';
 
-  // Sitting place and Panel for the team
+  // Sitting place and Panel for the team (Hero Allocation Bento)
   const venueRow = document.getElementById('pass-venue-row');
   if (venueRow) {
     venueRow.classList.toggle('hidden', !team.venue && !team.panel_no);
+    const panelEl = document.getElementById('pass-panel-value');
+    if (panelEl) {
+      panelEl.textContent = team.panel_no ? `Panel ${team.panel_no}` : 'Panel Pending';
+    }
     const venueEl = document.getElementById('pass-venue');
     if (venueEl) {
-      if (team.panel_no) {
-        venueEl.innerHTML = `<span class="panel-badge-pill">Panel ${team.panel_no}</span> <span>${escapeHtml(team.venue || '')}</span>`;
-      } else {
-        venueEl.textContent = team.venue || '';
-      }
+      venueEl.textContent = team.venue || 'Venue Pending';
     }
     const themeEl = document.getElementById('pass-venue-theme');
     if (themeEl) {
-      themeEl.textContent = team.theme ? `Theme: ${team.theme}` : '';
+      const cleanTheme = (team.theme || team.category || '').trim();
+      themeEl.textContent = cleanTheme || 'General Track';
     }
   }
 
@@ -997,28 +992,20 @@ function renderThemes() {
     if (filter === 'scanned' && (!g.scanned || g.scanned === 0)) return false;
 
     // Search query logic
+    // Search query logic (resilient multi-field token matching)
     if (query) {
       if (isVenueMode) {
-        const matchVenue = (g.venue || '').toLowerCase().includes(query);
-        const matchThemes = (g.themes || []).some(t => (t || '').toLowerCase().includes(query));
+        const matchVenue = matchesSearchQuery(query, g.venue);
+        const matchThemes = (g.themes || []).some(t => matchesSearchQuery(query, t));
         const matchTeam = (g.teams || []).some(t => 
-          (t.team_code || '').toLowerCase().includes(query) ||
-          (t.team_name || '').toLowerCase().includes(query) ||
-          (t.leader_name || '').toLowerCase().includes(query) ||
-          (t.college_name || '').toLowerCase().includes(query) ||
-          (t.project_title || '').toLowerCase().includes(query) ||
-          (t.category || '').toLowerCase().includes(query)
+          matchesSearchQuery(query, t.team_code, t.team_name, t.leader_name, t.college_name, t.project_title, t.category, t.members)
         );
         if (!matchVenue && !matchThemes && !matchTeam) return false;
       } else {
-        const matchTheme = (g.theme || '').toLowerCase().includes(query);
-        const matchVenue = (g.venue || '').toLowerCase().includes(query);
+        const matchTheme = matchesSearchQuery(query, g.theme);
+        const matchVenue = matchesSearchQuery(query, g.venue);
         const matchTeam = (g.teams || []).some(t => 
-          (t.team_code || '').toLowerCase().includes(query) ||
-          (t.team_name || '').toLowerCase().includes(query) ||
-          (t.leader_name || '').toLowerCase().includes(query) ||
-          (t.college_name || '').toLowerCase().includes(query) ||
-          (t.project_title || '').toLowerCase().includes(query)
+          matchesSearchQuery(query, t.team_code, t.team_name, t.leader_name, t.college_name, t.project_title, t.category, t.members)
         );
         if (!matchTheme && !matchVenue && !matchTeam) return false;
       }
@@ -2075,6 +2062,34 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Universal resilient search matching helper (case-insensitive, punctuation-agnostic, token-based)
+function normalizeSearchText(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .toLowerCase()
+    .replace(/[.,\-_/\\#()\[\]{}:;'"!?]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function matchesSearchQuery(query, ...fields) {
+  if (!query) return true;
+  const qClean = normalizeSearchText(query);
+  if (!qClean) return true;
+
+  // Split query into individual word tokens
+  const tokens = qClean.split(' ').filter(Boolean);
+  if (tokens.length === 0) return true;
+
+  // Build searchable text from all provided fields
+  const haystack = normalizeSearchText(fields.filter(Boolean).join(' '));
+
+  // Every token must be present somewhere in the haystack
+  return tokens.every(token => haystack.includes(token));
+}
+window.normalizeSearchText = normalizeSearchText;
+window.matchesSearchQuery = matchesSearchQuery;
+
 // Wire document click to close dropdowns when clicking outside
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.custom-dropdown')) {
@@ -2302,18 +2317,20 @@ function renderJuryPanels() {
       if (!anyPending) return false;
     }
 
-    // Search query
+    // Search query (resilient multi-field token matching)
     if (query) {
-      const codeMatch = (panel.panel_code || '').toLowerCase().includes(query);
-      const nameMatch = (panel.panel_name || '').toLowerCase().includes(query);
-      const inUserMatch = internal && internal.username.toLowerCase().includes(query);
-      const exUserMatch = external && external.username.toLowerCase().includes(query);
-      const inNameMatch = internal && internal.profile && internal.profile.full_name.toLowerCase().includes(query);
-      const exNameMatch = external && external.profile && external.profile.full_name.toLowerCase().includes(query);
-      const inOrgMatch = internal && internal.profile && (internal.profile.organization || '').toLowerCase().includes(query);
-      const exOrgMatch = external && external.profile && (external.profile.organization || '').toLowerCase().includes(query);
-
-      return codeMatch || nameMatch || inUserMatch || exUserMatch || inNameMatch || exNameMatch || inOrgMatch || exOrgMatch;
+      return matchesSearchQuery(
+        query,
+        panel.panel_code,
+        panel.panel_name,
+        panel.venue,
+        internal && internal.username,
+        external && external.username,
+        internal && internal.profile && internal.profile.full_name,
+        external && external.profile && external.profile.full_name,
+        internal && internal.profile && internal.profile.organization,
+        external && external.profile && external.profile.organization
+      );
     }
 
     return true;
@@ -2464,16 +2481,13 @@ async function loadJuryAdminEvaluations() {
 function handleJuryEvalsSearch() {
   clearTimeout(juryEvalsDebounceTimer);
   juryEvalsDebounceTimer = setTimeout(() => {
-    const q = document.getElementById('jury-evals-search-input').value.trim().toLowerCase();
-    if (!q) {
+    const q = document.getElementById('jury-evals-search-input').value;
+    if (!q || !q.trim()) {
       renderJuryAdminEvaluations(rawJuryEvalsData);
       return;
     }
     const filtered = rawJuryEvalsData.filter(e => 
-      (e.team_code || '').toLowerCase().includes(q) ||
-      (e.team_name || '').toLowerCase().includes(q) ||
-      (e.project_title || '').toLowerCase().includes(q) ||
-      (e.panel_code || '').toLowerCase().includes(q)
+      matchesSearchQuery(q, e.team_code, e.team_name, e.project_title, e.panel_code, e.leader_name, e.category, e.judge_username, e.judge_name)
     );
     renderJuryAdminEvaluations(filtered);
   }, 250);
@@ -3038,19 +3052,15 @@ function renderJudgeProjects() {
     projects = projects.filter(p => !p.evaluation || p.evaluation.status !== 'SUBMITTED');
   }
 
-  // Filter by search query
+  // Filter by search query (resilient multi-field token matching)
   if (query) {
     projects = projects.filter(p =>
-      (p.team_code && p.team_code.toLowerCase().includes(query)) ||
-      (p.team_name && p.team_name.toLowerCase().includes(query)) ||
-      (p.project_title && p.project_title.toLowerCase().includes(query)) ||
-      (p.category && p.category.toLowerCase().includes(query)) ||
-      (p.college_name && p.college_name.toLowerCase().includes(query))
+      matchesSearchQuery(query, p.team_code, p.team_name, p.project_title, p.leader_name, p.category, p.college_name, p.members, p.notes)
     );
   }
 
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center loading-cell">No projects match the current filter or search query.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center loading-cell">No projects match the current filter or search query.</td></tr>';
     mobileList.innerHTML = '<div class="text-center loading-cell" style="padding: 24px;">No projects match the current filter or search query.</div>';
     return;
   }
@@ -3073,7 +3083,7 @@ function renderJudgeProjects() {
         <td data-label="Team Name"><strong class="table-team-name">${escapeHtml(p.team_name || '—')}</strong></td>
         <td data-label="Project Title"><div class="table-project-title">${escapeHtml(p.project_title || '—')}</div></td>
         <td data-label="Leader Name"><div class="table-leader-name">${escapeHtml(p.leader_name || '—')}</div></td>
-        <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>
+        <td data-label="Theme"><span class="status-pill-badge pill-blue" title="${escapeHtml(p.category || 'General')}">${escapeHtml(p.category || 'General')}</span></td>
         <td data-label="Evaluation Status">${statusPill}</td>
         <td data-label="Action" style="text-align: center;">
           <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm" onclick="openEvaluationModal(${p.team_id})">
@@ -3665,11 +3675,7 @@ function renderAllocationWorkspace() {
   let filteredUnassigned = allocState.unassigned;
   if (query) {
     filteredUnassigned = allocState.unassigned.filter(t =>
-      (t.team_code && t.team_code.toLowerCase().includes(query)) ||
-      (t.team_name && t.team_name.toLowerCase().includes(query)) ||
-      (t.theme && t.theme.toLowerCase().includes(query)) ||
-      (t.leader_name && t.leader_name.toLowerCase().includes(query)) ||
-      (t.college_name && t.college_name.toLowerCase().includes(query))
+      matchesSearchQuery(query, t.team_code, t.team_name, t.theme, t.leader_name, t.college_name, t.project_title, t.members)
     );
   }
 
@@ -3750,11 +3756,7 @@ function renderAllocationWorkspace() {
     let teams = p.teams || [];
     if (query) {
       teams = teams.filter(t =>
-        (t.team_code && t.team_code.toLowerCase().includes(query)) ||
-        (t.team_name && t.team_name.toLowerCase().includes(query)) ||
-        (t.theme && t.theme.toLowerCase().includes(query)) ||
-        (t.leader_name && t.leader_name.toLowerCase().includes(query)) ||
-        (t.college_name && t.college_name.toLowerCase().includes(query))
+        matchesSearchQuery(query, t.team_code, t.team_name, t.theme, t.leader_name, t.college_name, t.project_title, t.members)
       );
     }
 
