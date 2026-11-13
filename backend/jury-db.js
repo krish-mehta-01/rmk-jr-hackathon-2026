@@ -192,26 +192,26 @@ async function seedPanelsAndJudges() {
 
     // 2. Ensure Internal Judge account exists
     const inUsername = `P${i}-IN`;
-    const inDefaultPass = `rmkjh2026`;
+    const inDefaultPass = `rmkjrh2026`;
     const [inUser] = await pool.execute('SELECT id FROM jury_users WHERE username = ?', [inUsername]);
     if (inUser.length === 0) {
       const hash = await bcrypt.hash(inDefaultPass, 10);
       await pool.execute(
         `INSERT INTO jury_users (panel_id, username, password_hash, judge_type, is_active, must_change_password, is_registered)
-         VALUES (?, ?, ?, 'INTERNAL', TRUE, FALSE, TRUE)`,
+         VALUES (?, ?, ?, 'INTERNAL', TRUE, TRUE, TRUE)`,
         [panelId, inUsername, hash]
       );
     }
 
     // 3. Ensure External Judge account exists
     const exUsername = `P${i}-EX`;
-    const exDefaultPass = `rmkjh2026`;
+    const exDefaultPass = `rmkjrh2026`;
     const [exUser] = await pool.execute('SELECT id FROM jury_users WHERE username = ?', [exUsername]);
     if (exUser.length === 0) {
       const hash = await bcrypt.hash(exDefaultPass, 10);
       await pool.execute(
         `INSERT INTO jury_users (panel_id, username, password_hash, judge_type, is_active, must_change_password, is_registered)
-         VALUES (?, ?, ?, 'EXTERNAL', TRUE, FALSE, TRUE)`,
+         VALUES (?, ?, ?, 'EXTERNAL', TRUE, TRUE, TRUE)`,
         [panelId, exUsername, hash]
       );
     }

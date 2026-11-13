@@ -2706,7 +2706,7 @@ function logoutJudge() {
   judgeMeData = null;
   localStorage.removeItem('rmk_judge_token');
   showView('view-jury-login');
-  closeJudgePasswordModal();
+  closeJudgePasswordModal(true);
   closeEvaluationModal();
   showToast('Logged out of Jury portal', 'info');
 }
@@ -2753,10 +2753,27 @@ function openJudgePasswordModal() {
   if (modal) {
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    const currentInput = document.getElementById('pwd-current');
+    const loginPwd = document.getElementById('judge-password');
+    if (currentInput) {
+      if (loginPwd && loginPwd.value) {
+        currentInput.value = loginPwd.value;
+      } else if (!currentInput.value) {
+        currentInput.value = 'rmkjrh2026';
+      }
+    }
+    const newPwd = document.getElementById('pwd-new');
+    if (newPwd) {
+      setTimeout(() => newPwd.focus(), 100);
+    }
   }
 }
 
-function closeJudgePasswordModal() {
+function closeJudgePasswordModal(force = false) {
+  if (!force && judgeMeData && judgeMeData.must_change_password) {
+    // Cannot close modal when password change is mandatory
+    return;
+  }
   const modal = document.getElementById('modal-jury-password');
   if (modal) {
     modal.classList.add('hidden');
@@ -2778,6 +2795,12 @@ async function handleJudgeChangePassword(e) {
 
   if (newPwd.length < 8) {
     errBox.textContent = 'New password must be at least 8 characters long.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  if (newPwd === currentPwd || newPwd === 'rmkjrh2026' || newPwd === 'rmkjh2026') {
+    errBox.textContent = 'New password cannot be the default password. Please choose a private password.';
     errBox.classList.remove('hidden');
     return;
   }
@@ -2809,7 +2832,8 @@ async function handleJudgeChangePassword(e) {
       return;
     }
 
-    closeJudgePasswordModal();
+    if (judgeMeData) judgeMeData.must_change_password = false;
+    closeJudgePasswordModal(true);
     showToast('Password updated successfully!', 'info');
 
     // Refresh context and proceed to registration if pending
