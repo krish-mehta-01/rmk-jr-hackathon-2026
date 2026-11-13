@@ -660,6 +660,11 @@ app.use('/api', allocationRoutes);
 const juryRoutes = require('./jury-routes');
 app.use('/api', juryRoutes);
 
+// Evaluation Reports & Rankings Routes (Status, Themes, Overall, Excel Exports)
+const evaluationReportRoutes = require('./evaluation-report-routes');
+app.use('/api/admin/reports', evaluationReportRoutes);
+app.use('/api/reports', evaluationReportRoutes);
+
 // Uptime check (no DB) for keep-awake pings; also shows which commit Render is running
 app.get('/api/health', (req, res) => res.json({ ok: true, commit: (process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7) }));
 

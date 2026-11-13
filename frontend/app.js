@@ -602,14 +602,16 @@ function switchAdminSection(secName) {
   const alinkThemes = document.getElementById('alink-themes');
   const alinkQR = document.getElementById('alink-qr');
   const alinkAllocations = document.getElementById('alink-allocations');
+  const alinkEvalReports = document.getElementById('alink-eval-reports');
 
   const secTable = document.getElementById('admin-sec-table');
   const secThemes = document.getElementById('admin-sec-themes');
   const secQR = document.getElementById('admin-sec-qr');
   const secAllocations = document.getElementById('admin-sec-allocations');
+  const secEvalReports = document.getElementById('admin-sec-eval-reports');
 
-  [alinkTable, alinkThemes, alinkQR, alinkAllocations].forEach(btn => btn && btn.classList.remove('active'));
-  [secTable, secThemes, secQR, secAllocations].forEach(pane => {
+  [alinkTable, alinkThemes, alinkQR, alinkAllocations, alinkEvalReports].forEach(btn => btn && btn.classList.remove('active'));
+  [secTable, secThemes, secQR, secAllocations, secEvalReports].forEach(pane => {
     if (pane) {
       pane.classList.add('hidden');
       pane.classList.remove('active');
@@ -644,6 +646,13 @@ function switchAdminSection(secName) {
       secQR.classList.add('active');
     }
     loadPermanentVenueQR();
+  } else if (secName === 'eval-reports') {
+    if (alinkEvalReports) alinkEvalReports.classList.add('active');
+    if (secEvalReports) {
+      secEvalReports.classList.remove('hidden');
+      secEvalReports.classList.add('active');
+    }
+    initEvaluationReportsView();
   }
 }
 
@@ -4787,3 +4796,624 @@ window.closeRevisionHistoryModal = closeRevisionHistoryModal;
 
 window.handleJudgeProjectSearch = handleJudgeProjectSearch;
 window.setJudgeProjectFilter = setJudgeProjectFilter;
+
+
+// ═════════════════════════════════════════════════════════════════
+//  EVALUATION REPORTS, MARKS, RANKINGS & EXCEL EXPORTS MODULE
+// ═════════════════════════════════════════════════════════════════
+
+let currentEvalReportTab = 'overview';
+let rawEvalReportData = null;
+let evalSearchDebounceTimer = null;
+let availableEvalThemes = [];
+
+function getEffectiveAdminToken() {
+  return adminToken || localStorage.getItem('rmk_admin_token') ||
+         juryAdminToken || localStorage.getItem('rmk_jury_admin_token') || null;
+}
+
+function initEvaluationReportsView() {
+  if (currentEvalReportTab === 'overview') {
+    loadEvaluationStatusReport();
+  } else if (currentEvalReportTab === 'themes') {
+    loadThemeRankings();
+  } else if (currentEvalReportTab === 'overall') {
+    loadOverallRankings();
+  }
+}
+
+function switchEvalReportTab(tabName) {
+  currentEvalReportTab = tabName;
+
+  const btnOverview = document.getElementById('btn-subnav-eval-overview');
+  const btnThemes = document.getElementById('btn-subnav-eval-themes');
+  const btnOverall = document.getElementById('btn-subnav-eval-overall');
+  const btnExports = document.getElementById('btn-subnav-eval-exports');
+
+  const paneOverview = document.getElementById('eval-tab-pane-overview');
+  const paneThemes = document.getElementById('eval-tab-pane-themes');
+  const paneOverall = document.getElementById('eval-tab-pane-overall');
+  const paneExports = document.getElementById('eval-tab-pane-exports');
+
+  [btnOverview, btnThemes, btnOverall, btnExports].forEach(btn => btn && btn.classList.remove('active'));
+  [paneOverview, paneThemes, paneOverall, paneExports].forEach(pane => {
+    if (pane) {
+      pane.classList.add('hidden');
+      pane.classList.remove('active');
+    }
+  });
+
+  if (tabName === 'overview') {
+    if (btnOverview) btnOverview.classList.add('active');
+    if (paneOverview) {
+      paneOverview.classList.remove('hidden');
+      paneOverview.classList.add('active');
+    }
+    loadEvaluationStatusReport();
+  } else if (tabName === 'themes') {
+    if (btnThemes) btnThemes.classList.add('active');
+    if (paneThemes) {
+      paneThemes.classList.remove('hidden');
+      paneThemes.classList.add('active');
+    }
+    loadThemeRankings();
+  } else if (tabName === 'overall') {
+    if (btnOverall) btnOverall.classList.add('active');
+    if (paneOverall) {
+      paneOverall.classList.remove('hidden');
+      paneOverall.classList.add('active');
+    }
+    loadOverallRankings();
+  } else if (tabName === 'exports') {
+    if (btnExports) btnExports.classList.add('active');
+    if (paneExports) {
+      paneExports.classList.remove('hidden');
+      paneExports.classList.add('active');
+    }
+  }
+}
+
+function refreshCurrentEvalTab() {
+  switchEvalReportTab(currentEvalReportTab);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sub-Tab 1: Evaluation Status Dashboard
+// ─────────────────────────────────────────────────────────────────
+
+async function loadEvaluationStatusReport() {
+  const token = getEffectiveAdminToken();
+  if (!token) return;
+
+  const tbody = document.getElementById('eval-status-table-body');
+  const mobileList = document.getElementById('eval-mobile-cards-list');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center loading-cell">Loading evaluation records...</td></tr>';
+  if (mobileList) mobileList.innerHTML = '<div class="qr-loading">Loading evaluation records...</div>';
+
+  const search = (document.getElementById('eval-search-input')?.value || '').trim();
+  const theme = (document.getElementById('eval-filter-theme')?.value || 'ALL');
+  const panel = (document.getElementById('eval-filter-panel')?.value || 'ALL');
+  const status = (document.getElementById('eval-filter-status')?.value || 'ALL');
+
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (theme && theme !== 'ALL') params.set('theme', theme);
+  if (panel && panel !== 'ALL') params.set('panel', panel);
+  if (status && status !== 'ALL') params.set('status', status);
+
+  try {
+    const res = await fetch(`/api/admin/reports/evaluations/status?${params.toString()}`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (res.status === 401) {
+      showToast('Admin session expired. Please log in again.', 'error');
+      return;
+    }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${errData.error || 'Failed to load evaluations'}</td></tr>`;
+      return;
+    }
+
+    const data = await res.json();
+    rawEvalReportData = data;
+
+    // Update summary metrics cards
+    const s = data.summary || {};
+    const setElem = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    setElem('stat-eval-total', s.total_teams || 0);
+    setElem('stat-eval-completed', s.fully_evaluated || 0);
+    setElem('stat-eval-in-pending', s.internal_pending || 0);
+    setElem('stat-eval-ex-pending', s.external_pending || 0);
+    setElem('stat-eval-not-started', s.not_evaluated || 0);
+    setElem('stat-eval-rate', (s.completion_percent || 0) + '%');
+
+    // Populate theme dropdown options if not already populated
+    if (Array.isArray(s.theme_breakdown) && s.theme_breakdown.length > 0) {
+      availableEvalThemes = s.theme_breakdown.map(th => th.theme);
+      populateThemeDropdowns(availableEvalThemes);
+    }
+
+    renderEvaluationStatusTable(data.teams || []);
+  } catch (err) {
+    console.error('[ERROR] loadEvaluationStatusReport:', err);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Network error connecting to evaluation service</td></tr>';
+  }
+}
+
+function populateThemeDropdowns(themes) {
+  const themeFilter = document.getElementById('eval-filter-theme');
+  const rankThemeSelector = document.getElementById('rank-theme-selector');
+
+  if (themeFilter && themeFilter.options.length <= 1) {
+    const curVal = themeFilter.value;
+    themeFilter.innerHTML = '<option value="ALL">All Themes / Domains</option>' +
+      themes.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    themeFilter.value = curVal || 'ALL';
+  }
+
+  if (rankThemeSelector && rankThemeSelector.options.length === 0) {
+    rankThemeSelector.innerHTML = themes.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  }
+}
+
+function renderEvaluationStatusTable(teams) {
+  const tbody = document.getElementById('eval-status-table-body');
+  const mobileList = document.getElementById('eval-mobile-cards-list');
+
+  if (!teams || teams.length === 0) {
+    const emptyMsg = '<tr><td colspan="8" class="text-center">No matching evaluation records found.</td></tr>';
+    if (tbody) tbody.innerHTML = emptyMsg;
+    if (mobileList) mobileList.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-muted);">No matching evaluation records found.</div>';
+    return;
+  }
+
+  // 1. Desktop Table Rows
+  if (tbody) {
+    tbody.innerHTML = teams.map(t => {
+      let statusPillClass = 'pill-absent';
+      if (t.overall_status === 'FULLY_EVALUATED') statusPillClass = 'pill-present';
+      else if (t.overall_status === 'INTERNAL_EVALUATED' || t.overall_status === 'EXTERNAL_EVALUATED') statusPillClass = 'pill-amber';
+
+      const inScoreHtml = t.internal_status === 'SUBMITTED' 
+        ? `<strong class="mono" style="color:var(--accent-green-dark);">${t.internal_marks}</strong> / 50`
+        : (t.internal_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted">Pending</span>');
+
+      const exScoreHtml = t.external_status === 'SUBMITTED' 
+        ? `<strong class="mono" style="color:var(--accent-green-dark);">${t.external_marks}</strong> / 50`
+        : (t.external_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted">Pending</span>');
+
+      const combinedHtml = t.is_fully_evaluated && t.combined_score !== null
+        ? `<span class="mono" style="font-weight:800; font-size:15px; color:var(--accent-green-dark);">${t.combined_score} / 100</span>`
+        : '<span class="text-muted">—</span>';
+
+      return `
+        <tr>
+          <td><span class="table-team-id mono">${escapeHtml(t.team_code)}</span></td>
+          <td>
+            <div class="table-team-title">${escapeHtml(t.team_name)}</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${escapeHtml(t.project_title)}</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:1px;">${escapeHtml(t.school || '')}</div>
+          </td>
+          <td><span class="table-theme-badge">${escapeHtml(t.theme)}</span></td>
+          <td>
+            <span class="table-panel-badge">${escapeHtml(t.panel_code)}</span>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${escapeHtml(t.panel_venue || '')}</div>
+          </td>
+          <td style="text-align:center;">${inScoreHtml}</td>
+          <td style="text-align:center;">${exScoreHtml}</td>
+          <td style="text-align:center;">${combinedHtml}</td>
+          <td style="text-align:center;"><span class="status-pill-badge ${statusPillClass}">${escapeHtml(t.overall_status_label)}</span></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 2. Mobile Cards
+  if (mobileList) {
+    mobileList.innerHTML = teams.map(t => {
+      let statusPillClass = 'pill-absent';
+      if (t.overall_status === 'FULLY_EVALUATED') statusPillClass = 'pill-present';
+      else if (t.overall_status === 'INTERNAL_EVALUATED' || t.overall_status === 'EXTERNAL_EVALUATED') statusPillClass = 'pill-amber';
+
+      const inScore = t.internal_status === 'SUBMITTED' ? `${t.internal_marks}/50` : (t.internal_status === 'DRAFT' ? 'Draft' : 'Pending');
+      const exScore = t.external_status === 'SUBMITTED' ? `${t.external_marks}/50` : (t.external_status === 'DRAFT' ? 'Draft' : 'Pending');
+      const combined = t.is_fully_evaluated && t.combined_score !== null ? `${t.combined_score}/100` : 'Pending';
+
+      return `
+        <div class="jdash-project-card">
+          <div class="jdash-card-top">
+            <span class="jdash-card-id">${escapeHtml(t.team_code)}</span>
+            <span class="status-pill-badge ${statusPillClass}">${escapeHtml(t.overall_status_label)}</span>
+          </div>
+
+          <h4 class="jdash-card-title">${escapeHtml(t.team_name)}</h4>
+          <p class="jdash-card-teamname">${escapeHtml(t.project_title)}</p>
+
+          <div class="jdash-card-tags">
+            <span class="jdash-card-theme">${escapeHtml(t.theme)}</span>
+            <span class="table-panel-badge">${escapeHtml(t.panel_code)}</span>
+            <span style="font-size:11px; color:var(--text-muted);">${escapeHtml(t.panel_venue)}</span>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; margin-top:4px; font-size:12.5px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="color:var(--text-muted);">IN:</span> <strong>${inScore}</strong>
+              <span style="margin: 0 6px; color:#cbd5e1;">|</span>
+              <span style="color:var(--text-muted);">EX:</span> <strong>${exScore}</strong>
+            </div>
+            <div>
+              <span style="color:var(--text-muted);">Total:</span> <strong class="mono" style="color:var(--accent-green-dark); font-size:14px;">${combined}</strong>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+function handleEvalSearch() {
+  clearTimeout(evalSearchDebounceTimer);
+  evalSearchDebounceTimer = setTimeout(() => {
+    loadEvaluationStatusReport();
+  }, 250);
+}
+
+function handleEvalFilterChange() {
+  loadEvaluationStatusReport();
+}
+
+function resetEvalFilters() {
+  const search = document.getElementById('eval-search-input');
+  const theme = document.getElementById('eval-filter-theme');
+  const panel = document.getElementById('eval-filter-panel');
+  const status = document.getElementById('eval-filter-status');
+
+  if (search) search.value = '';
+  if (theme) theme.value = 'ALL';
+  if (panel) panel.value = 'ALL';
+  if (status) status.value = 'ALL';
+
+  loadEvaluationStatusReport();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sub-Tab 2: Theme-wise Rankings
+// ─────────────────────────────────────────────────────────────────
+
+let currentThemeRankingsData = null;
+
+function renderThemeLeaderboard() {
+  if (!currentThemeRankingsData) return;
+  const group = currentThemeRankingsData;
+  const tbody = document.getElementById('theme-rankings-table-body');
+  const pendBody = document.getElementById('theme-pending-table-body');
+  const badge = document.getElementById('theme-rank-meta-badge');
+  const title = document.getElementById('theme-leaderboard-title');
+  const sub = document.getElementById('theme-leaderboard-subtitle');
+  const topNSelect = document.getElementById('rank-topn-selector');
+  const topN = topNSelect ? topNSelect.value : '3';
+
+  const allRanked = group.ranked_teams || [];
+  const isTopN = topN && topN !== 'ALL' && !isNaN(parseInt(topN, 10));
+  const topNVal = isTopN ? parseInt(topN, 10) : null;
+
+  // Filter ranked teams to Top N including all ties at the cutoff rank
+  // Standard competition ranking: a team qualifies if its rank <= topNVal
+  const displayedRanked = isTopN
+    ? allRanked.filter(t => t.rank <= topNVal)
+    : allRanked;
+
+  if (title) title.textContent = `${group.theme} — Leaderboard`;
+  if (sub) {
+    sub.textContent = isTopN
+      ? `Standard Competition Ranking (1, 2, 2, 4) • Showing Top ${topNVal} (${displayedRanked.length} eligible teams with ties)`
+      : `Standard Competition Ranking (1, 2, 2, 4) • Showing all ${allRanked.length} ranked teams`;
+  }
+  if (badge) {
+    badge.textContent = `${group.total_teams} Total • ${group.fully_evaluated_count} Ranked (${displayedRanked.length} shown) • ${group.pending_count} Pending`;
+  }
+
+  // 1. Render Ranked Teams
+  if (tbody) {
+    if (allRanked.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both internal and external evaluations yet in this theme.</td></tr>';
+    } else if (displayedRanked.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams meet the Top ${topNVal} cutoff in this theme.</td></tr>`;
+    } else {
+      tbody.innerHTML = displayedRanked.map(t => {
+        let badgeClass = 'rank-badge-other';
+        if (t.rank === 1) badgeClass = 'rank-badge-1';
+        else if (t.rank === 2) badgeClass = 'rank-badge-2';
+        else if (t.rank === 3) badgeClass = 'rank-badge-3';
+
+        return `
+          <tr>
+            <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
+            <td><span class="table-team-id mono">${escapeHtml(t.team_code)}</span></td>
+            <td><strong>${escapeHtml(t.team_name)}</strong></td>
+            <td>${escapeHtml(t.project_title)}</td>
+            <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
+            <td style="text-align:center;" class="mono">${t.external_marks} / 50</td>
+            <td style="text-align:center;"><strong class="mono" style="font-size:16px; color:var(--accent-green-dark);">${t.combined_score} / 100</strong></td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+
+  // 2. Render Pending Teams
+  const pendCountLabel = document.getElementById('theme-pending-count-label');
+  if (pendCountLabel) pendCountLabel.textContent = `${group.pending_count} incomplete teams`;
+
+  if (pendBody) {
+    if (!group.pending_teams || group.pending_teams.length === 0) {
+      pendBody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All teams in this theme have completed evaluations!</td></tr>';
+    } else {
+      pendBody.innerHTML = group.pending_teams.map(pt => {
+        return `
+          <tr>
+            <td><span class="table-team-id mono">${escapeHtml(pt.team_code)}</span></td>
+            <td>${escapeHtml(pt.team_name)}</td>
+            <td>${escapeHtml(pt.project_title)}</td>
+            <td><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
+            <td>${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+            <td>${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+            <td><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function handleTopNChange() {
+  const rankSelect = document.getElementById('rank-topn-selector');
+  const exportSelect = document.getElementById('export-theme-topn-select');
+  if (rankSelect && exportSelect) {
+    exportSelect.value = rankSelect.value;
+  }
+  renderThemeLeaderboard();
+}
+
+function syncExportTopNToRankSelector() {
+  const rankSelect = document.getElementById('rank-topn-selector');
+  const exportSelect = document.getElementById('export-theme-topn-select');
+  if (rankSelect && exportSelect) {
+    rankSelect.value = exportSelect.value;
+  }
+  renderThemeLeaderboard();
+}
+
+function downloadCurrentThemeExcel() {
+  downloadEvaluationExcel('theme-excel');
+}
+
+async function loadThemeRankings() {
+  const token = getEffectiveAdminToken();
+  if (!token) return;
+
+  const selector = document.getElementById('rank-theme-selector');
+  let chosenTheme = selector?.value;
+
+  const tbody = document.getElementById('theme-rankings-table-body');
+
+  if (tbody && !currentThemeRankingsData) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center loading-cell">Loading theme leaderboard...</td></tr>';
+  }
+
+  try {
+    const url = chosenTheme ? `/api/admin/reports/rankings/theme?theme=${encodeURIComponent(chosenTheme)}` : '/api/admin/reports/rankings/theme';
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load rankings</td></tr>';
+      return;
+    }
+
+    const data = await res.json();
+    if (Array.isArray(data.available_themes) && selector && selector.options.length === 0) {
+      selector.innerHTML = data.available_themes.map(th => `<option value="${escapeHtml(th)}">${escapeHtml(th)}</option>`).join('');
+      if (!chosenTheme && data.available_themes.length > 0) {
+        chosenTheme = data.available_themes[0];
+        selector.value = chosenTheme;
+      }
+    }
+
+    const group = (data.themes && data.themes[0]) || null;
+    if (!group) {
+      currentThemeRankingsData = null;
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center">No data available for this theme.</td></tr>';
+      return;
+    }
+
+    currentThemeRankingsData = group;
+    renderThemeLeaderboard();
+  } catch (err) {
+    console.error('[ERROR] loadThemeRankings:', err);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Network error loading rankings</td></tr>';
+  }
+}
+
+function handleThemeSelectorChange() {
+  loadThemeRankings();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sub-Tab 3: Overall Grand Leaderboard
+// ─────────────────────────────────────────────────────────────────
+
+async function loadOverallRankings() {
+  const token = getEffectiveAdminToken();
+  if (!token) return;
+
+  const tbody = document.getElementById('overall-rankings-table-body');
+  const pendBody = document.getElementById('overall-pending-table-body');
+  const badge = document.getElementById('overall-rank-meta-badge');
+  const pendCountLabel = document.getElementById('overall-pending-count-label');
+
+  if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center loading-cell">Loading grand leaderboard...</td></tr>';
+
+  try {
+    const res = await fetch('/api/admin/reports/rankings/overall', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load overall leaderboard</td></tr>';
+      return;
+    }
+
+    const data = await res.json();
+    if (badge) badge.textContent = `${data.fully_evaluated_count} / ${data.total_registered} Fully Evaluated`;
+    if (pendCountLabel) pendCountLabel.textContent = `${data.pending_count} incomplete teams excluded from final ranking`;
+
+    // 1. Render Ranked Teams
+    if (tbody) {
+      if (data.ranked_teams.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both evaluations yet.</td></tr>';
+      } else {
+        tbody.innerHTML = data.ranked_teams.map(t => {
+          let badgeClass = 'rank-badge-other';
+          if (t.rank === 1) badgeClass = 'rank-badge-1';
+          else if (t.rank === 2) badgeClass = 'rank-badge-2';
+          else if (t.rank === 3) badgeClass = 'rank-badge-3';
+
+          return `
+            <tr>
+              <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
+              <td><span class="table-team-id mono">${escapeHtml(t.team_code)}</span></td>
+              <td><strong>${escapeHtml(t.team_name)}</strong></td>
+              <td>${escapeHtml(t.project_title)}</td>
+              <td><span class="table-theme-badge">${escapeHtml(t.theme)}</span></td>
+              <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
+              <td style="text-align:center;" class="mono">${t.external_marks} / 50</td>
+              <td style="text-align:center;"><strong class="mono" style="font-size:16px; color:var(--accent-green-dark);">${t.combined_score} / 100</strong></td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // 2. Render Pending Teams
+    if (pendBody) {
+      if (data.pending_teams.length === 0) {
+        pendBody.innerHTML = '<tr><td colspan="8" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All registered teams are fully evaluated!</td></tr>';
+      } else {
+        pendBody.innerHTML = data.pending_teams.map(pt => {
+          return `
+            <tr>
+              <td><span class="table-team-id mono">${escapeHtml(pt.team_code)}</span></td>
+              <td>${escapeHtml(pt.team_name)}</td>
+              <td>${escapeHtml(pt.project_title)}</td>
+              <td><span class="table-theme-badge">${escapeHtml(pt.theme)}</span></td>
+              <td><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
+              <td>${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+              <td>${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+              <td><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    console.error('[ERROR] loadOverallRankings:', err);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Network error loading grand leaderboard</td></tr>';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sub-Tab 4: Excel Reports Download
+// ─────────────────────────────────────────────────────────────────
+
+async function downloadEvaluationExcel(endpoint) {
+  const token = getEffectiveAdminToken();
+  if (!token) {
+    showToast('Admin session required to download reports.', 'error');
+    return;
+  }
+
+  let btnId = 'btn-export-status';
+  if (endpoint.includes('theme')) btnId = 'btn-export-theme';
+  else if (endpoint.includes('overall')) btnId = 'btn-export-overall';
+
+  const btn = document.getElementById(btnId);
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner" style="display:inline-block; margin-right:8px;"></span> Generating Excel Workbook...';
+  }
+
+  let queryParam = '';
+  if (endpoint.includes('theme')) {
+    const exportSelect = document.getElementById('export-theme-topn-select');
+    const rankSelect = document.getElementById('rank-topn-selector');
+    const topN = (exportSelect && exportSelect.value) || (rankSelect && rankSelect.value) || '3';
+    queryParam = `?topN=${encodeURIComponent(topN)}`;
+  }
+
+  showToast('Generating executive Excel workbook from live database...', 'info');
+
+  try {
+    const res = await fetch(`/api/admin/reports/export/${endpoint}${queryParam}`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+
+    if (!res.ok) {
+      showToast('Failed to generate Excel report.', 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+
+    // Extract filename from header if present
+    const disposition = res.headers.get('content-disposition');
+    let filename = `RMK_Jr_Hackathon_2026_Report_${Date.now()}.xlsx`;
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) filename = match[1];
+    }
+
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    showToast('Excel report downloaded successfully!', 'info');
+  } catch (err) {
+    console.error('[ERROR] downloadEvaluationExcel:', err);
+    showToast('Download failed due to a network error.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  }
+}
+
+// ─── Attach Evaluation Report handlers to global window scope ───
+window.switchAdminSection = switchAdminSection;
+window.switchEvalReportTab = switchEvalReportTab;
+window.refreshCurrentEvalTab = refreshCurrentEvalTab;
+window.loadEvaluationStatusReport = loadEvaluationStatusReport;
+window.handleEvalSearch = handleEvalSearch;
+window.handleEvalFilterChange = handleEvalFilterChange;
+window.resetEvalFilters = resetEvalFilters;
+window.loadThemeRankings = loadThemeRankings;
+window.handleThemeSelectorChange = handleThemeSelectorChange;
+window.handleTopNChange = handleTopNChange;
+window.syncExportTopNToRankSelector = syncExportTopNToRankSelector;
+window.downloadCurrentThemeExcel = downloadCurrentThemeExcel;
+window.loadOverallRankings = loadOverallRankings;
+window.downloadEvaluationExcel = downloadEvaluationExcel;
