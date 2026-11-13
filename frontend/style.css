@@ -5731,32 +5731,32 @@ html.jury-theme-active body {
 
 .alloc-history-table th:nth-child(1),
 .alloc-history-table td:nth-child(1) {
-  width: 90px !important;
-  min-width: 90px !important;
+  width: 80px !important;
+  min-width: 80px !important;
 }
 
 .alloc-history-table th:nth-child(2),
 .alloc-history-table td:nth-child(2) {
-  width: 110px !important;
-  min-width: 110px !important;
+  width: 100px !important;
+  min-width: 100px !important;
 }
 
 .alloc-history-table th:nth-child(3),
 .alloc-history-table td:nth-child(3) {
-  width: 180px !important;
-  min-width: 180px !important;
+  width: 170px !important;
+  min-width: 170px !important;
 }
 
 .alloc-history-table th:nth-child(4),
 .alloc-history-table td:nth-child(4) {
-  width: 120px !important;
-  min-width: 120px !important;
+  width: 110px !important;
+  min-width: 110px !important;
 }
 
 .alloc-history-table th:nth-child(5),
 .alloc-history-table td:nth-child(5) {
-  width: 130px !important;
-  min-width: 130px !important;
+  width: 120px !important;
+  min-width: 120px !important;
 }
 
 .alloc-history-table th:nth-child(6),
@@ -5776,6 +5776,7 @@ html.jury-theme-active body {
 
 .alloc-history-table td:last-child {
   white-space: normal !important;
+  word-break: break-word !important;
   max-width: 260px !important;
 }
 

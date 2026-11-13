@@ -8,14 +8,29 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <script>
-    // URL-based view flags before anything renders
-    const p = location.pathname.replace(/\/+$/, '');
-    if (p === '/rmkjrhackathon2026-adminlogin') document.documentElement.classList.add('admin-page');
-    else if (p === '/rmkjrhackathon2026-jury-admin') document.documentElement.classList.add('jury-admin-page');
-    else if (p === '/j8k2m9q7w4' || p === '/rmkjrhackathon2026-jurylogin') document.documentElement.classList.add('jury-page');
+    // URL-based view flags and clean route detection before anything renders
+    (function () {
+      const p = (location.pathname || '').replace(/\/+$/, '').toLowerCase();
+
+      // Legacy random token URL: immediately replace URL in address bar with official jury login URL
+      if (p === '/j8k2m9q7w4') {
+        window.location.replace('/rmkjrhackathon2026-jurylogin' + (location.search || '') + (location.hash || ''));
+        return;
+      }
+
+      // Clean, predictable route detection
+      if (p === '/rmkjrhackathon2026-adminlogin' || p === '/adminlogin' || p === '/admin') {
+        document.documentElement.classList.add('admin-page');
+      } else if (p === '/rmkjrhackathon2026-jury-admin' || p === '/jury-admin') {
+        document.documentElement.classList.add('jury-admin-page');
+      } else if (p === '/rmkjrhackathon2026-jurylogin' || p === '/jurylogin' || p === '/jury') {
+        document.documentElement.classList.add('jury-page');
+      }
+      // Normal team root '/' and all other paths default to team pass
+    })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261115_r1" />
+  <link rel="stylesheet" href="/style.css?v=20261115_v7" />
 </head>
 <body>
 
@@ -1447,7 +1462,14 @@
               </tr>
             </thead>
             <tbody id="alloc-history-tbody">
-              <tr><td colspan="6" class="text-center loading-cell">Loading history...</td></tr>
+              <tr>
+                <td colspan="6" class="text-center" style="padding: 36px 16px;">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #64748b; font-weight: 500;">
+                    <div class="btn-spinner" style="border: 2px solid #cbd5e1; border-top-color: #059669; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;"></div>
+                    <span>Loading revision history...</span>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1468,6 +1490,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261115_r1"></script>
+  <script src="/app.js?v=20261115_v7"></script>
 </body>
 </html>

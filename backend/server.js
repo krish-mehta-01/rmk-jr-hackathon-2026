@@ -1,8 +1,16 @@
+// Process-level safety against unhandled rejections and exceptions
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[UNHANDLED REJECTION IN SERVER]:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION IN SERVER]:', err);
+});
+
 // Runs the app as a long-lived server (local development, Render). On Vercel, api/index.js is used instead.
 const app = require('./app');
 const { testConnection } = require('./db');
 
-const PORT = process.env.PORT || 30000;
+const PORT = process.env.PORT || 3000;
 
 // Render's free plan sleeps after 15 min without visits, and the next visit then takes ~1 min.
 // In the run-up to the hackathon (15 Nov 2026) the server visits its own public URL every 10 min

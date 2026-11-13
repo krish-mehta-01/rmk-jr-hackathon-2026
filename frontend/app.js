@@ -838,7 +838,7 @@ function populateThemewiseFilter() {
     chipsContainer.innerHTML = `
       <button type="button" class="theme-chip ${currentVal === 'all' ? 'active' : ''}" data-theme="all" onclick="handleThemewiseFilter('all')">All Themes (12)</button>
     ` + sortedThemes.map(t => `
-      <button type="button" class="theme-chip ${currentVal === t.theme ? 'active' : ''}" data-theme="${escapeHtml(t.theme)}" onclick="handleThemewiseFilter('${escapeHtml(t.theme).replace(/'/g, "\\'")}')">
+      <button type="button" class="theme-chip ${currentVal === t.theme ? 'active' : ''}" data-theme="${escapeHtml(t.theme)}" onclick="handleThemewiseFilter(this.dataset.theme)">
         ${escapeHtml(t.theme)} (${t.total})
       </button>
     `).join('');
@@ -2576,7 +2576,7 @@ async function openAdminEvalDetail(evalId) {
     });
     const data = await res.json();
     if (!res.ok) {
-      body.innerHTML = `<div class="glass-alert-error">${data.error || 'Failed to load details'}</div>`;
+      body.innerHTML = `<div class="glass-alert-error">${escapeHtml(data.error || 'Failed to load details')}</div>`;
       return;
     }
 
@@ -4389,66 +4389,82 @@ async function handleOpenRevisionHistory() {
   const modal = document.getElementById('modal-alloc-history');
   const tbody = document.getElementById('alloc-history-tbody');
 
-  const activeToken = adminToken || localStorage.getItem('rmk_admin_token') || juryAdminToken || localStorage.getItem('rmk_jury_admin_token') || judgeToken || localStorage.getItem('rmk_judge_token');
-
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="6" class="text-center" style="padding: 36px 16px;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #64748b; font-weight: 500;">
-          <div class="btn-spinner" style="border: 2px solid #cbd5e1; border-top-color: #059669; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;"></div>
-          <span>Loading revision history...</span>
-        </div>
-      </td>
-    </tr>
-  `;
   if (modal) modal.classList.remove('hidden');
 
-  if (!activeToken) {
+  if (tbody) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center text-muted" style="padding: 28px;">
-          Please log in as an Admin or Judge to view revision history.
+        <td colspan="6" class="text-center" style="padding: 36px 16px;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #64748b; font-weight: 500;">
+            <div class="btn-spinner" style="border: 2px solid #cbd5e1; border-top-color: #059669; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;"></div>
+            <span>Loading revision history...</span>
+          </div>
         </td>
       </tr>
     `;
-    return;
   }
 
+  const activeToken = adminToken || localStorage.getItem('rmk_admin_token') ||
+                      juryAdminToken || localStorage.getItem('rmk_jury_admin_token') ||
+                      judgeToken || localStorage.getItem('rmk_judge_token') || null;
+
   try {
-    const res = await fetch('/api/admin/allocations/revisions', {
-      headers: { Authorization: 'Bearer ' + activeToken }
-    });
-    if (sessionExpired(res)) return;
+    const fetchHeaders = {};
+    if (activeToken) {
+      fetchHeaders['Authorization'] = 'Bearer ' + activeToken;
+    }
+
+    let res = await fetch('/api/admin/allocations/revisions', { headers: fetchHeaders });
+    if (!res.ok && res.status === 404) {
+      res = await fetch('/api/allocations/revisions', { headers: fetchHeaders });
+    }
+
+    // Do NOT call sessionExpired(res) which silently aborts and leaves modal stuck!
     if (!res.ok) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center text-danger" style="padding: 24px;">
-            Failed to load revision history. (Status ${res.status})
-            <div style="margin-top: 10px;">
-              <button type="button" class="glass-btn glass-btn-secondary btn-xs" onclick="handleOpenRevisionHistory()">Retry</button>
-            </div>
-          </td>
-        </tr>
-      `;
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center" style="padding: 28px 16px;">
+              <div style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">
+                Failed to load revision history (Status ${res.status}).
+              </div>
+              <div style="color: #64748b; font-size: 13px; margin-bottom: 14px;">
+                ${res.status === 401 ? 'Authentication required or session expired.' : 'An error occurred while connecting to the server.'}
+              </div>
+              <button type="button" class="glass-btn glass-btn-secondary btn-xs" onclick="handleOpenRevisionHistory()">
+                Retry
+              </button>
+            </td>
+          </tr>
+        `;
+      }
       return;
     }
 
     const data = await res.json();
     const revisions = data.revisions || [];
 
+    if (!tbody) return;
+
     if (revisions.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding: 24px;">No revisions found.</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center text-muted" style="padding: 32px 16px;">
+            No revision history available.
+          </td>
+        </tr>
+      `;
       return;
     }
 
     tbody.innerHTML = revisions.map(r => {
-      let statusPill = `<span class="status-pill-badge pill-absent">${escapeHtml(r.status)}</span>`;
+      let statusPill = `<span class="status-pill-badge pill-absent">${escapeHtml(r.status || 'UNKNOWN')}</span>`;
       if (r.status === 'PUBLISHED' && (r.is_active === 1 || r.is_active === true)) {
-        statusPill = `<span class="status-pill-badge pill-present">ACTIVE</span>`;
+        statusPill = `<span class="status-pill-badge pill-present" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">ACTIVE</span>`;
       } else if (r.status === 'PUBLISHED') {
-        statusPill = `<span class="status-pill-badge" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">ARCHIVED</span>`;
+        statusPill = `<span class="status-pill-badge" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-weight: 600; padding: 4px 10px; border-radius: 9999px;">ARCHIVED</span>`;
       } else if (r.status === 'DRAFT') {
-        statusPill = `<span class="status-pill-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">DRAFT</span>`;
+        statusPill = `<span class="status-pill-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">DRAFT</span>`;
       }
 
       let dateStr = '—';
@@ -4470,30 +4486,41 @@ async function handleOpenRevisionHistory() {
         }
       }
 
+      const teamCount = r.assigned_count != null ? `${r.assigned_count} teams` : '—';
+      const author = r.published_by || r.created_by || 'Admin';
+      const notes = r.notes ? escapeHtml(r.notes) : '<span style="color: #94a3b8; font-style: italic;">No notes provided</span>';
+
       return `
         <tr>
-          <td class="mono"><strong style="color: #0f172a;">Rev #${escapeHtml(String(r.revision_number))}</strong></td>
+          <td class="mono"><strong style="color: #0f172a; font-size: 13.5px;">Rev #${escapeHtml(String(r.revision_number))}</strong></td>
           <td>${statusPill}</td>
-          <td style="color: #334155; font-size: 12.5px;">${escapeHtml(dateStr)}</td>
-          <td style="color: #475569;">${escapeHtml(r.published_by || r.created_by || '—')}</td>
-          <td><strong style="color: #059669;">${r.assigned_count != null ? r.assigned_count + ' teams' : '—'}</strong></td>
-          <td style="font-size: 12px; color: #64748b;">${escapeHtml(r.notes || '—')}</td>
+          <td style="color: #334155; font-size: 12.5px; white-space: nowrap;">${escapeHtml(dateStr)}</td>
+          <td style="color: #475569; font-weight: 500;">${escapeHtml(author)}</td>
+          <td><strong style="color: #059669; font-size: 13px;">${escapeHtml(teamCount)}</strong></td>
+          <td style="font-size: 12.5px; color: #475569; line-height: 1.4;">${notes}</td>
         </tr>
       `;
     }).join('');
 
   } catch (err) {
     console.error('[ERROR] handleOpenRevisionHistory:', err);
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" class="text-center text-danger" style="padding: 24px;">
-          Server connection error.
-          <div style="margin-top: 10px;">
-            <button type="button" class="glass-btn glass-btn-secondary btn-xs" onclick="handleOpenRevisionHistory()">Retry</button>
-          </div>
-        </td>
-      </tr>
-    `;
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center" style="padding: 28px 16px;">
+            <div style="color: #ef4444; font-weight: 600; margin-bottom: 8px;">
+              Server connection error while loading history.
+            </div>
+            <div style="color: #64748b; font-size: 13px; margin-bottom: 14px;">
+              ${escapeHtml(err.message || 'Unable to connect to the server.')}
+            </div>
+            <button type="button" class="glass-btn glass-btn-secondary btn-xs" onclick="handleOpenRevisionHistory()">
+              Retry
+            </button>
+          </td>
+        </tr>
+      `;
+    }
   }
 }
 

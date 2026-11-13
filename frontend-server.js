@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.FRONTEND_PORT || 5173;
-const BACKEND_PORT = process.env.BACKEND_PORT || 30000;
+const BACKEND_PORT = process.env.BACKEND_PORT || 3000;
 const FRONTEND_DIR = path.join(__dirname, 'frontend');
 
 const MIME_TYPES = {
@@ -50,6 +50,17 @@ const server = http.createServer((req, res) => {
 
   // 2. Serve static files from frontend/
   let reqPath = req.url.split('?')[0];
+
+  // Redirect legacy random token route to official jury login route
+  const cleanPath = reqPath.replace(/\/+$/, '').toLowerCase();
+  if (cleanPath === '/j8k2m9q7w4') {
+    res.writeHead(301, {
+      'Location': '/rmkjrhackathon2026-jurylogin',
+      'Cache-Control': 'no-cache'
+    });
+    return res.end();
+  }
+
   if (reqPath === '/') reqPath = '/index.html';
 
   let filePath = path.join(FRONTEND_DIR, reqPath);
@@ -70,7 +81,8 @@ const server = http.createServer((req, res) => {
       });
       fs.createReadStream(filePath).pipe(res);
     } else {
-      // SPA Fallback: for routes like /rmkjrhackathon2026-jurylogin, serve index.html
+      // SPA Fallback: for clean routes (/rmkjrhackathon2026-adminlogin, /adminlogin, /admin,
+      // /rmkjrhackathon2026-jurylogin, /jurylogin, /jury, /rmkjrhackathon2026-jury-admin, /jury-admin), serve index.html
       const indexPath = path.join(FRONTEND_DIR, 'index.html');
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=UTF-8',

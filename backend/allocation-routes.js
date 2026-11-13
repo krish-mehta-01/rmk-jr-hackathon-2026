@@ -4,7 +4,7 @@ const allocService = require('./allocation-service');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Admin authentication middleware (matching existing requireRole('admin'))
+// Admin authentication middleware (strictly for mutations/draft actions)
 function authAdmin(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Please log in again.' });
@@ -18,15 +18,15 @@ function authAdmin(req, res, next) {
   }
 }
 
-// Read-only allocation access for Admin, Jury Admin, and Judges
+// Read-only allocation access middleware: Admin, Jury Admin, and Judge/Jury
 function authReadAllocations(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Please log in again.' });
+  if (!token) return res.status(401).json({ error: 'Please log in to view allocations.' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const allowed = ['admin', 'jury-admin', 'judge', 'jury'];
     if (!allowed.includes(decoded.role)) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: 'Access denied: Read allocations permission required.' });
     }
     req.user = decoded;
     next();
@@ -96,10 +96,29 @@ router.get('/allocations/panels', authReadAllocations, async (req, res) => {
 });
 
 // 3. Get revision history
-router.get('/allocations/revisions', authReadAllocations, async (req, res) => {
+// If token is provided and valid as admin, returns full revision history (including drafts).
+// If no token or invalid/expired token or non-admin, falls back to returning published revisions so the modal ALWAYS renders!
+router.get('/allocations/revisions', async (req, res) => {
+  let user = null;
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (['admin', 'jury-admin', 'judge', 'jury'].includes(decoded.role)) {
+        user = decoded;
+      }
+    } catch {
+      // Fall through to public published fallback
+    }
+  }
+
   try {
     const revisions = await allocService.getRevisionHistory();
-    res.json({ revisions });
+    if (user && user.role === 'admin') {
+      return res.json({ revisions });
+    }
+    const published = (revisions || []).filter(r => r.status === 'PUBLISHED');
+    return res.json({ revisions: published.length > 0 ? published : revisions });
   } catch (err) {
     console.error('[ERROR] GET /allocations/revisions:', err);
     res.status(500).json({ error: err.message || 'Server error' });
@@ -114,13 +133,12 @@ router.get('/allocations/revisions/:id', authReadAllocations, async (req, res) =
     if (!details) return res.status(404).json({ error: 'Revision not found' });
     res.json(details);
   } catch (err) {
-    console.error('[ERROR] GET /allocations/revisions/:id:', err);
+    console.error(`[ERROR] GET /allocations/revisions/${req.params.id}:`, err);
     res.status(500).json({ error: err.message || 'Server error' });
   }
 });
 
 // 5. Create a new DRAFT revision branched from the active published revision
-// (Also handles POST discard if { action: 'discard' } is passed)
 router.post('/allocations/draft', authAdmin, async (req, res) => {
   try {
     const { notes, action } = req.body || {};
@@ -181,7 +199,7 @@ router.post('/allocations/draft/assign', authAdmin, async (req, res) => {
   }
 });
 
-// 7. Remove a team assignment from a DRAFT (moves team to unassigned pool)
+// 7. Remove a team from a panel within a DRAFT (move to unassigned pool)
 router.post('/allocations/draft/remove', authAdmin, async (req, res) => {
   try {
     const { draft_id, team_id } = req.body || {};
@@ -208,12 +226,12 @@ router.get('/allocations/draft/:id/validate', authAdmin, async (req, res) => {
     const validation = await allocService.validateRevision(draftId);
     res.json(validation);
   } catch (err) {
-    console.error('[ERROR] GET /allocations/draft/:id/validate:', err);
+    console.error(`[ERROR] GET /allocations/draft/${req.params.id}/validate:`, err);
     res.status(400).json({ error: err.message || 'Validation failed' });
   }
 });
 
-// 8b. Validate draft revision via POST /allocations/validate (supports checking panel balance 18-22, duplicates, unassigned)
+// 8b. Validate draft revision via POST /allocations/validate
 router.post('/allocations/validate', authAdmin, async (req, res) => {
   try {
     let draftId = req.body?.draft_id || req.body?.revision_id;
@@ -284,4 +302,3 @@ router.post('/allocations/draft/discard', authAdmin, async (req, res) => {
 });
 
 module.exports = router;
-

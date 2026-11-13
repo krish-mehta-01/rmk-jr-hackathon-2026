@@ -40,9 +40,9 @@ const rawPool = mysql.createPool({
   ...config,
   ssl,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 30,
   queueLimit: 0,
-  maxIdle: 10,
+  maxIdle: 30,
   idleTimeout: 60000,
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000,
@@ -50,7 +50,14 @@ const rawPool = mysql.createPool({
   timezone: 'Z'
 });
 
-const TRANSIENT_ERRORS = new Set(['ECONNRESET', 'PROTOCOL_CONNECTION_LOST', 'EPIPE', 'ETIMEDOUT']);
+const TRANSIENT_ERRORS = new Set([
+  'ECONNRESET',
+  'PROTOCOL_CONNECTION_LOST',
+  'EPIPE',
+  'ETIMEDOUT',
+  'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR',
+  'ER_LOCK_DEADLOCK'
+]);
 
 // Retries a query on a fresh connection if the one handed out had been dropped.
 // All queries in this app are safe to repeat (idempotent updates, upserts, reads).
@@ -59,6 +66,16 @@ const pool = {
     for (let attempt = 1; ; attempt++) {
       try {
         return await rawPool.execute(sql, params);
+      } catch (err) {
+        if (!TRANSIENT_ERRORS.has(err.code) || attempt >= 3) throw err;
+        console.warn(`[WARN] DB connection dropped (${err.code}), retrying`);
+      }
+    }
+  },
+  async query(sql, params) {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await rawPool.query(sql, params);
       } catch (err) {
         if (!TRANSIENT_ERRORS.has(err.code) || attempt >= 3) throw err;
         console.warn(`[WARN] DB connection dropped (${err.code}), retrying`);

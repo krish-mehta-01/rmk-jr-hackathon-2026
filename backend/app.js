@@ -470,6 +470,24 @@ app.get('/api/admin/export', authAdmin, async (req, res) => {
 });
 
 
+// Helper for safely executing document generation scripts with timeout
+function runDocGenScript(scriptPath, timeoutMs = 25000) {
+  if (!fs.existsSync(scriptPath)) return false;
+  const { spawnSync } = require('child_process');
+  const commands = process.platform === 'win32' ? ['python', 'py'] : ['python3', 'python'];
+  for (const cmd of commands) {
+    try {
+      const proc = spawnSync(cmd, [scriptPath], {
+        timeout: timeoutMs,
+        stdio: 'ignore',
+        windowsHide: true
+      });
+      if (proc && !proc.error && proc.status === 0) return true;
+    } catch {}
+  }
+  return false;
+}
+
 // Download / generate venue-wise segregated Excel (.xlsx) - ALWAYS generated dynamically from DB
 app.get('/api/admin/export/venue-excel', authAdmin, async (req, res) => {
   try {
@@ -484,7 +502,9 @@ app.get('/api/admin/export/venue-excel', authAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ERROR] /api/admin/export/venue-excel error:', err);
-    res.status(500).json({ error: 'Failed to generate venue Excel' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate venue Excel' });
+    }
   }
 });
 
@@ -494,11 +514,8 @@ app.get('/api/admin/export/venue-doc', authAdmin, async (req, res) => {
     let filePath = findVenueDocx();
     if (!filePath) {
       const genScript = path.join(__dirname, '..', 'scratch', 'generate_venue_docs.py');
-      if (fs.existsSync(genScript)) {
-        const { spawnSync } = require('child_process');
-        spawnSync('python', [genScript], { stdio: 'ignore' });
-        filePath = findVenueDocx();
-      }
+      runDocGenScript(genScript, 25000);
+      filePath = findVenueDocx();
     }
     if (!filePath) {
       return res.status(404).json({ error: 'Venue document is currently being prepared. Please retry shortly.' });
@@ -512,7 +529,9 @@ app.get('/api/admin/export/venue-doc', authAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ERROR] /api/admin/export/venue-doc error:', err);
-    res.status(500).json({ error: 'Failed to generate venue Word document' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate venue Word document' });
+    }
   }
 });
 
@@ -533,7 +552,9 @@ app.get('/api/admin/export/venue-pdf', authAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ERROR] /api/admin/export/venue-pdf error:', err);
-    res.status(500).json({ error: 'Failed to generate venue PDF document' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate venue PDF document' });
+    }
   }
 });
 
@@ -555,7 +576,9 @@ app.get('/api/admin/export/theme-excel', authAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ERROR] /api/admin/export/theme-excel error:', err);
-    res.status(500).json({ error: 'Failed to generate theme Excel' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate theme Excel' });
+    }
   }
 });
 
@@ -565,11 +588,8 @@ app.get('/api/admin/export/theme-doc', authAdmin, async (req, res) => {
     let filePath = findThemeDocx();
     if (!filePath) {
       const genScript = path.join(__dirname, '..', 'scratch', 'build_theme_docx_pdf.py');
-      if (fs.existsSync(genScript)) {
-        const { spawnSync } = require('child_process');
-        spawnSync('python', [genScript], { stdio: 'ignore' });
-        filePath = findThemeDocx();
-      }
+      runDocGenScript(genScript, 25000);
+      filePath = findThemeDocx();
     }
     if (!filePath) {
       return res.status(404).json({ error: 'Theme Word document is currently being prepared. Please retry shortly.' });
@@ -583,7 +603,9 @@ app.get('/api/admin/export/theme-doc', authAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ERROR] /api/admin/export/theme-doc error:', err);
-    res.status(500).json({ error: 'Failed to generate theme Word document' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate theme Word document' });
+    }
   }
 });
 
@@ -603,7 +625,9 @@ app.get('/api/admin/export/theme-pdf', authAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ERROR] /api/admin/export/theme-pdf error:', err);
-    res.status(500).json({ error: 'Failed to generate theme PDF document' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate theme PDF document' });
+    }
   }
 });
 
@@ -630,6 +654,7 @@ app.post('/api/admin/teams/:id/toggle-attendance', authAdmin, async (req, res) =
 // Allocation Management Routes (Revisions, Drafts, Assignments)
 const allocationRoutes = require('./allocation-routes');
 app.use('/api/admin', allocationRoutes);
+app.use('/api', allocationRoutes);
 
 // Jury Management & Evaluation Routes
 const juryRoutes = require('./jury-routes');
@@ -637,6 +662,11 @@ app.use('/api', juryRoutes);
 
 // Uptime check (no DB) for keep-awake pings; also shows which commit Render is running
 app.get('/api/health', (req, res) => res.json({ ok: true, commit: (process.env.RENDER_GIT_COMMIT || 'local').slice(0, 7) }));
+
+// Legacy random token URL redirect -> official jury login URL
+app.get(['/j8k2m9q7w4', '/j8k2m9q7w4/*'], (req, res) => {
+  res.redirect(301, '/rmkjrhackathon2026-jurylogin');
+});
 
 // Unknown API routes return JSON, everything else gets the app
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
@@ -647,11 +677,22 @@ app.get('*', (req, res) => {
 
 // Global error handling middleware (handles invalid JSON body, unhandled errors gracefully without crash)
 app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({ error: 'Invalid JSON payload' });
   }
   console.error('[UNHANDLED EXPRESS ERROR]:', err);
   res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+});
+
+// Process-level safety against uncaught rejections/exceptions
+process.on('unhandledRejection', (reason) => {
+  console.error('[UNHANDLED REJECTION IN APP]:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION IN APP]:', err);
 });
 
 module.exports = app;
