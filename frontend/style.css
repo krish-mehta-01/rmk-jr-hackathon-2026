@@ -5267,7 +5267,7 @@ html.jury-theme-active body {
   box-sizing: border-box !important;
 }
 
-/* ─── Evaluation Modal (#modal-jury-evaluation) ─── */
+/* ─── Evaluation Modal (#modal-jury-evaluation) & General Jury/Alloc Modals ─── */
 .jury-modal {
   position: fixed !important;
   inset: 0 !important;
@@ -5280,6 +5280,14 @@ html.jury-theme-active body {
   justify-content: center !important;
   padding: 20px !important;
   box-sizing: border-box !important;
+}
+
+.jury-modal.hidden,
+.jury-modal[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .jury-eval-modal-content {
@@ -6009,4 +6017,19 @@ html.jury-theme-active body {
   border-color: #059669 !important;
   background-color: #ffffff !important;
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* ─── Global Strict Hidden Rule (Highest Specificity & Cascade Priority) ─── */
+.hidden,
+[hidden],
+.jury-modal.hidden,
+.jury-modal[hidden],
+.map-modal.hidden,
+.map-modal[hidden],
+div.hidden,
+section.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }

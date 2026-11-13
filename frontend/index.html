@@ -30,7 +30,7 @@
     })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261115_v7" />
+  <link rel="stylesheet" href="/style.css?v=20261113_fix_modal" />
 </head>
 <body>
 
@@ -1251,7 +1251,7 @@
   </div>
 
   <!-- Mandatory Password Change Modal for Judges -->
-  <div id="modal-jury-password" class="jury-modal hidden">
+  <div id="modal-jury-password" class="jury-modal hidden" style="display: none;">
     <div class="jury-modal-box glass-card">
       <div class="modal-header" style="display: block; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 18px;">
         <h3 class="modal-title">First-time login: update password</h3>
@@ -1280,7 +1280,7 @@
   </div>
 
   <!-- Evaluation Modal for Judge (Master-Detail on Desktop, Stacked with Sticky Actions on Mobile) -->
-  <div id="modal-jury-evaluation" class="jury-modal hidden">
+  <div id="modal-jury-evaluation" class="jury-modal hidden" style="display: none;">
     <div class="jury-modal-box glass-card jury-eval-modal-content">
       <div class="modal-header eval-modal-header">
         <div class="eval-modal-header-info">
@@ -1348,8 +1348,8 @@
   </div>
 
   <!-- Modal: Confirm Final Evaluation Submission -->
-  <div id="modal-eval-confirm" class="jury-modal hidden">
-    <div class="jury-modal-box glass-card eval-confirm-box">
+  <div id="modal-eval-confirm" class="jury-modal hidden" style="display: none;" onclick="if(event.target===this)closeEvalConfirmModal()">
+    <div class="jury-modal-box glass-card eval-confirm-box" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div class="confirm-icon-wrap" style="display: flex; align-items: center; gap: 10px;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -1373,8 +1373,8 @@
   </div>
 
   <!-- Evaluation Detail Modal for Jury Admin -->
-  <div id="modal-jury-admin-eval-detail" class="jury-modal hidden">
-    <div class="jury-modal-box glass-card">
+  <div id="modal-jury-admin-eval-detail" class="jury-modal hidden" style="display: none;" onclick="if(event.target===this)closeAdminEvalModal()">
+    <div class="jury-modal-box glass-card" onclick="event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title" id="admin-eval-modal-title">Evaluation Details</h3>
         <button type="button" class="modal-close-btn" onclick="closeAdminEvalModal()" aria-label="Close">✕</button>
@@ -1386,8 +1386,8 @@
   </div>
 
   <!-- Modal 1: Create Draft Modal -->
-  <div id="modal-alloc-create-draft" class="jury-modal hidden">
-    <div class="jury-modal-box glass-card alloc-modal-box">
+  <div id="modal-alloc-create-draft" class="jury-modal hidden" style="display: none;" onclick="if(event.target===this)closeCreateDraftModal()">
+    <div class="jury-modal-box glass-card alloc-modal-box" onclick="event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">Create Draft Revision</h3>
         <button type="button" class="modal-close-btn" onclick="closeCreateDraftModal()" aria-label="Close">✕</button>
@@ -1413,8 +1413,8 @@
   </div>
 
   <!-- Modal 2: Pre-Publish Validation & Confirmation Modal -->
-  <div id="modal-alloc-publish" class="jury-modal hidden">
-    <div class="jury-modal-box glass-card alloc-publish-modal-box">
+  <div id="modal-alloc-publish" class="jury-modal hidden" style="display: none;" onclick="if(event.target===this)closePublishModal()">
+    <div class="jury-modal-box glass-card alloc-publish-modal-box" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h3 class="modal-title">Pre-Publish Validation & Confirmation</h3>
@@ -1442,8 +1442,8 @@
   </div>
 
   <!-- Modal 3: Revision History Modal -->
-  <div id="modal-alloc-history" class="jury-modal hidden">
-    <div class="jury-modal-box glass-card alloc-history-modal-box">
+  <div id="modal-alloc-history" class="jury-modal hidden" style="display: none;" onclick="if(event.target===this)closeRevisionHistoryModal()">
+    <div class="jury-modal-box glass-card alloc-history-modal-box" onclick="event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">Allocation Revision History</h3>
         <button type="button" class="modal-close-btn" onclick="closeRevisionHistoryModal()" aria-label="Close">✕</button>
@@ -1490,6 +1490,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261115_v7"></script>
+  <script src="/app.js?v=20261113_fix_modal"></script>
 </body>
 </html>

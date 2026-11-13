@@ -2114,8 +2114,16 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
+  if (e.key === 'Escape' || e.keyCode === 27) {
     closeDropdowns();
+    if (typeof closeRevisionHistoryModal === 'function') closeRevisionHistoryModal();
+    if (typeof closeCreateDraftModal === 'function') closeCreateDraftModal();
+    if (typeof closePublishModal === 'function') closePublishModal();
+    if (typeof closeAdminEvalModal === 'function') closeAdminEvalModal();
+    if (typeof closeEvaluationModal === 'function') closeEvaluationModal();
+    if (typeof closeEvalConfirmModal === 'function') closeEvalConfirmModal();
+    if (typeof closeJudgePasswordModal === 'function') closeJudgePasswordModal();
+    if (typeof closeMapModal === 'function') closeMapModal();
   }
 });
 
@@ -2569,6 +2577,7 @@ async function openAdminEvalDetail(evalId) {
 
   body.innerHTML = '<div class="qr-loading">Loading breakdown...</div>';
   modal.classList.remove('hidden');
+  modal.style.display = 'flex';
 
   try {
     const res = await fetch(`/api/jury-admin/evaluations/${evalId}`, {
@@ -2622,7 +2631,10 @@ async function openAdminEvalDetail(evalId) {
 
 function closeAdminEvalModal() {
   const modal = document.getElementById('modal-jury-admin-eval-detail');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2738,12 +2750,18 @@ async function refreshJudgeStatus() {
 
 function openJudgePasswordModal() {
   const modal = document.getElementById('modal-jury-password');
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
 }
 
 function closeJudgePasswordModal() {
   const modal = document.getElementById('modal-jury-password');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 async function handleJudgeChangePassword(e) {
@@ -3208,7 +3226,11 @@ async function openEvaluationModal(teamId) {
   const criteriaBox = document.getElementById('eval-criteria-container');
   criteriaBox.innerHTML = '<div class="qr-loading">Loading scoring criteria...</div>';
   document.getElementById('eval-error').classList.add('hidden');
-  document.getElementById('modal-jury-evaluation').classList.remove('hidden');
+  const evalModal = document.getElementById('modal-jury-evaluation');
+  if (evalModal) {
+    evalModal.classList.remove('hidden');
+    evalModal.style.display = 'flex';
+  }
 
   try {
     // 1. Fetch Criteria
@@ -3338,7 +3360,10 @@ function updateTotalScoreDisplay() {
 
 function closeEvaluationModal() {
   const modal = document.getElementById('modal-jury-evaluation');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
   currentEvalTeamId = null;
   currentEvalExisting = null;
 }
@@ -3398,6 +3423,7 @@ function submitEvaluationFinal() {
   const confirmModal = document.getElementById('modal-eval-confirm');
   if (confirmModal) {
     confirmModal.classList.remove('hidden');
+    confirmModal.style.display = 'flex';
   } else if (!confirm('Are you sure you want to final-submit this evaluation? Once submitted, your scores and feedback will be locked and cannot be edited.')) {
     return;
   } else {
@@ -3407,7 +3433,10 @@ function submitEvaluationFinal() {
 
 function closeEvalConfirmModal() {
   const confirmModal = document.getElementById('modal-eval-confirm');
-  if (confirmModal) confirmModal.classList.add('hidden');
+  if (confirmModal) {
+    confirmModal.classList.add('hidden');
+    confirmModal.style.display = 'none';
+  }
 }
 
 async function executeFinalEvaluationSubmit() {
@@ -4019,12 +4048,18 @@ function handleCreateDraftModal() {
     errBox.textContent = '';
     errBox.classList.add('hidden');
   }
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
 }
 
 function closeCreateDraftModal() {
   const modal = document.getElementById('modal-alloc-create-draft');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 async function submitCreateDraft() {
@@ -4236,7 +4271,10 @@ async function handleValidateAndOpenPublishModal() {
   }
 
   body.innerHTML = '<div class="text-center loading-cell" style="padding: 30px;">Validating draft revision...</div>';
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
 
   try {
     const res = await fetch(`/api/admin/allocations/draft/${allocState.draftRevision.id}/validate`, {
@@ -4328,7 +4366,10 @@ async function handleValidateAndOpenPublishModal() {
 
 function closePublishModal() {
   const modal = document.getElementById('modal-alloc-publish');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 function togglePublishConfirmBtn() {
@@ -4389,7 +4430,10 @@ async function handleOpenRevisionHistory() {
   const modal = document.getElementById('modal-alloc-history');
   const tbody = document.getElementById('alloc-history-tbody');
 
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
 
   if (tbody) {
     tbody.innerHTML = `
@@ -4526,7 +4570,10 @@ async function handleOpenRevisionHistory() {
 
 function closeRevisionHistoryModal() {
   const modal = document.getElementById('modal-alloc-history');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 // ─── Attach Allocation handlers to global window scope ───
