@@ -19,7 +19,7 @@ const DEFAULT_THEME_VENUES = {
 
 async function generateVenueExcel(pool, outputPath) {
   const [rows] = await pool.execute(
-    `SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, t.project_title, t.category, t.members, t.mentor_name, t.is_present, t.check_in_time, t.marked_by, t.qr_verification_token, t.panel_no, COALESCE(t.venue, v.venue) AS venue
+    `SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.email, t.college_name, t.project_title, t.category, t.members, t.mentor_name, t.is_present, t.check_in_time, t.marked_by, t.qr_verification_token, t.panel_no, COALESCE(t.venue, v.venue) AS venue
      FROM teams t
      LEFT JOIN theme_venues v ON v.theme = t.category
      ORDER BY t.panel_no ASC, t.category ASC, t.team_code ASC`

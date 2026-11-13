@@ -4,7 +4,7 @@ const { DEFAULT_THEME_VENUES } = require('./venue-export');
 
 async function generateThemeExcel(pool, outputPath, filterTheme = null) {
   let query = `
-    SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.college_name, 
+    SELECT t.team_code, t.team_name, t.leader_name, t.mobile_no, t.email, t.college_name, 
            t.project_title, t.category, t.members, t.mentor_name, t.is_present, 
            t.check_in_time, t.marked_by, t.qr_verification_token, t.panel_no,
            COALESCE(t.venue, v.venue) AS venue
