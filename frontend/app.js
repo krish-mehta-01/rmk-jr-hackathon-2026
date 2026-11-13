@@ -600,13 +600,15 @@ function switchAdminSection(secName) {
   const alinkTable = document.getElementById('alink-table');
   const alinkThemes = document.getElementById('alink-themes');
   const alinkQR = document.getElementById('alink-qr');
+  const alinkAllocations = document.getElementById('alink-allocations');
 
   const secTable = document.getElementById('admin-sec-table');
   const secThemes = document.getElementById('admin-sec-themes');
   const secQR = document.getElementById('admin-sec-qr');
+  const secAllocations = document.getElementById('admin-sec-allocations');
 
-  [alinkTable, alinkThemes, alinkQR].forEach(btn => btn && btn.classList.remove('active'));
-  [secTable, secThemes, secQR].forEach(pane => {
+  [alinkTable, alinkThemes, alinkQR, alinkAllocations].forEach(btn => btn && btn.classList.remove('active'));
+  [secTable, secThemes, secQR, secAllocations].forEach(pane => {
     if (pane) {
       pane.classList.add('hidden');
       pane.classList.remove('active');
@@ -621,10 +623,19 @@ function switchAdminSection(secName) {
     }
     loadTeamsTable();
   } else if (secName === 'themes') {
-    alinkThemes.classList.add('active');
-    secThemes.classList.remove('hidden');
-    secThemes.classList.add('active');
+    if (alinkThemes) alinkThemes.classList.add('active');
+    if (secThemes) {
+      secThemes.classList.remove('hidden');
+      secThemes.classList.add('active');
+    }
     loadThemes();
+  } else if (secName === 'allocations') {
+    if (alinkAllocations) alinkAllocations.classList.add('active');
+    if (secAllocations) {
+      secAllocations.classList.remove('hidden');
+      secAllocations.classList.add('active');
+    }
+    loadAdminAllocations();
   } else if (secName === 'qr') {
     if (alinkQR) alinkQR.classList.add('active');
     if (secQR) {
@@ -2236,13 +2247,13 @@ function renderJuryAdminEvaluations(evals) {
   }
 
   tbody.innerHTML = evals.map(item => {
-    const inScore = item.internal_eval ? `${item.internal_eval.score} / 100` : '<span class="text-muted">Pending</span>';
-    const exScore = item.external_eval ? `${item.external_eval.score} / 100` : '<span class="text-muted">Pending</span>';
+    const inScore = item.internal_eval ? `${item.internal_eval.score} / 50` : '<span class="text-muted">Pending</span>';
+    const exScore = item.external_eval ? `${item.external_eval.score} / 50` : '<span class="text-muted">Pending</span>';
     
     // Combined score is ONLY shown when both are submitted; never coerced to zero
     let combinedHtml = '<span class="status-pill-badge pill-absent">Pending</span>';
     if (item.is_complete && item.combined_score !== null) {
-      combinedHtml = `<span class="score-summary-val" style="font-size:16px;">${item.combined_score} / 200</span>`;
+      combinedHtml = `<span class="score-summary-val" style="font-size:16px;">${item.combined_score} / 100</span>`;
     }
 
     let statusBadge = '<span class="status-pill-badge pill-absent">Pending</span>';
@@ -2307,7 +2318,7 @@ async function openAdminEvalDetail(evalId) {
         <p style="font-size:13px; color:var(--text-muted);">${escapeHtml(ev.project_title || '—')}</p>
         <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
           <span>Judge: <strong>${escapeHtml(ev.judge_name || ev.judge_username)}</strong></span>
-          <span class="score-summary-val" style="font-size:20px;">${ev.total_score} / 100</span>
+          <span class="score-summary-val" style="font-size:20px;">${ev.total_score} / 50</span>
         </div>
       </div>
 
@@ -2656,6 +2667,9 @@ async function submitJudgeRegistration() {
 // JUDGE DASHBOARD & EVALUATION EXECUTION
 // ─────────────────────────────────────────────────────────────
 
+let judgeActiveFilter = 'all';
+let judgeSearchQuery = '';
+
 async function initJudgeDashboard() {
   showView('view-jury-dashboard');
 
@@ -2676,6 +2690,9 @@ async function initJudgeDashboard() {
     document.getElementById('jdash-badge-panel').textContent = `Panel ${me.panel_code}`;
     document.getElementById('jdash-badge-type').textContent = typeLabel;
     document.getElementById('jdash-badge-type').className = `status-pill-badge ${isInternal ? 'pill-blue' : 'pill-purple'}`;
+
+    const venueTextEl = document.getElementById('jdash-venue-text');
+    if (venueTextEl) venueTextEl.textContent = me.panel_venue || 'Venue Pending';
 
     if (me.profile) {
       document.getElementById('jdash-name').textContent = me.profile.full_name || me.username;
@@ -2704,6 +2721,11 @@ async function loadJudgeProjects() {
     const data = await res.json();
     currentJudgeProjects = data.projects || [];
 
+    if (data.panel && data.panel.venue) {
+      const venueTextEl = document.getElementById('jdash-venue-text');
+      if (venueTextEl) venueTextEl.textContent = data.panel.venue;
+    }
+
     const total = currentJudgeProjects.length;
     const completed = currentJudgeProjects.filter(p => p.evaluation && p.evaluation.status === 'SUBMITTED').length;
     const pending = total - completed;
@@ -2713,6 +2735,18 @@ async function loadJudgeProjects() {
     document.getElementById('jdash-stat-completed').textContent = completed;
     document.getElementById('jdash-stat-pending').textContent = pending;
     document.getElementById('jdash-stat-progress').textContent = `${progress}%`;
+
+    const progBar = document.getElementById('jdash-progress-bar');
+    if (progBar) progBar.style.width = `${progress}%`;
+    const progRatio = document.getElementById('jdash-progress-ratio');
+    if (progRatio) progRatio.textContent = `${completed} of ${total} evaluated (${progress}%)`;
+
+    const countAll = document.getElementById('jdash-count-all');
+    if (countAll) countAll.textContent = total;
+    const countPending = document.getElementById('jdash-count-pending');
+    if (countPending) countPending.textContent = pending;
+    const countCompleted = document.getElementById('jdash-count-completed');
+    if (countCompleted) countCompleted.textContent = completed;
 
     const emptyBox = document.getElementById('jdash-empty-state');
     const tableContainer = document.getElementById('jdash-projects-container');
@@ -2727,17 +2761,59 @@ async function loadJudgeProjects() {
     } else {
       emptyBox.classList.add('hidden');
       tableContainer.classList.remove('hidden');
-      renderJudgeProjects(currentJudgeProjects);
+      renderJudgeProjects();
     }
   } catch (err) {
     console.error('[ERROR] loadJudgeProjects:', err);
   }
 }
 
-function renderJudgeProjects(projects) {
-  const tbody = document.getElementById('jdash-projects-table-body');
-  if (!tbody) return;
+function handleJudgeProjectSearch() {
+  const input = document.getElementById('jdash-search-input');
+  judgeSearchQuery = input ? input.value.trim().toLowerCase() : '';
+  renderJudgeProjects();
+}
 
+function setJudgeProjectFilter(filterName, tabEl) {
+  judgeActiveFilter = filterName;
+  document.querySelectorAll('[data-jdash-filter]').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  renderJudgeProjects();
+}
+
+function renderJudgeProjects() {
+  const tbody = document.getElementById('jdash-projects-table-body');
+  const mobileList = document.getElementById('jdash-mobile-cards-list');
+  if (!tbody || !mobileList) return;
+
+  const query = judgeSearchQuery;
+  let projects = currentJudgeProjects || [];
+
+  // Filter by status
+  if (judgeActiveFilter === 'completed') {
+    projects = projects.filter(p => p.evaluation && p.evaluation.status === 'SUBMITTED');
+  } else if (judgeActiveFilter === 'pending') {
+    projects = projects.filter(p => !p.evaluation || p.evaluation.status !== 'SUBMITTED');
+  }
+
+  // Filter by search query
+  if (query) {
+    projects = projects.filter(p =>
+      (p.team_code && p.team_code.toLowerCase().includes(query)) ||
+      (p.team_name && p.team_name.toLowerCase().includes(query)) ||
+      (p.project_title && p.project_title.toLowerCase().includes(query)) ||
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.college_name && p.college_name.toLowerCase().includes(query))
+    );
+  }
+
+  if (projects.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center loading-cell">No projects match the current filter or search query.</td></tr>';
+    mobileList.innerHTML = '<div class="text-center loading-cell" style="padding: 24px;">No projects match the current filter or search query.</div>';
+    return;
+  }
+
+  // 1. Desktop Table View
   tbody.innerHTML = projects.map(p => {
     const isSubmitted = p.evaluation && p.evaluation.status === 'SUBMITTED';
     const isDraft = p.evaluation && p.evaluation.status === 'DRAFT';
@@ -2758,13 +2834,67 @@ function renderJudgeProjects(projects) {
         </td>
         <td data-label="Theme"><span class="status-pill-badge pill-blue">${escapeHtml(p.category || 'General')}</span></td>
         <td data-label="School">${escapeHtml(p.college_name || '—')}</td>
-        <td data-label="My Evaluation">${statusPill}</td>
+        <td data-label="Evaluation Status">${statusPill}</td>
         <td data-label="Action">
           <button type="button" class="glass-btn ${isSubmitted ? 'glass-btn-secondary' : 'glass-btn-primary'} btn-sm" onclick="openEvaluationModal(${p.team_id})">
             ${isSubmitted ? 'View Evaluation' : (isDraft ? 'Resume Evaluation' : 'Evaluate')}
           </button>
         </td>
       </tr>
+    `;
+  }).join('');
+
+  // 2. Mobile Touch Cards List (Touch target >= 44px, clean typography)
+  mobileList.innerHTML = projects.map(p => {
+    const isSubmitted = p.evaluation && p.evaluation.status === 'SUBMITTED';
+    const isDraft = p.evaluation && p.evaluation.status === 'DRAFT';
+
+    let statusPill = '<span class="status-pill-badge pill-absent">Not Evaluated</span>';
+    if (isSubmitted) {
+      statusPill = `<span class="status-pill-badge pill-present">Submitted (${p.evaluation.total_score} pts)</span>`;
+    } else if (isDraft) {
+      statusPill = `<span class="status-pill-badge pill-amber">Draft Saved (${p.evaluation.total_score} pts)</span>`;
+    }
+
+    let btnLabel = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>Evaluate Project</span>
+    `;
+    let btnClass = 'glass-btn-primary';
+
+    if (isSubmitted) {
+      btnLabel = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>View Evaluation (Locked)</span>
+      `;
+      btnClass = 'glass-btn-secondary';
+    } else if (isDraft) {
+      btnLabel = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>Resume Evaluation (Draft)</span>
+      `;
+      btnClass = 'glass-btn-primary';
+    }
+
+    return `
+      <div class="jdash-project-card">
+        <div class="jdash-card-top">
+          <span class="jdash-card-id">${escapeHtml(p.team_code)}</span>
+          ${statusPill}
+        </div>
+        <div>
+          <h4 class="jdash-card-title">${escapeHtml(p.project_title || p.team_name)}</h4>
+          <div class="jdash-card-teamname">${escapeHtml(p.team_name)}</div>
+        </div>
+        <div class="jdash-card-tags">
+          <span class="jdash-card-theme">${escapeHtml(p.category || 'General')}</span>
+          <span class="jdash-card-school" title="${escapeHtml(p.college_name || '—')}">${escapeHtml(p.college_name || '—')}</span>
+        </div>
+        ${p.members ? `<div class="jdash-card-members"><strong>Members:</strong> ${escapeHtml(p.members)}</div>` : ''}
+        <button type="button" class="glass-btn ${btnClass} jdash-card-btn" onclick="openEvaluationModal(${p.team_id})">
+          ${btnLabel}
+        </button>
+      </div>
     `;
   }).join('');
 }
@@ -2816,9 +2946,10 @@ async function openEvaluationModal(teamId) {
     submitBtn.textContent = isSubmitted ? 'Already Final Submitted' : 'Submit Final Evaluation';
     submitBtn.disabled = isSubmitted;
 
-    // Build Criteria HTML
+    // Build Criteria HTML with mobile-friendly preset pills
     criteriaBox.innerHTML = currentJudgeCriteria.map(c => {
       const savedScore = existingScoresMap.has(c.id) ? existingScoresMap.get(c.id) : 0;
+      const numScore = parseFloat(savedScore) || 0;
       return `
         <div class="eval-criterion-card" data-crit-id="${c.id}" data-max-score="${c.max_score}">
           <div class="criterion-card-head">
@@ -2832,10 +2963,20 @@ async function openEvaluationModal(teamId) {
           <p class="criterion-desc">${escapeHtml(c.description || '')}</p>
 
           <div class="criterion-input-row">
-            <input type="range" class="criterion-range-slider" min="0" max="${c.max_score}" step="0.5" value="${savedScore}" 
+            <input type="range" class="criterion-range-slider" min="0" max="${c.max_score}" step="0.5" value="${numScore}" 
                    oninput="syncCritInput(this, 'slider')" ${isSubmitted ? 'disabled' : ''} />
-            <input type="number" class="criterion-number-input" min="0" max="${c.max_score}" step="0.5" value="${savedScore}" 
+            <input type="number" class="criterion-number-input" min="0" max="${c.max_score}" step="0.5" value="${numScore}" 
                    oninput="syncCritInput(this, 'number')" ${isSubmitted ? 'disabled' : ''} />
+          </div>
+
+          <div class="criterion-score-presets">
+            <span class="presets-label">Quick:</span>
+            ${[0, 2.5, 5, 7.5, 10].map(val => `
+              <button type="button" class="score-preset-pill ${numScore === val ? 'active' : ''}" 
+                      onclick="setCritPreset(this, ${val})" ${isSubmitted ? 'disabled' : ''}>
+                ${val}
+              </button>
+            `).join('')}
           </div>
         </div>
       `;
@@ -2848,14 +2989,25 @@ async function openEvaluationModal(teamId) {
   }
 }
 
+function setCritPreset(btn, val) {
+  const card = btn.closest('.eval-criterion-card');
+  const slider = card.querySelector('.criterion-range-slider');
+  const number = card.querySelector('.criterion-number-input');
+  slider.value = val;
+  number.value = val;
+  card.querySelectorAll('.score-preset-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  updateTotalScoreDisplay();
+}
+
 function syncCritInput(elem, type) {
   const card = elem.closest('.eval-criterion-card');
   const slider = card.querySelector('.criterion-range-slider');
   const number = card.querySelector('.criterion-number-input');
-  const max = parseFloat(card.dataset.maxScore) || 20;
+  const max = parseFloat(card.dataset.maxScore) || 10;
 
-  let val = parseFloat(elem.value) || 0;
-  if (val < 0) val = 0;
+  let val = parseFloat(elem.value);
+  if (isNaN(val) || val < 0) val = 0;
   if (val > max) val = max;
 
   if (type === 'slider') {
@@ -2863,6 +3015,11 @@ function syncCritInput(elem, type) {
   } else {
     slider.value = val;
   }
+
+  // Update preset active state
+  card.querySelectorAll('.score-preset-pill').forEach(btn => {
+    btn.classList.toggle('active', parseFloat(btn.textContent.trim()) === val);
+  });
 
   updateTotalScoreDisplay();
 }
@@ -2873,12 +3030,13 @@ function updateTotalScoreDisplay() {
 
   document.querySelectorAll('.eval-criterion-card').forEach(card => {
     const num = card.querySelector('.criterion-number-input');
-    const max = parseFloat(card.dataset.maxScore) || 20;
+    const max = parseFloat(card.dataset.maxScore) || 10;
     total += parseFloat(num.value) || 0;
     maxPossible += max;
   });
 
-  document.getElementById('eval-modal-total-score').textContent = `${total} / ${maxPossible}`;
+  const formattedTotal = Number(total.toFixed(2));
+  document.getElementById('eval-modal-total-score').textContent = `${formattedTotal} / ${maxPossible || 50}`;
 }
 
 function closeEvaluationModal() {
@@ -2939,12 +3097,20 @@ async function submitEvaluationFinal() {
   const errBox = document.getElementById('eval-error');
   errBox.classList.add('hidden');
 
+  // Enforce mandatory written remarks before submission
+  const remarks = (document.getElementById('eval-remarks').value || '').trim();
+  if (!remarks) {
+    errBox.textContent = 'Written evaluation remarks and feedback are mandatory for final submission.';
+    errBox.classList.remove('hidden');
+    document.getElementById('eval-remarks').focus();
+    return;
+  }
+
   if (!confirm('Are you sure you want to final-submit this evaluation? Once submitted, your scores and feedback will be locked and cannot be edited.')) {
     return;
   }
 
   const scores = collectEvaluationScores();
-  const remarks = document.getElementById('eval-remarks').value;
 
   try {
     const res = await fetch(`/api/jury/evaluations/${currentEvalTeamId}/submit`, {
@@ -2993,7 +3159,791 @@ window.editJudgeRegistration = editJudgeRegistration;
 window.submitJudgeRegistration = submitJudgeRegistration;
 window.loadJudgeProjects = loadJudgeProjects;
 window.openEvaluationModal = openEvaluationModal;
+window.setCritPreset = setCritPreset;
+window.syncCritInput = syncCritInput;
 window.closeEvaluationModal = closeEvaluationModal;
 window.syncCritInput = syncCritInput;
 window.saveEvaluationDraft = saveEvaluationDraft;
 window.submitEvaluationFinal = submitEvaluationFinal;
+
+
+// ════════════════════════════════════════════════════════════════
+//  ADMIN PANEL ALLOCATION MANAGEMENT (Milestone 2)
+// ════════════════════════════════════════════════════════════════
+
+let allocState = {
+  activeRevision: null,
+  draftRevision: null,
+  currentRevision: null,
+  panels: [],
+  assigned: [],
+  unassigned: [],
+  activeFilter: 'all',
+  panelFilter: 'all',
+  searchQuery: ''
+};
+
+async function loadAdminAllocations() {
+  if (!adminToken) return;
+
+  try {
+    const sumRes = await fetch('/api/admin/allocations/summary', {
+      headers: { Authorization: 'Bearer ' + adminToken }
+    });
+    if (sessionExpired(sumRes)) return;
+    if (!sumRes.ok) {
+      showToast('Failed to load allocation summary', 'error');
+      return;
+    }
+
+    const sumData = await sumRes.json();
+    allocState.activeRevision = sumData.active_revision;
+    allocState.draftRevision = sumData.draft_revision;
+
+    // View draft if one is in progress, otherwise view active published revision
+    const targetRevId = allocState.draftRevision
+      ? allocState.draftRevision.id
+      : (allocState.activeRevision ? allocState.activeRevision.id : null);
+
+    if (!targetRevId) {
+      showToast('No allocation revisions found', 'error');
+      return;
+    }
+
+    const detRes = await fetch('/api/admin/allocations/revisions/' + targetRevId, {
+      headers: { Authorization: 'Bearer ' + adminToken }
+    });
+    if (sessionExpired(detRes)) return;
+    if (!detRes.ok) {
+      showToast('Failed to load allocation details', 'error');
+      return;
+    }
+
+    const detData = await detRes.json();
+    allocState.currentRevision = detData.revision;
+    allocState.panels = detData.panels || [];
+    allocState.assigned = detData.assigned || [];
+    allocState.unassigned = detData.unassigned || [];
+
+    updateAllocBanner();
+    updateAllocStats(detData.stats);
+    populateAllocPanelFilter();
+    renderAllocationWorkspace();
+
+  } catch (err) {
+    console.error('[ERROR] loadAdminAllocations:', err);
+    showToast('Network error loading allocations', 'error');
+  }
+}
+
+function updateAllocBanner() {
+  const activeRevTitle = document.getElementById('alloc-active-rev-title');
+  const activeRevMeta = document.getElementById('alloc-active-rev-meta');
+  const btnCreateDraft = document.getElementById('btn-create-draft');
+  const draftAlert = document.getElementById('alloc-draft-alert');
+  const draftTitle = document.getElementById('alloc-draft-title');
+  const draftMeta = document.getElementById('alloc-draft-meta');
+
+  if (allocState.activeRevision) {
+    const act = allocState.activeRevision;
+    const pubDate = act.published_at
+      ? new Date(act.published_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : 'Initial release';
+    activeRevTitle.textContent = `Active Allocation: Revision #${act.revision_number} (${act.status})`;
+    activeRevMeta.textContent = `Published on ${pubDate} • ${allocState.assigned.length} teams assigned`;
+  } else {
+    activeRevTitle.textContent = 'Active Allocation: None Published';
+    activeRevMeta.textContent = 'Create a revision and publish it to assign teams to panels.';
+  }
+
+  if (allocState.draftRevision) {
+    const draft = allocState.draftRevision;
+    const createDate = draft.created_at
+      ? new Date(draft.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+      : '';
+    draftTitle.textContent = `Draft Revision #${draft.revision_number} in Progress`;
+    draftMeta.textContent = `— Created by ${draft.created_by || 'admin'} on ${createDate} (Isolated from published allocations)`;
+    draftAlert.classList.remove('hidden');
+    if (btnCreateDraft) btnCreateDraft.classList.add('hidden');
+  } else {
+    draftAlert.classList.add('hidden');
+    if (btnCreateDraft) btnCreateDraft.classList.remove('hidden');
+  }
+}
+
+function updateAllocStats(stats) {
+  if (!stats) return;
+
+  const totalEl = document.getElementById('stat-alloc-total');
+  const assignedEl = document.getElementById('stat-alloc-assigned');
+  const unassignedEl = document.getElementById('stat-alloc-unassigned');
+  const pillUnassigned = document.getElementById('pill-unassigned-count');
+  const panelsEl = document.getElementById('stat-alloc-panels');
+  const unassignedCardStat = document.getElementById('card-stat-unassigned');
+
+  if (totalEl) totalEl.textContent = stats.total_teams;
+  if (assignedEl) assignedEl.textContent = stats.assigned_count;
+  if (unassignedEl) unassignedEl.textContent = stats.unassigned_count;
+  if (pillUnassigned) pillUnassigned.textContent = stats.unassigned_count;
+  if (panelsEl) panelsEl.textContent = allocState.panels.length + ' Panels';
+
+  if (unassignedCardStat) {
+    if (stats.unassigned_count > 0) unassignedCardStat.classList.add('has-unassigned');
+    else unassignedCardStat.classList.remove('has-unassigned');
+  }
+}
+
+function populateAllocPanelFilter() {
+  const select = document.getElementById('alloc-panel-filter');
+  if (!select) return;
+
+  const currentVal = select.value || 'all';
+  select.innerHTML = '<option value="all">All Panels (' + allocState.panels.length + ')</option>';
+  allocState.panels.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.panel_code} — ${p.panel_name} (${p.count || (p.teams ? p.teams.length : 0)})`;
+    select.appendChild(opt);
+  });
+  select.value = currentVal;
+}
+
+function renderAllocationWorkspace() {
+  const query = allocState.searchQuery.toLowerCase().trim();
+  const isDraft = Boolean(allocState.draftRevision);
+
+  // 1. Render Unassigned Teams Pool
+  const unassignedCard = document.getElementById('alloc-unassigned-card');
+  const unassignedGrid = document.getElementById('alloc-unassigned-grid');
+  const unassignedHeaderCount = document.getElementById('unassigned-header-count');
+
+  let filteredUnassigned = allocState.unassigned;
+  if (query) {
+    filteredUnassigned = allocState.unassigned.filter(t =>
+      (t.team_code && t.team_code.toLowerCase().includes(query)) ||
+      (t.team_name && t.team_name.toLowerCase().includes(query)) ||
+      (t.theme && t.theme.toLowerCase().includes(query)) ||
+      (t.leader_name && t.leader_name.toLowerCase().includes(query)) ||
+      (t.college_name && t.college_name.toLowerCase().includes(query))
+    );
+  }
+
+  if (allocState.activeFilter === 'assigned') {
+    unassignedCard.classList.add('hidden');
+  } else if (allocState.unassigned.length > 0) {
+    unassignedCard.classList.remove('hidden');
+    unassignedHeaderCount.textContent = allocState.unassigned.length + ' team(s)';
+
+    if (filteredUnassigned.length === 0) {
+      unassignedGrid.innerHTML = '<div class="text-muted" style="grid-column: 1 / -1; padding: 12px;">No unassigned teams match the search criteria.</div>';
+    } else {
+      unassignedGrid.innerHTML = filteredUnassigned.map(t => {
+        const teamId = Number(t.team_id || t.id);
+        const panelOptions = allocState.panels.map(p =>
+          `<option value="${p.id}">${escapeHtml(p.panel_code)}: ${escapeHtml(p.panel_name)}</option>`
+        ).join('');
+
+        return `
+          <div class="unassigned-team-card">
+            <div class="unassigned-team-top">
+              <span class="alloc-team-id-pill">${escapeHtml(t.team_code || '')}</span>
+              <span class="alloc-theme-tag" title="${escapeHtml(t.theme || '')}">${escapeHtml(t.theme || '')}</span>
+            </div>
+            <div class="unassigned-team-title">${escapeHtml(t.team_name || '—')}</div>
+            <div class="unassigned-team-meta">
+              <span>Leader: ${escapeHtml(t.leader_name || '—')}</span> • <span>${escapeHtml(t.college_name || '—')}</span>
+            </div>
+            <div class="unassigned-team-actions">
+              ${isDraft
+                ? `<select class="alloc-quick-assign-select" onchange="handleAssignTeam(this, ${teamId})">
+                     <option value="">Assign to Panel...</option>
+                     ${panelOptions}
+                   </select>`
+                : `<span class="unassigned-hint-text" style="font-size: 11.5px;">Create a draft revision to assign</span>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  } else {
+    // 0 unassigned teams
+    if (allocState.activeFilter === 'unassigned') {
+      unassignedCard.classList.remove('hidden');
+      unassignedHeaderCount.textContent = '0 teams';
+      unassignedGrid.innerHTML = '<div class="text-muted" style="grid-column: 1 / -1; padding: 16px;">All teams are currently assigned to panels.</div>';
+    } else {
+      unassignedCard.classList.add('hidden');
+    }
+  }
+
+  // 2. Render Panels Grid
+  const panelsGrid = document.getElementById('alloc-panels-grid');
+  if (allocState.activeFilter === 'unassigned') {
+    panelsGrid.parentElement.classList.add('hidden');
+    return;
+  }
+  panelsGrid.parentElement.classList.remove('hidden');
+
+  let displayPanels = allocState.panels;
+  if (allocState.panelFilter !== 'all') {
+    const pid = Number(allocState.panelFilter);
+    displayPanels = allocState.panels.filter(p => p.id === pid);
+  }
+
+  if (displayPanels.length === 0) {
+    panelsGrid.innerHTML = '<div class="text-center loading-cell" style="grid-column: 1 / -1;">No panels match the selected filter.</div>';
+    return;
+  }
+
+  panelsGrid.innerHTML = displayPanels.map(p => {
+    let teams = p.teams || [];
+    if (query) {
+      teams = teams.filter(t =>
+        (t.team_code && t.team_code.toLowerCase().includes(query)) ||
+        (t.team_name && t.team_name.toLowerCase().includes(query)) ||
+        (t.theme && t.theme.toLowerCase().includes(query)) ||
+        (t.leader_name && t.leader_name.toLowerCase().includes(query)) ||
+        (t.college_name && t.college_name.toLowerCase().includes(query))
+      );
+    }
+
+    const count = (p.teams || []).length;
+    let badgeClass = 'count-badge-optimal';
+    if (count === 0) badgeClass = 'count-badge-empty';
+    else if (count < 12) badgeClass = 'count-badge-low';
+
+    const panelOptions = allocState.panels.filter(other => other.id !== p.id).map(other =>
+      `<option value="${other.id}">${escapeHtml(other.panel_code)} (${escapeHtml(other.panel_name)})</option>`
+    ).join('');
+
+    const teamsHtml = teams.length === 0
+      ? `<div class="alloc-panel-empty-text">${query ? 'No matching teams in this panel' : 'No teams assigned yet'}</div>`
+      : teams.map(t => {
+          const teamId = Number(t.team_id || t.id);
+          return `
+            <div class="alloc-team-item">
+              <div class="alloc-team-header">
+                <span class="alloc-team-id-pill">${escapeHtml(t.team_code || '')}</span>
+                <span class="alloc-theme-tag" title="${escapeHtml(t.theme || '')}">${escapeHtml(t.theme || '')}</span>
+              </div>
+              <div class="alloc-team-title">${escapeHtml(t.team_name || '—')}</div>
+              <div class="alloc-team-sub">
+                <span>Leader: ${escapeHtml(t.leader_name || '—')}</span>
+              </div>
+              ${isDraft ? `
+                <div class="alloc-team-controls">
+                  <select class="alloc-move-select" onchange="handleMoveTeam(this, ${teamId})" title="Move team to another panel">
+                    <option value="">Move to...</option>
+                    ${panelOptions}
+                  </select>
+                  <button type="button" class="alloc-remove-btn" onclick="handleRemoveTeam(${teamId})" title="Unassign team (move to unassigned pool)" aria-label="Remove assignment">
+                    ✕
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+
+    return `
+      <div class="alloc-panel-card" id="alloc-panel-${p.id}">
+        <div class="alloc-panel-header">
+          <div class="alloc-panel-title-group">
+            <div class="alloc-panel-code-row">
+              <span class="alloc-panel-code-badge">${escapeHtml(p.panel_code)}</span>
+              <h4 class="alloc-panel-name">${escapeHtml(p.panel_name)}</h4>
+            </div>
+            <div class="alloc-panel-venue-pill" title="${escapeHtml(p.venue || 'No venue configured')}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>${escapeHtml(p.venue || 'Venue pending')}</span>
+            </div>
+          </div>
+          <span class="alloc-panel-count-badge ${badgeClass}">${count} Teams</span>
+        </div>
+        <div class="alloc-panel-teams-list">
+          ${teamsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function handleAllocFilterSearch() {
+  const input = document.getElementById('alloc-search-input');
+  allocState.searchQuery = input ? input.value : '';
+  renderAllocationWorkspace();
+}
+
+function setAllocFilter(filterName, tabEl) {
+  allocState.activeFilter = filterName;
+  document.querySelectorAll('[data-alloc-filter]').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  renderAllocationWorkspace();
+}
+
+function handleAllocPanelFilterChange(val) {
+  allocState.panelFilter = val;
+  renderAllocationWorkspace();
+}
+
+// ─── Draft Management Actions ───
+
+function handleCreateDraftModal() {
+  const modal = document.getElementById('modal-alloc-create-draft');
+  const notesInput = document.getElementById('alloc-draft-notes');
+  const errBox = document.getElementById('alloc-create-draft-error');
+
+  if (notesInput) notesInput.value = '';
+  if (errBox) {
+    errBox.textContent = '';
+    errBox.classList.add('hidden');
+  }
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeCreateDraftModal() {
+  const modal = document.getElementById('modal-alloc-create-draft');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function submitCreateDraft() {
+  const btn = document.getElementById('btn-submit-create-draft');
+  const errBox = document.getElementById('alloc-create-draft-error');
+  const notes = (document.getElementById('alloc-draft-notes')?.value || '').trim();
+
+  try {
+    if (btn) btn.disabled = true;
+    const res = await fetch('/api/admin/allocations/draft', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({ notes })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      if (errBox) {
+        errBox.textContent = data.error || 'Failed to create draft revision';
+        errBox.classList.remove('hidden');
+      }
+      return;
+    }
+
+    closeCreateDraftModal();
+    showToast(`Draft Revision #${data.draft.revision_number} started successfully!`, 'info');
+    await loadAdminAllocations();
+
+  } catch (err) {
+    console.error('[ERROR] submitCreateDraft:', err);
+    if (errBox) {
+      errBox.textContent = 'Server connection error';
+      errBox.classList.remove('hidden');
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleAssignTeam(selectEl, teamId) {
+  const panelId = Number(selectEl.value);
+  if (!panelId) return;
+
+  if (!allocState.draftRevision) {
+    showToast('Please create a draft revision first to make changes.', 'error');
+    selectEl.value = '';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/allocations/draft/assign', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({
+        draft_id: allocState.draftRevision.id,
+        team_id: teamId,
+        panel_id: panelId
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Failed to assign team', 'error');
+      return;
+    }
+
+    showToast('Team assigned to panel successfully', 'info');
+    await loadAdminAllocations();
+
+  } catch (err) {
+    console.error('[ERROR] handleAssignTeam:', err);
+    showToast('Failed to assign team', 'error');
+  }
+}
+
+async function handleMoveTeam(selectEl, teamId) {
+  const panelId = Number(selectEl.value);
+  if (!panelId) return;
+
+  if (!allocState.draftRevision) {
+    showToast('Please create a draft revision first to make changes.', 'error');
+    selectEl.value = '';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/allocations/draft/assign', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({
+        draft_id: allocState.draftRevision.id,
+        team_id: teamId,
+        panel_id: panelId
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Failed to move team', 'error');
+      return;
+    }
+
+    showToast('Team moved to new panel successfully', 'info');
+    await loadAdminAllocations();
+
+  } catch (err) {
+    console.error('[ERROR] handleMoveTeam:', err);
+    showToast('Failed to move team', 'error');
+  }
+}
+
+async function handleRemoveTeam(teamId) {
+  if (!allocState.draftRevision) {
+    showToast('Please create a draft revision first to make changes.', 'error');
+    return;
+  }
+
+  if (!confirm('Remove this team from its panel? The team will move to the unassigned pool.')) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/allocations/draft/remove', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({
+        draft_id: allocState.draftRevision.id,
+        team_id: teamId
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Failed to remove team', 'error');
+      return;
+    }
+
+    showToast('Team unassigned and moved to pool', 'info');
+    await loadAdminAllocations();
+
+  } catch (err) {
+    console.error('[ERROR] handleRemoveTeam:', err);
+    showToast('Failed to remove team', 'error');
+  }
+}
+
+async function handleDiscardDraft() {
+  if (!allocState.draftRevision) return;
+
+  const revNum = allocState.draftRevision.revision_number;
+  if (!confirm(`Are you sure you want to discard Draft Revision #${revNum}? All uncommitted assignment changes will be discarded.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/allocations/draft/discard', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({
+        draft_id: allocState.draftRevision.id
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Failed to discard draft', 'error');
+      return;
+    }
+
+    showToast(`Draft Revision #${revNum} has been discarded.`, 'info');
+    await loadAdminAllocations();
+
+  } catch (err) {
+    console.error('[ERROR] handleDiscardDraft:', err);
+    showToast('Failed to discard draft', 'error');
+  }
+}
+
+// ─── Publish Validation & Confirmation Modal ───
+
+async function handleValidateAndOpenPublishModal() {
+  if (!allocState.draftRevision) return;
+
+  const modal = document.getElementById('modal-alloc-publish');
+  const body = document.getElementById('publish-modal-body');
+  const chkConfirm = document.getElementById('chk-alloc-confirm');
+  const btnPublish = document.getElementById('btn-confirm-publish');
+  const subtitle = document.getElementById('publish-modal-subtitle');
+
+  if (chkConfirm) chkConfirm.checked = false;
+  if (btnPublish) btnPublish.disabled = true;
+  if (subtitle) {
+    subtitle.textContent = `Review Draft Revision #${allocState.draftRevision.revision_number} before making it active for all attendees`;
+  }
+
+  body.innerHTML = '<div class="text-center loading-cell" style="padding: 30px;">Validating draft revision...</div>';
+  if (modal) modal.classList.remove('hidden');
+
+  try {
+    const res = await fetch(`/api/admin/allocations/draft/${allocState.draftRevision.id}/validate`, {
+      headers: { Authorization: 'Bearer ' + adminToken }
+    });
+    if (!res.ok) {
+      body.innerHTML = '<div class="glass-alert-error">Failed to validate draft. Please try again.</div>';
+      return;
+    }
+
+    const val = await res.json();
+
+    let warningsHtml = '';
+    if (val.warnings && val.warnings.length > 0) {
+      warningsHtml = `
+        <div class="glass-alert-error" style="background: #fffbeb; border-color: #fde68a; color: #92400e; margin-bottom: 14px;">
+          <div style="font-weight: 700; margin-bottom: 4px;">Validation Warnings:</div>
+          <ul style="padding-left: 20px; font-size: 12.5px;">
+            ${val.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    let changesHtml = '';
+    const changes = val.changes || { moved_count: 0, added_count: 0, removed_count: 0, details: [] };
+    if (changes.details && changes.details.length > 0) {
+      changesHtml = `
+        <div class="alloc-change-card">
+          <div class="alloc-change-header">
+            Summary of Changes vs Active Published Revision (${changes.details.length} total changes)
+          </div>
+          <div class="alloc-change-list">
+            ${changes.details.map(d => {
+              let tag = `<span class="alloc-change-tag tag-moved">MOVED</span>`;
+              let desc = `${escapeHtml(d.team_code)} (${escapeHtml(d.team_name)}) moved from <strong>${escapeHtml(d.from_panel)}</strong> to <strong>${escapeHtml(d.to_panel)}</strong>`;
+              if (d.type === 'added') {
+                tag = `<span class="alloc-change-tag tag-added">ASSIGNED</span>`;
+                desc = `${escapeHtml(d.team_code)} (${escapeHtml(d.team_name)}) assigned to <strong>${escapeHtml(d.to_panel)}</strong>`;
+              } else if (d.type === 'removed') {
+                tag = `<span class="alloc-change-tag tag-removed">UNASSIGNED</span>`;
+                desc = `${escapeHtml(d.team_code)} (${escapeHtml(d.team_name)}) unassigned from <strong>${escapeHtml(d.from_panel)}</strong>`;
+              }
+              return `
+                <div class="alloc-change-row">
+                  <div>${tag} <span style="margin-left: 6px;">${desc}</span></div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      changesHtml = `
+        <div class="alloc-change-card">
+          <div class="alloc-change-header">Summary of Changes vs Active Published Revision</div>
+          <div style="padding: 12px 14px; font-size: 12.5px; color: var(--text-muted);">
+            No changes detected compared to the currently active revision.
+          </div>
+        </div>
+      `;
+    }
+
+    body.innerHTML = `
+      <div class="alloc-validation-summary-grid">
+        <div class="alloc-val-stat">
+          <div class="alloc-val-stat-num">${val.stats ? val.stats.total_teams : 0}</div>
+          <div class="alloc-val-stat-lbl">Total Registered</div>
+        </div>
+        <div class="alloc-val-stat">
+          <div class="alloc-val-stat-num" style="color: #047857;">${val.stats ? val.stats.assigned_count : 0}</div>
+          <div class="alloc-val-stat-lbl">Assigned</div>
+        </div>
+        <div class="alloc-val-stat">
+          <div class="alloc-val-stat-num" style="${(val.stats && val.stats.unassigned_count > 0) ? 'color: #b91c1c;' : 'color: #64748b;'}">${val.stats ? val.stats.unassigned_count : 0}</div>
+          <div class="alloc-val-stat-lbl">Unassigned</div>
+        </div>
+      </div>
+
+      ${warningsHtml}
+      ${changesHtml}
+    `;
+
+  } catch (err) {
+    console.error('[ERROR] handleValidateAndOpenPublishModal:', err);
+    body.innerHTML = '<div class="glass-alert-error">Server connection error during validation.</div>';
+  }
+}
+
+function closePublishModal() {
+  const modal = document.getElementById('modal-alloc-publish');
+  if (modal) modal.classList.add('hidden');
+}
+
+function togglePublishConfirmBtn() {
+  const chk = document.getElementById('chk-alloc-confirm');
+  const btn = document.getElementById('btn-confirm-publish');
+  if (btn && chk) {
+    btn.disabled = !chk.checked;
+  }
+}
+
+async function submitPublishDraft() {
+  if (!allocState.draftRevision) return;
+
+  const btn = document.getElementById('btn-confirm-publish');
+  const chk = document.getElementById('chk-alloc-confirm');
+
+  if (!chk || !chk.checked) {
+    showToast('Please confirm the checkbox to publish.', 'error');
+    return;
+  }
+
+  try {
+    if (btn) btn.disabled = true;
+    const res = await fetch('/api/admin/allocations/draft/publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({
+        draft_id: allocState.draftRevision.id,
+        confirmed: true
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || 'Failed to publish allocation revision', 'error');
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    closePublishModal();
+    showToast(`Revision #${data.published_revision.revision_number} published successfully! All judges and attendee QR passes updated.`, 'info');
+    await loadAdminAllocations();
+    if (typeof loadTeamsTable === 'function') loadTeamsTable();
+
+  } catch (err) {
+    console.error('[ERROR] submitPublishDraft:', err);
+    showToast('Failed to publish allocation revision', 'error');
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ─── Revision History Modal ───
+
+async function handleOpenRevisionHistory() {
+  const modal = document.getElementById('modal-alloc-history');
+  const tbody = document.getElementById('alloc-history-tbody');
+
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center loading-cell">Loading history...</td></tr>';
+  if (modal) modal.classList.remove('hidden');
+
+  try {
+    const res = await fetch('/api/admin/allocations/revisions', {
+      headers: { Authorization: 'Bearer ' + adminToken }
+    });
+    if (!res.ok) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load history.</td></tr>';
+      return;
+    }
+
+    const data = await res.json();
+    const revisions = data.revisions || [];
+
+    if (revisions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No revisions found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = revisions.map(r => {
+      let statusPill = `<span class="status-pill-badge pill-absent">${escapeHtml(r.status)}</span>`;
+      if (r.status === 'PUBLISHED' && r.is_active) {
+        statusPill = `<span class="status-pill-badge pill-present">ACTIVE</span>`;
+      } else if (r.status === 'PUBLISHED') {
+        statusPill = `<span class="status-pill-badge" style="background: #f1f5f9; color: #475569;">ARCHIVED</span>`;
+      } else if (r.status === 'DRAFT') {
+        statusPill = `<span class="status-pill-badge" style="background: #fef3c7; color: #92400e;">DRAFT</span>`;
+      }
+
+      const dateStr = r.published_at
+        ? new Date(r.published_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : (r.created_at ? new Date(r.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
+
+      return `
+        <tr>
+          <td class="mono"><strong>Rev #${r.revision_number}</strong></td>
+          <td>${statusPill}</td>
+          <td>${dateStr}</td>
+          <td>${escapeHtml(r.published_by || r.created_by || '—')}</td>
+          <td>${r.assigned_count != null ? r.assigned_count + ' teams' : '—'}</td>
+          <td style="font-size: 12px; color: var(--text-muted);">${escapeHtml(r.notes || '—')}</td>
+        </tr>
+      `;
+    }).join('');
+
+  } catch (err) {
+    console.error('[ERROR] handleOpenRevisionHistory:', err);
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Server connection error.</td></tr>';
+  }
+}
+
+function closeRevisionHistoryModal() {
+  const modal = document.getElementById('modal-alloc-history');
+  if (modal) modal.classList.add('hidden');
+}
+
+// ─── Attach Allocation handlers to global window scope ───
+window.loadAdminAllocations = loadAdminAllocations;
+window.handleAllocFilterSearch = handleAllocFilterSearch;
+window.setAllocFilter = setAllocFilter;
+window.handleAllocPanelFilterChange = handleAllocPanelFilterChange;
+window.handleCreateDraftModal = handleCreateDraftModal;
+window.closeCreateDraftModal = closeCreateDraftModal;
+window.submitCreateDraft = submitCreateDraft;
+window.handleAssignTeam = handleAssignTeam;
+window.handleMoveTeam = handleMoveTeam;
+window.handleRemoveTeam = handleRemoveTeam;
+window.handleDiscardDraft = handleDiscardDraft;
+window.handleValidateAndOpenPublishModal = handleValidateAndOpenPublishModal;
+window.closePublishModal = closePublishModal;
+window.togglePublishConfirmBtn = togglePublishConfirmBtn;
+window.submitPublishDraft = submitPublishDraft;
+window.handleOpenRevisionHistory = handleOpenRevisionHistory;
+window.closeRevisionHistoryModal = closeRevisionHistoryModal;
+
+window.handleJudgeProjectSearch = handleJudgeProjectSearch;
+window.setJudgeProjectFilter = setJudgeProjectFilter;

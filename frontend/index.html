@@ -291,6 +291,10 @@
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   <span>Venue</span>
                 </button>
+                <button type="button" class="laptop-nav-item" id="alink-allocations" onclick="switchAdminSection('allocations')">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                  <span>Panel Allocation</span>
+                </button>
                 <button type="button" class="laptop-nav-item" id="alink-qr" onclick="switchAdminSection('qr')">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
                   <span>Hackathon Day QR</span>
@@ -521,6 +525,129 @@
               </div>
             </div>
 
+            <!-- Pane 4: Panel Allocation Management -->
+            <div id="admin-sec-allocations" class="admin-tab-pane hidden">
+              
+              <!-- Allocation Revision & Draft Status Bar -->
+              <div class="glass-card alloc-status-card" id="alloc-banner-container">
+                <div class="alloc-banner-content">
+                  <div class="alloc-banner-left">
+                    <div class="alloc-revision-tag" id="alloc-active-rev-tag">
+                      <span class="status-indicator-dot dot-live"></span>
+                      <span id="alloc-active-rev-title">Active Allocation: Revision #1 (Published)</span>
+                    </div>
+                    <p class="alloc-banner-sub" id="alloc-active-rev-meta">Published on 13 Nov 2026 • 282 teams assigned</p>
+                  </div>
+                  <div class="alloc-banner-actions" id="alloc-banner-actions">
+                    <button type="button" class="glass-btn glass-btn-primary btn-sm" id="btn-create-draft" onclick="handleCreateDraftModal()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Create Draft Revision
+                    </button>
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="handleOpenRevisionHistory()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      Revision History
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Draft Mode Active Banner (displayed only when draft exists) -->
+                <div id="alloc-draft-alert" class="alloc-draft-alert hidden">
+                  <div class="draft-alert-info">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div>
+                      <strong id="alloc-draft-title">Draft Revision #2 in Progress</strong>
+                      <span class="draft-meta-text" id="alloc-draft-meta">— Edits are isolated from published data</span>
+                    </div>
+                  </div>
+                  <div class="draft-alert-actions">
+                    <button type="button" class="glass-btn glass-btn-primary btn-sm" onclick="handleValidateAndOpenPublishModal()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      Validate & Publish
+                    </button>
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm text-danger" onclick="handleDiscardDraft()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      Discard Draft
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bento Stats Cards -->
+              <div class="laptop-stats-grid alloc-stats-grid">
+                <div class="glass-card stat-bento-card">
+                  <span class="stat-tag">REGISTERED TEAMS</span>
+                  <div class="stat-number" id="stat-alloc-total">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card stat-green">
+                  <span class="stat-tag">ASSIGNED TEAMS</span>
+                  <div class="stat-number" id="stat-alloc-assigned">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card" id="card-stat-unassigned">
+                  <span class="stat-tag">UNASSIGNED TEAMS</span>
+                  <div class="stat-number" id="stat-alloc-unassigned">0</div>
+                </div>
+
+                <div class="glass-card stat-bento-card">
+                  <span class="stat-tag">ACTIVE PANELS</span>
+                  <div class="stat-number" id="stat-alloc-panels">15</div>
+                </div>
+              </div>
+
+              <!-- Search and Filter Bar -->
+              <div class="glass-card alloc-filter-card">
+                <div class="table-action-header alloc-action-header">
+                  <div class="table-search-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="alloc-search-input" placeholder="Search by Team ID, Name, Domain, School..." oninput="handleAllocFilterSearch()" />
+                  </div>
+
+                  <div class="table-filter-pill">
+                    <button type="button" class="filter-tab active" data-alloc-filter="all" onclick="setAllocFilter('all', this)">All Teams</button>
+                    <button type="button" class="filter-tab" data-alloc-filter="assigned" onclick="setAllocFilter('assigned', this)">Assigned</button>
+                    <button type="button" class="filter-tab" data-alloc-filter="unassigned" onclick="setAllocFilter('unassigned', this)">Unassigned (<span id="pill-unassigned-count">0</span>)</button>
+                  </div>
+
+                  <div class="alloc-panel-select-wrap">
+                    <select id="alloc-panel-filter" class="glass-select" onchange="handleAllocPanelFilterChange(this.value)">
+                      <option value="all">All Panels (15)</option>
+                    </select>
+                  </div>
+
+                  <div class="table-btn-cluster">
+                    <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadAdminAllocations()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Unassigned Teams Pool Drawer / Panel -->
+              <div class="glass-card alloc-unassigned-card hidden" id="alloc-unassigned-card">
+                <div class="unassigned-card-header">
+                  <div class="unassigned-header-title">
+                    <span class="warning-badge-dot"></span>
+                    <h3>Unassigned Teams Pool</h3>
+                    <span class="unassigned-count-pill" id="unassigned-header-count">0 teams</span>
+                  </div>
+                  <span class="unassigned-hint-text">These teams are not assigned to any panel. Assign them to a panel to include them in jury evaluation.</span>
+                </div>
+                <div class="unassigned-teams-grid" id="alloc-unassigned-grid">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+
+              <!-- 15 Panels Grid -->
+              <div class="alloc-panels-container">
+                <div class="alloc-panels-grid" id="alloc-panels-grid">
+                  <div class="loading-cell text-center" style="grid-column: 1 / -1; padding: 40px;">Loading allocation panels...</div>
+                </div>
+              </div>
+
+            </div>
+
           </main>
         </div>
       </div>
@@ -700,9 +827,9 @@
                       <tr>
                         <th>Panel</th>
                         <th>Team & Project</th>
-                        <th>Internal Score</th>
-                        <th>External Score</th>
-                        <th>Final Combined Score</th>
+                        <th>Internal Score (/50)</th>
+                        <th>External Score (/50)</th>
+                        <th>Combined Score (/100)</th>
                         <th>Status</th>
                         <th>Action</th>
                       </tr>
@@ -902,7 +1029,7 @@
 
       <main class="jury-dashboard-shell">
         
-        <!-- Judge Profile Card -->
+        <!-- Judge Profile Card with Physical Venue -->
         <div class="glass-card judge-profile-card">
           <div class="judge-profile-left">
             <div class="judge-avatar-capsule" id="jdash-avatar">J</div>
@@ -910,6 +1037,10 @@
               <div class="judge-profile-badges">
                 <span class="status-pill-badge pill-present" id="jdash-badge-panel">Panel P1</span>
                 <span class="status-pill-badge pill-blue" id="jdash-badge-type">Internal Judge</span>
+                <span class="status-pill-badge pill-venue" id="jdash-badge-venue">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span id="jdash-venue-text">Venue Pending</span>
+                </span>
               </div>
               <h2 class="judge-name-title" id="jdash-name">Judge Name</h2>
               <p class="judge-title-sub" id="jdash-sub">Designation • Organization</p>
@@ -944,41 +1075,78 @@
           </div>
         </div>
 
+        <!-- Progress Bar Card -->
+        <div class="glass-card jdash-progress-card">
+          <div class="jdash-progress-label-row">
+            <span class="jdash-progress-title">Panel Evaluation Completion</span>
+            <span class="jdash-progress-ratio" id="jdash-progress-ratio">0 of 0 evaluated (0%)</span>
+          </div>
+          <div class="jdash-progress-track">
+            <div class="jdash-progress-bar" id="jdash-progress-bar" style="width: 0%;"></div>
+          </div>
+        </div>
+
         <!-- Evaluation Projects Section -->
         <div class="glass-card jury-projects-card">
-          <div class="table-action-header">
-            <h3>Assigned Projects for Evaluation</h3>
-            <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJudgeProjects()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Refresh
-            </button>
+          <div class="table-action-header jdash-action-header">
+            <div class="jdash-header-title-block">
+              <h3>Assigned Projects for Evaluation</h3>
+              <p class="jdash-header-subtitle">Only projects from the active published allocation are listed.</p>
+            </div>
+            <div class="table-btn-cluster">
+              <button type="button" class="glass-btn glass-btn-secondary btn-sm" onclick="loadJudgeProjects()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Refresh
+              </button>
+            </div>
           </div>
 
-          <!-- Empty State (Phase 1) -->
+          <!-- Search and Filter Bar -->
+          <div class="jdash-search-filter-row">
+            <div class="table-search-pill jdash-search-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="jdash-search-input" placeholder="Search by Team ID, Name, Domain, School..." oninput="handleJudgeProjectSearch()" />
+            </div>
+            <div class="table-filter-pill jdash-filter-pill">
+              <button type="button" class="filter-tab active" data-jdash-filter="all" onclick="setJudgeProjectFilter('all', this)">All (<span id="jdash-count-all">0</span>)</button>
+              <button type="button" class="filter-tab" data-jdash-filter="pending" onclick="setJudgeProjectFilter('pending', this)">Pending (<span id="jdash-count-pending">0</span>)</button>
+              <button type="button" class="filter-tab" data-jdash-filter="completed" onclick="setJudgeProjectFilter('completed', this)">Completed (<span id="jdash-count-completed">0</span>)</button>
+            </div>
+          </div>
+
+          <!-- Empty State -->
           <div id="jdash-empty-state" class="jury-empty-state">
             <div class="empty-state-icon-box">
               <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
             </div>
             <h3 class="empty-state-title">No Projects Assigned Yet</h3>
-            <p class="empty-state-desc" id="jdash-empty-msg">Project allocations for Panel P1 will be published by the hackathon coordinators. Once teams are assigned to your panel, your evaluation sheets will appear here automatically.</p>
+            <p class="empty-state-desc" id="jdash-empty-msg">Project allocations for your panel will be published by the hackathon coordinators. Once teams are assigned to your panel, your evaluation sheets will appear here automatically.</p>
           </div>
 
-          <!-- Projects Table (for when projects are assigned) -->
-          <div id="jdash-projects-container" class="table-scroll-container hidden">
-            <table class="glass-data-table">
-              <thead>
-                <tr>
-                  <th>Team ID</th>
-                  <th>Team & Project Title</th>
-                  <th>Theme</th>
-                  <th>Institution / School</th>
-                  <th>My Evaluation</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="jdash-projects-table-body">
-              </tbody>
-            </table>
+          <!-- Projects Container -->
+          <div id="jdash-projects-container" class="hidden">
+            <!-- Mobile Cards List (Visible on phones & small screens) -->
+            <div class="jdash-mobile-cards-list" id="jdash-mobile-cards-list">
+              <!-- Injected dynamically -->
+            </div>
+
+            <!-- Desktop Table View (Visible on larger screens) -->
+            <div class="table-scroll-container jdash-desktop-table-wrap">
+              <table class="glass-data-table">
+                <thead>
+                  <tr>
+                    <th>Team ID</th>
+                    <th>Team & Project Title</th>
+                    <th>Theme</th>
+                    <th>Institution / School</th>
+                    <th>Evaluation Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="jdash-projects-table-body">
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1031,7 +1199,7 @@
       <div class="eval-modal-body">
         <div class="eval-score-summary-bar">
           <span class="score-summary-label">Total Score</span>
-          <span class="score-summary-val" id="eval-modal-total-score">0 / 100</span>
+          <span class="score-summary-val" id="eval-modal-total-score">0 / 50</span>
           <span class="status-pill-badge pill-absent" id="eval-modal-status-pill">Draft</span>
         </div>
 
@@ -1040,7 +1208,7 @@
         </div>
 
         <div class="form-group eval-remarks-group">
-          <label for="eval-remarks">Written Evaluation Remarks / Feedback</label>
+          <label for="eval-remarks">Written Evaluation Remarks / Feedback <span class="required-star" style="color:var(--accent-red); font-weight:700;">*</span></label>
           <textarea id="eval-remarks" rows="4" placeholder="Enter constructive feedback, strengths, and areas of improvement..."></textarea>
         </div>
 
@@ -1070,6 +1238,94 @@
       </div>
       <div class="admin-eval-modal-body" id="admin-eval-modal-body">
         <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: Create Draft Modal -->
+  <div id="modal-alloc-create-draft" class="jury-modal hidden">
+    <div class="jury-modal-box glass-card alloc-modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Draft Revision</h3>
+        <button type="button" class="modal-close-btn" onclick="closeCreateDraftModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="alloc-modal-body">
+        <p class="alloc-modal-desc">
+          Branch a new draft revision from the currently active published allocation. Any team assignments or panel moves you make will be kept isolated until you validate and publish.
+        </p>
+        <div class="form-group">
+          <label for="alloc-draft-notes">Revision Notes / Reason (Optional)</label>
+          <input type="text" id="alloc-draft-notes" placeholder="e.g. Rebalancing Smart Automation panels after late registrations" />
+        </div>
+        <div id="alloc-create-draft-error" class="glass-alert-error hidden" role="alert"></div>
+      </div>
+      <div class="modal-footer alloc-modal-footer">
+        <button type="button" class="glass-btn glass-btn-secondary" onclick="closeCreateDraftModal()">Cancel</button>
+        <button type="button" class="glass-btn glass-btn-primary" id="btn-submit-create-draft" onclick="submitCreateDraft()">
+          <span class="btn-text">Start Draft</span>
+          <div class="btn-spinner hidden"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Pre-Publish Validation & Confirmation Modal -->
+  <div id="modal-alloc-publish" class="jury-modal hidden">
+    <div class="jury-modal-box glass-card alloc-publish-modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Pre-Publish Validation & Confirmation</h3>
+          <p class="alloc-modal-subtitle" id="publish-modal-subtitle">Review changes before publishing revision</p>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closePublishModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="alloc-modal-body" id="publish-modal-body">
+        <!-- Injected dynamically: validation status, warning banner, change summary table -->
+      </div>
+      <div class="alloc-publish-confirm-bar">
+        <label class="alloc-confirm-label">
+          <input type="checkbox" id="chk-alloc-confirm" onchange="togglePublishConfirmBtn()" />
+          <span>I confirm that I have reviewed this allocation and want to make it active for all judges, panels, and attendees.</span>
+        </label>
+      </div>
+      <div class="modal-footer alloc-modal-footer">
+        <button type="button" class="glass-btn glass-btn-secondary" onclick="closePublishModal()">Cancel</button>
+        <button type="button" class="glass-btn glass-btn-primary" id="btn-confirm-publish" onclick="submitPublishDraft()" disabled>
+          <span class="btn-text">Publish Revision</span>
+          <div class="btn-spinner hidden"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Revision History Modal -->
+  <div id="modal-alloc-history" class="jury-modal hidden">
+    <div class="jury-modal-box glass-card alloc-history-modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Allocation Revision History</h3>
+        <button type="button" class="modal-close-btn" onclick="closeRevisionHistoryModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="alloc-modal-body">
+        <div class="table-scroll-container">
+          <table class="glass-data-table alloc-history-table">
+            <thead>
+              <tr>
+                <th>Rev #</th>
+                <th>Status</th>
+                <th>Created / Published</th>
+                <th>Author</th>
+                <th>Assigned Teams</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="alloc-history-tbody">
+              <tr><td colspan="6" class="text-center loading-cell">Loading history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer alloc-modal-footer">
+        <button type="button" class="glass-btn glass-btn-secondary" onclick="closeRevisionHistoryModal()">Close</button>
       </div>
     </div>
   </div>

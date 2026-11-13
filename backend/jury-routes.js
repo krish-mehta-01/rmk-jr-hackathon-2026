@@ -72,6 +72,35 @@ function authJudge(req, res, next) {
   }
 }
 
+// Strict Server-Side Enforcement: Judge must change password and complete profile registration
+async function enforceJudgeReady(req, res, next) {
+  try {
+    const [rows] = await pool.execute('SELECT is_active, must_change_password, is_registered FROM jury_users WHERE id = ?', [req.user.id]);
+    if (rows.length === 0) return res.status(401).json({ error: 'Judge account not found' });
+    const user = rows[0];
+
+    if (!user.is_active) {
+      return res.status(403).json({ error: 'Your account has been deactivated. Please contact the administrator.' });
+    }
+    if (user.must_change_password) {
+      return res.status(403).json({
+        error: 'Please change your default password before accessing project evaluations.',
+        code: 'MUST_CHANGE_PASSWORD'
+      });
+    }
+    if (!user.is_registered) {
+      return res.status(403).json({
+        error: 'Please complete your judge registration profile before accessing project evaluations.',
+        code: 'MUST_REGISTER'
+      });
+    }
+    next();
+  } catch (err) {
+    console.error('[ERROR] enforceJudgeReady check failed:', err);
+    res.status(500).json({ error: 'Authorization check failed' });
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // 1. JURY ADMINISTRATOR ENDPOINTS
 // ─────────────────────────────────────────────────────────────
@@ -489,7 +518,8 @@ router.post('/jury/change-password', authJudge, async (req, res) => {
 router.get('/jury/me', authJudge, async (req, res) => {
   try {
     const [userRows] = await pool.execute(`
-      SELECT u.id, u.username, u.judge_type, u.must_change_password, u.is_registered, p.panel_code, p.panel_name
+      SELECT u.id, u.username, u.judge_type, u.must_change_password, u.is_registered,
+             p.id AS panel_id, p.panel_code, p.panel_name, p.venue AS panel_venue
       FROM jury_users u
       JOIN jury_panels p ON p.id = u.panel_id
       WHERE u.id = ?
@@ -507,8 +537,10 @@ router.get('/jury/me', authJudge, async (req, res) => {
     res.json({
       id: user.id,
       username: user.username,
+      panel_id: user.panel_id,
       panel_code: user.panel_code,
       panel_name: user.panel_name,
+      panel_venue: user.panel_venue || 'Venue Pending',
       judge_type: user.judge_type,
       must_change_password: Boolean(user.must_change_password),
       is_registered: Boolean(user.is_registered),
@@ -598,8 +630,18 @@ router.post('/jury/register', authJudge, async (req, res) => {
 // 3. PROJECT EVALUATION ENDPOINTS
 // ─────────────────────────────────────────────────────────────
 
+// Helper function: verifies team is assigned to this panel in active published revision
+async function verifyActivePanelAssignment(teamId, panelId) {
+  const [rows] = await pool.execute(`
+    SELECT a.id FROM panel_project_assignments a
+    JOIN allocation_revisions rev ON rev.id = a.revision_id AND rev.is_active = TRUE AND rev.status = 'PUBLISHED'
+    WHERE a.team_id = ? AND a.panel_id = ?
+  `, [teamId, panelId]);
+  return rows.length > 0;
+}
+
 // Get Active Evaluation Criteria
-router.get('/jury/criteria', authJudge, async (req, res) => {
+router.get('/jury/criteria', authJudge, enforceJudgeReady, async (req, res) => {
   try {
     const [criteria] = await pool.execute(`
       SELECT id, criterion_code, title, description, max_score, display_order
@@ -614,15 +656,21 @@ router.get('/jury/criteria', authJudge, async (req, res) => {
   }
 });
 
-// Get Assigned Projects for the Judge's Panel
-router.get('/jury/projects', authJudge, async (req, res) => {
+// Get Assigned Projects for the Judge's Panel (Active Published Allocation Only)
+router.get('/jury/projects', authJudge, enforceJudgeReady, async (req, res) => {
   try {
+    // 1. Fetch physical venue of the panel
+    const [panelRows] = await pool.execute('SELECT id, panel_code, panel_name, venue FROM jury_panels WHERE id = ?', [req.user.panel_id]);
+    const panel = panelRows[0] || {};
+
+    // 2. Fetch assignments ONLY from the active published revision
     const [assigned] = await pool.execute(`
       SELECT 
         a.id AS assignment_id, a.team_id, a.notes,
         t.team_code, t.team_name, t.project_title, t.category, t.college_name, t.members,
         e.id AS evaluation_id, e.status AS evaluation_status, e.total_score, e.submitted_at
       FROM panel_project_assignments a
+      JOIN allocation_revisions rev ON rev.id = a.revision_id AND rev.is_active = TRUE AND rev.status = 'PUBLISHED'
       JOIN teams t ON t.id = a.team_id
       LEFT JOIN project_evaluations e ON e.team_id = a.team_id AND e.judge_id = ?
       WHERE a.panel_id = ?
@@ -647,7 +695,26 @@ router.get('/jury/projects', authJudge, async (req, res) => {
       }
     }));
 
-    res.json({ projects });
+    const totalCount = projects.length;
+    const completedCount = projects.filter(p => p.evaluation.status === 'SUBMITTED').length;
+    const draftCount = projects.filter(p => p.evaluation.status === 'DRAFT').length;
+
+    res.json({
+      panel: {
+        id: panel.id,
+        panel_code: panel.panel_code,
+        panel_name: panel.panel_name,
+        venue: panel.venue || 'Venue Pending'
+      },
+      stats: {
+        total: totalCount,
+        completed: completedCount,
+        draft: draftCount,
+        pending: totalCount - completedCount,
+        progress_percent: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+      },
+      projects
+    });
   } catch (err) {
     console.error('[ERROR] Get Assigned Projects:', err);
     res.status(500).json({ error: 'Failed to load projects' });
@@ -655,9 +722,15 @@ router.get('/jury/projects', authJudge, async (req, res) => {
 });
 
 // Get Single Project Evaluation for Authenticated Judge (Strict Isolation: Only Own Evaluation)
-router.get('/jury/evaluations/:teamId', authJudge, async (req, res) => {
+router.get('/jury/evaluations/:teamId', authJudge, enforceJudgeReady, async (req, res) => {
   try {
     const teamId = parseInt(req.params.teamId, 10);
+
+    // Verify team is assigned to this panel in active published revision
+    const isAssigned = await verifyActivePanelAssignment(teamId, req.user.panel_id);
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied: This team is not assigned to your panel in the active published allocation.' });
+    }
 
     const [evalRows] = await pool.execute(`
       SELECT * FROM project_evaluations
@@ -685,10 +758,16 @@ router.get('/jury/evaluations/:teamId', authJudge, async (req, res) => {
 });
 
 // Save Evaluation as Draft
-router.post('/jury/evaluations/:teamId/draft', authJudge, async (req, res) => {
+router.post('/jury/evaluations/:teamId/draft', authJudge, enforceJudgeReady, async (req, res) => {
   try {
     const teamId = parseInt(req.params.teamId, 10);
     const { scores, remarks } = req.body || {};
+
+    // Verify team is assigned to this panel in active published revision
+    const isAssigned = await verifyActivePanelAssignment(teamId, req.user.panel_id);
+    if (!isAssigned) {
+      return res.status(403).json({ error: 'Access denied: This team is not assigned to your panel in the active published allocation.' });
+    }
 
     // Check if already SUBMITTED
     const [existing] = await pool.execute(`
@@ -700,14 +779,42 @@ router.post('/jury/evaluations/:teamId/draft', authJudge, async (req, res) => {
       return res.status(400).json({ error: 'This evaluation has already been final-submitted and cannot be edited.' });
     }
 
-    // Calculate total score from provided items
+    // Fetch criteria for score validation (max 10.00 each)
+    const [allCriteria] = await pool.execute('SELECT id, max_score FROM jury_evaluation_criteria WHERE is_active = TRUE');
+    const critMaxMap = new Map();
+    for (const c of allCriteria) {
+      critMaxMap.set(c.id, parseFloat(c.max_score));
+    }
+
+    // Validate scores
     let totalScore = 0;
+    const validatedScores = [];
     if (Array.isArray(scores)) {
       for (const s of scores) {
-        const val = parseFloat(s.score) || 0;
-        totalScore += Math.max(0, val);
+        const critId = parseInt(s.criterion_id, 10);
+        const max = critMaxMap.has(critId) ? critMaxMap.get(critId) : 10.00;
+        const val = parseFloat(s.score);
+        if (isNaN(val)) continue;
+        if (val < 0) {
+          return res.status(400).json({ error: 'Evaluation scores cannot be negative' });
+        }
+        if (val > max) {
+          return res.status(400).json({ error: `Score cannot exceed maximum of ${max} marks` });
+        }
+        totalScore += val;
+        validatedScores.push({
+          criterion_id: critId,
+          score: val,
+          comments: s.comments ? String(s.comments).trim() : ''
+        });
       }
     }
+
+    if (totalScore > 50.00) {
+      return res.status(400).json({ error: 'Total evaluation score cannot exceed 50.00 marks' });
+    }
+
+    totalScore = Number(totalScore.toFixed(2));
 
     let evalId;
     if (existing.length > 0) {
@@ -726,18 +833,12 @@ router.post('/jury/evaluations/:teamId/draft', authJudge, async (req, res) => {
     }
 
     // Upsert individual criterion scores
-    if (Array.isArray(scores)) {
-      for (const s of scores) {
-        const critId = parseInt(s.criterion_id, 10);
-        const val = Math.max(0, parseFloat(s.score) || 0);
-        const comment = s.comments ? String(s.comments).trim() : '';
-
-        await pool.execute(`
-          INSERT INTO evaluation_scores (evaluation_id, criterion_id, score, comments)
-          VALUES (?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE score = VALUES(score), comments = VALUES(comments)
-        `, [evalId, critId, val, comment]);
-      }
+    for (const s of validatedScores) {
+      await pool.execute(`
+        INSERT INTO evaluation_scores (evaluation_id, criterion_id, score, comments)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE score = VALUES(score), comments = VALUES(comments)
+      `, [evalId, s.criterion_id, s.score, s.comments]);
     }
 
     res.json({ ok: true, status: 'DRAFT', total_score: totalScore });
@@ -747,72 +848,119 @@ router.post('/jury/evaluations/:teamId/draft', authJudge, async (req, res) => {
   }
 });
 
-// Final Evaluation Submission (Locks Evaluation)
-router.post('/jury/evaluations/:teamId/submit', authJudge, async (req, res) => {
+// Final Evaluation Submission (Locks Evaluation Transactionally)
+router.post('/jury/evaluations/:teamId/submit', authJudge, enforceJudgeReady, async (req, res) => {
+  const conn = await pool.getConnection();
   try {
+    await conn.beginTransaction();
+
     const teamId = parseInt(req.params.teamId, 10);
     const { scores, remarks } = req.body || {};
 
-    const [existing] = await pool.execute(`
+    // 1. Verify team is assigned to this panel in active published revision
+    const [assignRows] = await conn.execute(`
+      SELECT a.id FROM panel_project_assignments a
+      JOIN allocation_revisions rev ON rev.id = a.revision_id AND rev.is_active = TRUE AND rev.status = 'PUBLISHED'
+      WHERE a.team_id = ? AND a.panel_id = ?
+    `, [teamId, req.user.panel_id]);
+
+    if (assignRows.length === 0) {
+      await conn.rollback();
+      return res.status(403).json({ error: 'Access denied: This team is not assigned to your panel in the active published allocation.' });
+    }
+
+    // 2. Lock existing evaluation row FOR UPDATE to prevent race conditions
+    const [existing] = await conn.execute(`
       SELECT id, status FROM project_evaluations
       WHERE team_id = ? AND panel_id = ? AND judge_id = ?
+      FOR UPDATE
     `, [teamId, req.user.panel_id, req.user.id]);
 
     if (existing.length > 0 && existing[0].status === 'SUBMITTED') {
+      await conn.rollback();
       return res.status(400).json({ error: 'This evaluation has already been submitted and is locked.' });
     }
 
-    // Verify all active criteria have been scored
-    const [allCriteria] = await pool.execute('SELECT id, max_score FROM jury_evaluation_criteria WHERE is_active = TRUE');
+    // 3. Validate mandatory written remarks / feedback
+    const cleanRemarks = String(remarks || '').trim();
+    if (!cleanRemarks) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'Written remarks and feedback are mandatory for final submission.' });
+    }
+
+    // 4. Verify all active criteria have been scored (5 criteria x 10 marks = 50 total)
+    const [allCriteria] = await conn.execute(`
+      SELECT id, criterion_code, title, max_score 
+      FROM jury_evaluation_criteria 
+      WHERE is_active = TRUE 
+      ORDER BY display_order ASC
+    `);
+
     const scoreMap = new Map();
     if (Array.isArray(scores)) {
-      for (const s of scores) scoreMap.set(parseInt(s.criterion_id, 10), { val: parseFloat(s.score), comment: s.comments });
+      for (const s of scores) {
+        scoreMap.set(parseInt(s.criterion_id, 10), {
+          val: parseFloat(s.score),
+          comment: s.comments ? String(s.comments).trim() : ''
+        });
+      }
     }
 
     let totalScore = 0;
     for (const crit of allCriteria) {
       if (!scoreMap.has(crit.id)) {
-        return res.status(400).json({ error: `Please provide a score for all evaluation criteria before final submission.` });
+        await conn.rollback();
+        return res.status(400).json({ error: `Please provide a score for ${crit.title} (${crit.criterion_code}). All criteria must be evaluated.` });
       }
       const item = scoreMap.get(crit.id);
-      if (isNaN(item.val) || item.val < 0 || item.val > parseFloat(crit.max_score)) {
-        return res.status(400).json({ error: `Score must be between 0 and ${crit.max_score}` });
+      const max = parseFloat(crit.max_score);
+      if (isNaN(item.val) || item.val < 0 || item.val > max) {
+        await conn.rollback();
+        return res.status(400).json({ error: `Score for ${crit.title} must be between 0 and ${max}` });
       }
       totalScore += item.val;
     }
 
+    if (totalScore > 50.00) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'Total evaluation score cannot exceed 50.00 marks' });
+    }
+
+    totalScore = Number(totalScore.toFixed(2));
     const now = new Date();
     let evalId;
     if (existing.length > 0) {
       evalId = existing[0].id;
-      await pool.execute(`
+      await conn.execute(`
         UPDATE project_evaluations 
         SET total_score = ?, remarks = ?, status = 'SUBMITTED', submitted_at = ?
         WHERE id = ?
-      `, [totalScore, remarks || '', now, evalId]);
+      `, [totalScore, cleanRemarks, now, evalId]);
     } else {
-      const [ins] = await pool.execute(`
+      const [ins] = await conn.execute(`
         INSERT INTO project_evaluations (team_id, panel_id, judge_id, judge_type, status, total_score, remarks, submitted_at)
         VALUES (?, ?, ?, ?, 'SUBMITTED', ?, ?, ?)
-      `, [teamId, req.user.panel_id, req.user.id, req.user.judge_type, totalScore, remarks || '', now]);
+      `, [teamId, req.user.panel_id, req.user.id, req.user.judge_type, totalScore, cleanRemarks, now]);
       evalId = ins.insertId;
     }
 
     for (const crit of allCriteria) {
       const item = scoreMap.get(crit.id);
-      await pool.execute(`
+      await conn.execute(`
         INSERT INTO evaluation_scores (evaluation_id, criterion_id, score, comments)
         VALUES (?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE score = VALUES(score), comments = VALUES(comments)
-      `, [evalId, crit.id, item.val, item.comment || '']);
+      `, [evalId, crit.id, item.val, item.comment]);
     }
 
     // Audit log
-    await pool.execute(`
+    await conn.execute(`
       INSERT INTO evaluation_audit_logs (evaluation_id, action_by_type, action_by_id, action, new_data, ip_address)
       VALUES (?, 'JUDGE', ?, 'SUBMIT_EVALUATION', ?, ?)
     `, [evalId, req.user.id, JSON.stringify({ team_id: teamId, total_score: totalScore, judge_type: req.user.judge_type }), req.ip])
       .catch(e => console.warn('[WARN] Audit log insert failed:', e.message));
+
+    await conn.commit();
 
     res.json({
       ok: true,
@@ -821,8 +969,11 @@ router.post('/jury/evaluations/:teamId/submit', authJudge, async (req, res) => {
       submitted_at: now
     });
   } catch (err) {
+    await conn.rollback();
     console.error('[ERROR] Final Evaluation Submit:', err);
     res.status(500).json({ error: 'Failed to submit evaluation' });
+  } finally {
+    conn.release();
   }
 });
 

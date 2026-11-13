@@ -193,6 +193,8 @@ async function testConnection() {
     await syncAdmin();
     const { initJurySystem } = require('./jury-db');
     await initJurySystem();
+    const { runMigrations } = require('./migrations/runner');
+    await runMigrations();
     console.log('[OK] TiDB schema verified and ready');
     return true;
   } catch (err) {

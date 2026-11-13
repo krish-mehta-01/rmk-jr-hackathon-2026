@@ -546,6 +546,10 @@ app.post('/api/admin/teams/:id/toggle-attendance', authAdmin, async (req, res) =
   }
 });
 
+// Allocation Management Routes (Revisions, Drafts, Assignments)
+const allocationRoutes = require('./allocation-routes');
+app.use('/api/admin', allocationRoutes);
+
 // Jury Management & Evaluation Routes
 const juryRoutes = require('./jury-routes');
 app.use('/api', juryRoutes);
