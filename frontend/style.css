@@ -4472,14 +4472,14 @@ h4 {
 }
 
 .alloc-publish-modal-box {
-  max-width: 680px;
-  width: 92%;
+  max-width: 760px;
+  width: 95%;
   margin: auto;
 }
 
 .alloc-history-modal-box {
-  max-width: 820px;
-  width: 94%;
+  max-width: 920px;
+  width: 95%;
   margin: auto;
 }
 
@@ -5624,22 +5624,172 @@ html.jury-theme-active body {
   margin-top: 18px !important;
 }
 
-/* ─── Password Change Modal (#modal-jury-password) ─── */
+/* ─── Password Change Modal (#modal-jury-password) & Allocation Modals ─── */
 .jury-modal-box {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 20px !important;
-  max-width: 480px !important;
-  width: 100% !important;
-  padding: 28px 32px !important;
+  max-width: 520px;
+  width: 95% !important;
+  padding: 24px 28px !important;
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12) !important;
   color: #0f172a !important;
+  box-sizing: border-box !important;
 }
 
+.jury-modal-box.alloc-history-modal-box,
+.alloc-history-modal-box {
+  max-width: 920px !important;
+  width: 95% !important;
+}
+
+.jury-modal-box.alloc-publish-modal-box,
+.alloc-publish-modal-box {
+  max-width: 760px !important;
+  width: 95% !important;
+}
+
+.jury-modal-box.alloc-modal-box,
+.alloc-modal-box {
+  max-width: 560px !important;
+  width: 95% !important;
+}
+
+.modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin-bottom: 20px !important;
+  padding-bottom: 14px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  gap: 16px !important;
+}
+
+.modal-header .modal-title,
 .jury-modal-box .modal-title {
+  margin: 0 !important;
   font-size: 18px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
+}
+
+.modal-close-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 8px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+.modal-close-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  transform: scale(1.06) !important;
+}
+
+.alloc-history-modal-box .table-scroll-container {
+  overflow-x: auto !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  margin-bottom: 16px !important;
+  scrollbar-width: thin !important;
+}
+
+.alloc-history-table {
+  width: 100% !important;
+  min-width: 720px !important;
+  border-collapse: collapse !important;
+  table-layout: auto !important;
+}
+
+.alloc-history-table th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 12px 14px !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+
+.alloc-history-table th:nth-child(1),
+.alloc-history-table td:nth-child(1) {
+  width: 90px !important;
+  min-width: 90px !important;
+}
+
+.alloc-history-table th:nth-child(2),
+.alloc-history-table td:nth-child(2) {
+  width: 110px !important;
+  min-width: 110px !important;
+}
+
+.alloc-history-table th:nth-child(3),
+.alloc-history-table td:nth-child(3) {
+  width: 180px !important;
+  min-width: 180px !important;
+}
+
+.alloc-history-table th:nth-child(4),
+.alloc-history-table td:nth-child(4) {
+  width: 120px !important;
+  min-width: 120px !important;
+}
+
+.alloc-history-table th:nth-child(5),
+.alloc-history-table td:nth-child(5) {
+  width: 130px !important;
+  min-width: 130px !important;
+}
+
+.alloc-history-table th:nth-child(6),
+.alloc-history-table td:nth-child(6) {
+  width: auto !important;
+  min-width: 160px !important;
+}
+
+.alloc-history-table td {
+  padding: 12px 14px !important;
+  font-size: 13px !important;
+  color: #1e293b !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.alloc-history-table td:last-child {
+  white-space: normal !important;
+  max-width: 260px !important;
+}
+
+.alloc-history-table tr:hover td {
+  background: #f8fafc !important;
+}
+
+.alloc-modal-footer {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid #e2e8f0 !important;
 }
 
 .jury-modal-box .modal-subtitle {
@@ -5680,6 +5830,7 @@ html.jury-theme-active body {
   max-height: 380px !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  scroll-behavior: smooth !important;
   scrollbar-width: thin !important;
   scrollbar-color: #cbd5e1 transparent !important;
   border-radius: 16px !important;
@@ -5833,4 +5984,28 @@ html.jury-theme-active body {
   font-size: 11px;
   color: #64748b;
   line-height: 1.35;
+}
+
+/* ─── Select Dropdowns: Hover Border & Focus Ring ─── */
+.glass-select,
+.alloc-quick-assign-select,
+.alloc-move-select {
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease !important;
+  outline: none !important;
+  cursor: pointer !important;
+}
+
+.glass-select:hover,
+.alloc-quick-assign-select:hover,
+.alloc-move-select:hover {
+  border-color: #94a3b8 !important;
+  background-color: #ffffff !important;
+}
+
+.glass-select:focus,
+.alloc-quick-assign-select:focus,
+.alloc-move-select:focus {
+  border-color: #059669 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
 }

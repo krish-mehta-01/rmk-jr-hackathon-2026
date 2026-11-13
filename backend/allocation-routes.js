@@ -18,8 +18,25 @@ function authAdmin(req, res, next) {
   }
 }
 
+// Read-only allocation access for Admin, Jury Admin, and Judges
+function authReadAllocations(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Please log in again.' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const allowed = ['admin', 'jury-admin', 'judge', 'jury'];
+    if (!allowed.includes(decoded.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ error: 'Session expired. Please log in again.' });
+  }
+}
+
 // 1. Get current allocation summary (Active published revision + Draft if in progress)
-router.get('/allocations/summary', authAdmin, async (req, res) => {
+router.get('/allocations/summary', authReadAllocations, async (req, res) => {
   try {
     const active = await allocService.getActivePublishedRevision();
     const draft = await allocService.getDraftRevision();
@@ -43,7 +60,7 @@ router.get('/allocations/summary', authAdmin, async (req, res) => {
 });
 
 // 1b. Get active published allocation revision details directly
-router.get('/allocations/active', authAdmin, async (req, res) => {
+router.get('/allocations/active', authReadAllocations, async (req, res) => {
   try {
     const active = await allocService.getActivePublishedRevision();
     if (!active) return res.status(404).json({ error: 'No active published revision found' });
@@ -68,7 +85,7 @@ router.get('/allocations/active', authAdmin, async (req, res) => {
 });
 
 // 2. Get all panels with physical venues
-router.get('/allocations/panels', authAdmin, async (req, res) => {
+router.get('/allocations/panels', authReadAllocations, async (req, res) => {
   try {
     const panels = await allocService.getAllPanels();
     res.json({ panels });
@@ -79,7 +96,7 @@ router.get('/allocations/panels', authAdmin, async (req, res) => {
 });
 
 // 3. Get revision history
-router.get('/allocations/revisions', authAdmin, async (req, res) => {
+router.get('/allocations/revisions', authReadAllocations, async (req, res) => {
   try {
     const revisions = await allocService.getRevisionHistory();
     res.json({ revisions });
@@ -90,7 +107,7 @@ router.get('/allocations/revisions', authAdmin, async (req, res) => {
 });
 
 // 4. Get full revision details (panels, assigned teams, unassigned teams)
-router.get('/allocations/revisions/:id', authAdmin, async (req, res) => {
+router.get('/allocations/revisions/:id', authReadAllocations, async (req, res) => {
   try {
     const revId = parseInt(req.params.id, 10);
     const details = await allocService.getRevisionDetails(revId);
