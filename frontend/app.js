@@ -814,8 +814,83 @@ let rawVenuesData = [];
 let rawThemesData = [];
 let venueDisplayMode = 'venue'; // 'venue' (15 Venues - default) or 'theme' (12 Themes)
 let currentThemeFilter = 'all';
+let currentThemewiseFilter = 'all';
 let currentThemeSearch = '';
 const expandedThemes = new Set();
+
+function populateThemewiseFilter() {
+  const select = document.getElementById('select-theme-filter');
+  const chipsContainer = document.getElementById('theme-quick-chips');
+  if (!select) return;
+
+  const currentVal = currentThemewiseFilter;
+  const sortedThemes = [...rawThemesData].sort((a, b) => (a.theme || '').localeCompare(b.theme || ''));
+  const totalTeams = sortedThemes.reduce((acc, t) => acc + (t.total || 0), 0);
+
+  // Populate Dropdown
+  select.innerHTML = `<option value="all">All 12 Themes (${totalTeams} Teams)</option>` +
+    sortedThemes.map(t => `<option value="${escapeHtml(t.theme)}">${escapeHtml(t.theme)} (${t.total} Teams)</option>`).join('');
+  select.value = currentVal;
+
+  // Populate Quick Clickable Chips
+  if (chipsContainer) {
+    chipsContainer.innerHTML = `
+      <button type="button" class="theme-chip ${currentVal === 'all' ? 'active' : ''}" data-theme="all" onclick="handleThemewiseFilter('all')">All Themes (12)</button>
+    ` + sortedThemes.map(t => `
+      <button type="button" class="theme-chip ${currentVal === t.theme ? 'active' : ''}" data-theme="${escapeHtml(t.theme)}" onclick="handleThemewiseFilter('${escapeHtml(t.theme).replace(/'/g, "\\'")}')">
+        ${escapeHtml(t.theme)} (${t.total})
+      </button>
+    `).join('');
+  }
+
+  updateThemewiseFilterBadge();
+}
+
+function handleThemewiseFilter(theme) {
+  currentThemewiseFilter = theme || 'all';
+  const select = document.getElementById('select-theme-filter');
+  if (select) select.value = currentThemewiseFilter;
+
+  // Update chip active classes
+  const chips = document.querySelectorAll('.theme-chip');
+  chips.forEach(chip => {
+    chip.classList.toggle('active', chip.getAttribute('data-theme') === currentThemewiseFilter);
+  });
+
+  updateThemewiseFilterBadge();
+
+  // If a specific theme is picked, automatically expand the matched cards
+  if (currentThemewiseFilter !== 'all') {
+    const isVenueMode = (venueDisplayMode === 'venue');
+    const sourceData = isVenueMode ? rawVenuesData : rawThemesData;
+    sourceData.forEach(g => {
+      const matches = isVenueMode 
+        ? (g.themes || []).includes(currentThemewiseFilter)
+        : (g.theme === currentThemewiseFilter);
+      if (matches) expandedThemes.add(getItemKey(g));
+    });
+  }
+
+  renderThemes();
+}
+window.handleThemewiseFilter = handleThemewiseFilter;
+
+function clearThemewiseFilter() {
+  handleThemewiseFilter('all');
+}
+window.clearThemewiseFilter = clearThemewiseFilter;
+
+function updateThemewiseFilterBadge() {
+  const badge = document.getElementById('theme-active-filter-badge');
+  const text = document.getElementById('theme-active-filter-text');
+  if (!badge) return;
+  if (currentThemewiseFilter && currentThemewiseFilter !== 'all') {
+    badge.classList.remove('hidden');
+    if (text) text.textContent = `Theme: ${currentThemewiseFilter}`;
+  } else {
+    badge.classList.add('hidden');
+  }
+}
 
 function setVenueDisplayMode(mode) {
   venueDisplayMode = mode;
@@ -877,6 +952,7 @@ async function loadThemes() {
     rawVenuesData = data.venues || [];
     rawThemesData = data.themes || [];
     updateThemeStats();
+    populateThemewiseFilter();
     renderThemes();
   } catch (err) {
     console.error('[ERROR] loadThemes:', err);
@@ -896,6 +972,16 @@ function renderThemes() {
   const filtered = sourceData.filter(g => {
     const hasVenue = Boolean(g.venue && g.venue.trim());
     
+    // Themewise filter check
+    if (currentThemewiseFilter && currentThemewiseFilter !== 'all') {
+      if (isVenueMode) {
+        const matchesTheme = (g.themes || []).includes(currentThemewiseFilter);
+        if (!matchesTheme) return false;
+      } else {
+        if (g.theme !== currentThemewiseFilter) return false;
+      }
+    }
+
     // Filter chip logic
     if (filter === 'venue_set' && !hasVenue) return false;
     if (filter === 'venue_missing' && hasVenue) return false;
@@ -959,6 +1045,11 @@ function renderThemes() {
     const hasVenue = Boolean(g.venue && g.venue.trim());
     const rate = g.total > 0 ? Math.round((g.scanned / g.total) * 100) : 0;
 
+    const teamsToShow = (isVenueMode && currentThemewiseFilter && currentThemewiseFilter !== 'all')
+      ? (g.teams || []).filter(t => t.category === currentThemewiseFilter)
+      : (g.teams || []);
+    const matchingScanned = teamsToShow.filter(t => t.is_present).length;
+
     if (isVenueMode) {
       // ─────────────────────────────────────────────
       // 15 VENUE TILES (DEFAULT) - NO PANEL NUMBER
@@ -990,7 +1081,7 @@ function renderThemes() {
               <span>Assigned Theme${(g.themes && g.themes.length > 1) ? 's' : ''}:</span>
             </div>
             <div class="theme-venue-value is-set">
-              ${(g.themes || []).map(t => `<span class="theme-track-pill">${escapeHtml(t)}</span>`).join('')}
+              ${(g.themes || []).map(t => `<span class="theme-track-pill ${t === currentThemewiseFilter ? 'active-track-pill' : ''}">${escapeHtml(t)}</span>`).join('')}
             </div>
           </div>
         </div>
@@ -1007,9 +1098,9 @@ function renderThemes() {
         <button type="button" class="theme-card-expand-bar" data-key="${escapeHtml(itemKey)}" data-theme="${escapeHtml(itemKey)}" aria-expanded="${isOpen}">
           <span class="expand-bar-left">
             <svg class="chevron-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-            <span class="expand-bar-title">${isOpen ? 'Hide' : 'Show'} Registered Teams (${g.total})</span>
+            <span class="expand-bar-title">${isOpen ? 'Hide' : 'Show'} ${currentThemewiseFilter !== 'all' ? `Teams for "${escapeHtml(currentThemewiseFilter)}" (${teamsToShow.length} of ${g.total})` : `Registered Teams (${g.total})`}</span>
           </span>
-          <span class="expand-bar-summary">${g.scanned} Present · ${g.total - g.scanned} Pending</span>
+          <span class="expand-bar-summary">${matchingScanned} Present · ${teamsToShow.length - matchingScanned} Pending</span>
         </button>
 
         <!-- Expandable Teams Roster -->
@@ -1033,7 +1124,7 @@ function renderThemes() {
                 </tr>
               </thead>
               <tbody>
-                ${(g.teams || []).map(t => {
+                ${teamsToShow.map(t => {
                   const isPresent = Boolean(t.is_present);
                   const scannedAt = t.check_in_time
                     ? new Date(t.check_in_time).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
@@ -1621,9 +1712,151 @@ async function exportVenuePdf() {
   }
 }
 window.exportVenuePdf = exportVenuePdf;
-
 window.exportVenueDoc = exportVenueDoc;
 window.exportVenueExcel = exportVenueExcel;
+
+// ─────────────────────────────────────────────────────────────
+// THEME-WISE DOWNLOAD HANDLERS (ADMIN AUTHENTICATED)
+// ─────────────────────────────────────────────────────────────
+async function exportThemePdf() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-export-theme-pdf');
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+    showToast('Preparing Themewise PDF document...', 'info');
+    const res = await fetch('/api/admin/export/theme-pdf', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Failed to download theme PDF document', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Theme_Wise_Teams.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Themewise PDF document downloaded', 'success');
+  } catch (err) {
+    console.error('exportThemePdf error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+}
+
+async function exportThemeDoc() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-export-theme-doc');
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+    showToast('Preparing Themewise Word document...', 'info');
+    const res = await fetch('/api/admin/export/theme-doc', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Failed to download theme Word document', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'RMK_Junior_Hackathon_2026_Theme_Wise_Teams.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Themewise Word document downloaded', 'success');
+  } catch (err) {
+    console.error('exportThemeDoc error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+}
+
+async function exportThemeExcel() {
+  const token = (window.adminAuth && window.adminAuth.token) || adminToken;
+  if (!token) {
+    showToast('Please log in as admin', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-export-theme-excel');
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    }
+    const selectedTheme = (currentThemewiseFilter && currentThemewiseFilter !== 'all') ? currentThemewiseFilter : '';
+    showToast(selectedTheme ? `Preparing Excel workbook for ${selectedTheme}...` : 'Preparing Themewise Excel workbook...', 'info');
+    const queryUrl = selectedTheme
+      ? `/api/admin/export/theme-excel?theme=${encodeURIComponent(selectedTheme)}`
+      : '/api/admin/export/theme-excel';
+
+    const res = await fetch(queryUrl, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (sessionExpired(res)) return;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Failed to download theme Excel workbook', 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = selectedTheme 
+      ? `RMK_Junior_Hackathon_2026_${selectedTheme.replace(/[^a-zA-Z0-9]/g, '_')}_Teams.xlsx`
+      : 'RMK_Junior_Hackathon_2026_Theme_Wise_Teams.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    showToast('Themewise Excel workbook downloaded', 'success');
+  } catch (err) {
+    console.error('exportThemeExcel error:', err);
+    showToast('Download error. Please check connection.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+}
+
+window.exportThemePdf = exportThemePdf;
+window.exportThemeDoc = exportThemeDoc;
+window.exportThemeExcel = exportThemeExcel;
 
 // ─────────────────────────────────────────────────────────────
 // PERMANENT HACKATHON DAY QR CODE

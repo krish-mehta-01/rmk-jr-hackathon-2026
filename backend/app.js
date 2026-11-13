@@ -1,4 +1,4 @@
-// Build: v20261112_r17_real_google_satellite_campus_map - Actual Google Satellite aerial view of RMK campus with professional building & route overlays
+// Build: v20261113_r19_themewise_filter_and_exports - Themewise filtering in Venue menu and Themewise PDF, Word, Excel exports
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
@@ -12,6 +12,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { pool } = require('./db');
 const { generateVenueExcel, findVenueDocx, findVenueExcel, findVenuePdf } = require('./venue-export');
+const { generateThemeExcel, findThemeDocx, findThemeExcel, findThemePdf } = require('./theme-export');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
@@ -523,6 +524,76 @@ app.get('/api/admin/export/venue-pdf', authAdmin, async (req, res) => {
   } catch (err) {
     console.error('[ERROR] /api/admin/export/venue-pdf error:', err);
     res.status(500).json({ error: 'Failed to generate venue PDF document' });
+  }
+});
+
+// Download / generate theme-wise segregated Excel (.xlsx) - ALWAYS generated dynamically from DB
+app.get('/api/admin/export/theme-excel', authAdmin, async (req, res) => {
+  try {
+    const filterTheme = req.query.theme || null;
+    const filename = filterTheme 
+      ? `RMK_Junior_Hackathon_2026_${filterTheme.replace(/[^a-zA-Z0-9]/g, '_')}_Teams.xlsx`
+      : 'RMK_Junior_Hackathon_2026_Theme_Wise_Teams.xlsx';
+    const target = path.join(__dirname, '..', 'public', 'exports', filename);
+    await generateThemeExcel(pool, target, filterTheme);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.download(target, filename, (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] theme-excel download failed:', err);
+        res.status(500).json({ error: 'Failed to download theme Excel' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/theme-excel error:', err);
+    res.status(500).json({ error: 'Failed to generate theme Excel' });
+  }
+});
+
+// Download / generate theme-wise segregated Word document (.docx)
+app.get('/api/admin/export/theme-doc', authAdmin, async (req, res) => {
+  try {
+    let filePath = findThemeDocx();
+    if (!filePath) {
+      const genScript = path.join(__dirname, '..', 'scratch', 'build_theme_docx_pdf.py');
+      if (fs.existsSync(genScript)) {
+        const { spawnSync } = require('child_process');
+        spawnSync('python', [genScript], { stdio: 'ignore' });
+        filePath = findThemeDocx();
+      }
+    }
+    if (!filePath) {
+      return res.status(404).json({ error: 'Theme Word document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Theme_Wise_Teams.docx', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] theme-doc download failed:', err);
+        res.status(500).json({ error: 'Failed to download theme Word document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/theme-doc error:', err);
+    res.status(500).json({ error: 'Failed to generate theme Word document' });
+  }
+});
+
+// Download theme-wise segregated PDF document (.pdf) (Scanned / Attendance Sheet)
+app.get('/api/admin/export/theme-pdf', authAdmin, async (req, res) => {
+  try {
+    const filePath = findThemePdf();
+    if (!filePath) {
+      return res.status(404).json({ error: 'Theme PDF document is currently being prepared. Please retry shortly.' });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.download(filePath, 'RMK_Junior_Hackathon_2026_Theme_Wise_Teams.pdf', (err) => {
+      if (err && !res.headersSent) {
+        console.error('[ERROR] theme-pdf download failed:', err);
+        res.status(500).json({ error: 'Failed to download theme PDF document' });
+      }
+    });
+  } catch (err) {
+    console.error('[ERROR] /api/admin/export/theme-pdf error:', err);
+    res.status(500).json({ error: 'Failed to generate theme PDF document' });
   }
 });
 

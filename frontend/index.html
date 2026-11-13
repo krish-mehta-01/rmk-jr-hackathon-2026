@@ -400,6 +400,28 @@
             <div id="admin-sec-themes" class="admin-tab-pane hidden">
               <!-- Unified Compact Venue & Themes Control Bar -->
               <div class="glass-card theme-control-card theme-top-bar">
+                <!-- Row 1: Themewise Filter at the Top -->
+                <div class="theme-filter-row">
+                  <div class="theme-filter-select-wrapper">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-filter-icon"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <span class="theme-filter-label">Themewise Filter:</span>
+                    <select id="select-theme-filter" class="glass-select theme-select-dropdown" onchange="handleThemewiseFilter(this.value)">
+                      <option value="all">All 12 Themes (282 Teams)</option>
+                    </select>
+                  </div>
+
+                  <div id="theme-active-filter-badge" class="theme-active-filter-badge hidden">
+                    <span id="theme-active-filter-text">Theme: All</span>
+                    <button type="button" class="theme-active-filter-clear" onclick="clearThemewiseFilter()" title="Clear Theme Filter" aria-label="Clear Theme Filter">✕</button>
+                  </div>
+
+                  <!-- Quick Clickable Theme Chips -->
+                  <div class="theme-quick-chips" id="theme-quick-chips">
+                    <button type="button" class="theme-chip active" data-theme="all" onclick="handleThemewiseFilter('all')">All Themes (12)</button>
+                  </div>
+                </div>
+
+                <!-- Row 2: Search, Mode Switcher, and Export Actions -->
                 <div class="table-action-header theme-action-header">
                   
                   <div class="table-search-pill theme-search-pill">
@@ -423,7 +445,7 @@
                       <span>Refresh</span>
                     </button>
 
-                    <!-- Export Rosters Dropdown -->
+                    <!-- Export Rosters Dropdown (Themewise & Venue-wise) -->
                     <div class="custom-dropdown" id="dropdown-venue-export">
                       <button type="button" class="glass-btn glass-btn-primary btn-sm dropdown-trigger" id="btn-venue-export-dropdown" onclick="toggleVenueExportDropdown(event)" aria-haspopup="true" aria-expanded="false">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -431,6 +453,43 @@
                         <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                       </button>
                       <div class="custom-dropdown-menu custom-dropdown-menu-right" id="menu-venue-export" role="menu">
+                        <!-- THEMEWISE EXPORTS -->
+                        <div class="dropdown-group-header">THEME-WISE EXPORTS</div>
+                        <button type="button" class="dropdown-item" id="btn-export-theme-pdf" onclick="closeDropdowns(); exportThemePdf();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <path d="M9 15h6"/>
+                            <path d="M12 12v6"/>
+                          </svg>
+                          <span class="dropdown-item-label">Themewise PDF (Scanned Sheet)</span>
+                          <span class="file-tag tag-pdf">PDF</span>
+                        </button>
+                        <button type="button" class="dropdown-item" id="btn-export-theme-doc" onclick="closeDropdowns(); exportThemeDoc();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                          </svg>
+                          <span class="dropdown-item-label">Themewise Word Sheet</span>
+                          <span class="file-tag tag-docx">DOCX</span>
+                        </button>
+                        <button type="button" class="dropdown-item" id="btn-export-theme-excel" onclick="closeDropdowns(); exportThemeExcel();">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="8" y1="13" x2="16" y2="17"/>
+                            <line x1="16" y1="13" x2="8" y2="17"/>
+                          </svg>
+                          <span class="dropdown-item-label">Themewise Excel Sheet</span>
+                          <span class="file-tag tag-xlsx">XLSX</span>
+                        </button>
+
+                        <div class="dropdown-item-divider"></div>
+
+                        <!-- VENUE-WISE EXPORTS -->
+                        <div class="dropdown-group-header">VENUE-WISE EXPORTS</div>
                         <button type="button" class="dropdown-item" id="btn-export-venue-pdf" onclick="closeDropdowns(); exportVenuePdf();">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -438,7 +497,7 @@
                             <path d="M9 15h6"/>
                             <path d="M12 12v6"/>
                           </svg>
-                          <span class="dropdown-item-label">Download PDF</span>
+                          <span class="dropdown-item-label">Venue PDF (15 Panels)</span>
                           <span class="file-tag tag-pdf">PDF</span>
                         </button>
                         <button type="button" class="dropdown-item" id="btn-export-venue-doc" onclick="closeDropdowns(); exportVenueDoc();">
@@ -448,7 +507,7 @@
                             <line x1="16" y1="13" x2="8" y2="13"/>
                             <line x1="16" y1="17" x2="8" y2="17"/>
                           </svg>
-                          <span class="dropdown-item-label">Download Word</span>
+                          <span class="dropdown-item-label">Venue Word Document</span>
                           <span class="file-tag tag-docx">DOCX</span>
                         </button>
                         <button type="button" class="dropdown-item" id="btn-export-venue-excel" onclick="closeDropdowns(); exportVenueExcel();">
@@ -458,7 +517,7 @@
                             <line x1="8" y1="13" x2="16" y2="17"/>
                             <line x1="16" y1="13" x2="8" y2="17"/>
                           </svg>
-                          <span class="dropdown-item-label">Download Excel</span>
+                          <span class="dropdown-item-label">Venue Excel (15 Sheets)</span>
                           <span class="file-tag tag-xlsx">XLSX</span>
                         </button>
                       </div>
