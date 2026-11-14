@@ -112,6 +112,8 @@ async function fetchAllEvaluationData() {
       t.college_name AS school,
       t.members,
       t.mentor_name,
+      t.mentor_contact,
+      t.mobile_no,
       t.is_present,
       
       COALESCE(p.panel_code, CONCAT('P', t.panel_no), 'Unassigned') AS panel_code,
@@ -188,8 +190,10 @@ async function fetchAllEvaluationData() {
       panel_venue: r.panel_venue,
       school: r.school || '—',
       leader_name: r.leader_name || '—',
+      leader_phone: r.mobile_no || '—',
       members: r.members || '',
       mentor_name: r.mentor_name || '—',
+      mentor_contact: r.mentor_contact || '—',
       is_present: Boolean(r.is_present),
 
       internal_status: inSubmitted ? 'SUBMITTED' : (r.in_status === 'DRAFT' ? 'DRAFT' : 'PENDING'),

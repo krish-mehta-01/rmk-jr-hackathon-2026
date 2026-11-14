@@ -5251,12 +5251,109 @@ function populateThemeDropdowns(themes) {
   }
 }
 
+const expandedEvalTeams = new Set();
+
+function toggleEvalDetailsRow(teamId, btn, event) {
+  if (event) event.stopPropagation();
+  const idStr = String(teamId);
+  const isOpen = !expandedEvalTeams.has(idStr);
+  if (isOpen) expandedEvalTeams.add(idStr);
+  else expandedEvalTeams.delete(idStr);
+
+  const detailRow = document.querySelector(`tr[data-eval-detail-for="${idStr}"]`);
+  if (detailRow) {
+    detailRow.classList.toggle('hidden', !isOpen);
+  }
+
+  const parentRow = btn ? btn.closest('tr') : (event ? event.target.closest('tr') : null);
+  if (parentRow && !parentRow.classList.contains('eval-detail-row')) {
+    parentRow.classList.toggle('is-expanded', isOpen);
+    const expandBtn = parentRow.querySelector('.btn-eval-expand');
+    if (expandBtn) {
+      expandBtn.setAttribute('aria-expanded', String(isOpen));
+      expandBtn.classList.toggle('is-open', isOpen);
+    }
+  }
+}
+window.toggleEvalDetailsRow = toggleEvalDetailsRow;
+
+function renderEvalDetailDrawer(t, colspan = 6) {
+  const idStr = String(t.team_id || t.id);
+  const isOpen = expandedEvalTeams.has(idStr);
+  const leaderPhone = t.leader_phone && t.leader_phone !== '—' ? t.leader_phone : (t.mobile_no || '');
+  const remarksHtml = (t.internal_remarks || t.external_remarks) ? `
+    <div class="eval-detail-item eval-detail-full eval-remarks-box">
+      <span class="eval-detail-label">Evaluation Remarks:</span>
+      <div class="eval-remarks-grid">
+        ${t.internal_remarks ? `<div class="eval-remark-item"><span class="eval-remark-author">Internal Jury:</span> <span>${escapeHtml(t.internal_remarks)}</span></div>` : ''}
+        ${t.external_remarks ? `<div class="eval-remark-item"><span class="eval-remark-author">External Jury:</span> <span>${escapeHtml(t.external_remarks)}</span></div>` : ''}
+      </div>
+    </div>
+  ` : '';
+
+  return `
+    <tr class="eval-detail-row${isOpen ? '' : ' hidden'}" data-eval-detail-for="${idStr}">
+      <td colspan="${colspan}">
+        <div class="eval-detail-card">
+          <div class="eval-detail-grid">
+            <div class="eval-detail-item eval-detail-full">
+              <span class="eval-detail-label">Project Title:</span>
+              <span class="eval-detail-val eval-detail-project-title">${escapeHtml(t.project_title || '—')}</span>
+            </div>
+
+            <div class="eval-detail-item">
+              <span class="eval-detail-label">Theme / Domain:</span>
+              <span class="eval-detail-val"><span class="status-pill-badge pill-blue">${escapeHtml(t.theme || 'General')}</span></span>
+            </div>
+
+            <div class="eval-detail-item">
+              <span class="eval-detail-label">Team Leader:</span>
+              <span class="eval-detail-val">
+                <strong>${escapeHtml(t.leader_name || '—')}</strong>
+                ${leaderPhone ? `<div style="margin-top:2px; font-size:12px; color:#2563eb;" class="mono"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>${escapeHtml(leaderPhone)}</div>` : ''}
+              </span>
+            </div>
+
+            <div class="eval-detail-item">
+              <span class="eval-detail-label">Mentor:</span>
+              <span class="eval-detail-val">
+                <strong>${escapeHtml(t.mentor_name || '—')}</strong>
+                ${t.mentor_contact && t.mentor_contact !== '—' ? `<span style="color:#64748b; font-size:12px; margin-left:4px;" class="mono">(${escapeHtml(t.mentor_contact)})</span>` : ''}
+              </span>
+            </div>
+
+            <div class="eval-detail-item">
+              <span class="eval-detail-label">Team Members:</span>
+              <span class="eval-detail-val">${escapeHtml(t.members || '—')}</span>
+            </div>
+
+            <div class="eval-detail-item">
+              <span class="eval-detail-label">Institution / School:</span>
+              <span class="eval-detail-val">${escapeHtml(t.school || t.college_name || '—')}</span>
+            </div>
+
+            <div class="eval-detail-item">
+              <span class="eval-detail-label">Panel & Venue:</span>
+              <span class="eval-detail-val">
+                <span class="table-panel-badge">${escapeHtml(t.panel_code || '—')}</span>
+                <span style="color:#64748b; font-size:12px; margin-left:5px;">${escapeHtml(t.panel_venue || 'Venue Pending')}</span>
+              </span>
+            </div>
+
+            ${remarksHtml}
+          </div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
 function renderEvaluationStatusTable(teams) {
   const tbody = document.getElementById('eval-status-table-body');
   const mobileList = document.getElementById('eval-mobile-cards-list');
 
   if (!teams || teams.length === 0) {
-    const emptyMsg = '<tr><td colspan="8" class="text-center">No matching evaluation records found.</td></tr>';
+    const emptyMsg = '<tr><td colspan="6" class="text-center">No matching evaluation records found.</td></tr>';
     if (tbody) tbody.innerHTML = emptyMsg;
     if (mobileList) mobileList.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-muted);">No matching evaluation records found.</div>';
     return;
@@ -5265,42 +5362,48 @@ function renderEvaluationStatusTable(teams) {
   // 1. Desktop Table Rows
   if (tbody) {
     tbody.innerHTML = teams.map(t => {
+      const idStr = String(t.team_id || t.id);
+      const isOpen = expandedEvalTeams.has(idStr);
       let statusPillClass = 'pill-absent';
       if (t.overall_status === 'FULLY_EVALUATED') statusPillClass = 'pill-present';
       else if (t.overall_status === 'INTERNAL_EVALUATED' || t.overall_status === 'EXTERNAL_EVALUATED') statusPillClass = 'pill-amber';
 
       const inScoreHtml = t.internal_status === 'SUBMITTED' 
-        ? `<strong class="mono" style="color:var(--accent-green-dark);">${t.internal_marks}</strong> / 50`
-        : (t.internal_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted">Pending</span>');
+        ? `<strong class="mono" style="color:var(--accent-green-dark); font-size:13.5px;">${t.internal_marks}</strong> <span style="font-size:11px; color:#64748b;">/ 50</span>`
+        : (t.internal_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted" style="font-size:12px;">Pending</span>');
 
       const exScoreHtml = t.external_status === 'SUBMITTED' 
-        ? `<strong class="mono" style="color:var(--accent-green-dark);">${t.external_marks}</strong> / 50`
-        : (t.external_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted">Pending</span>');
+        ? `<strong class="mono" style="color:var(--accent-green-dark); font-size:13.5px;">${t.external_marks}</strong> <span style="font-size:11px; color:#64748b;">/ 50</span>`
+        : (t.external_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted" style="font-size:12px;">Pending</span>');
 
       const combinedHtml = t.is_fully_evaluated && t.combined_score !== null
-        ? `<span class="mono" style="font-weight:800; font-size:15px; color:var(--accent-green-dark);">${t.combined_score} / 100</span>`
-        : '<span class="text-muted">—</span>';
+        ? `<div class="mono" style="font-weight:800; font-size:14px; color:var(--accent-green-dark);">${t.combined_score} / 100</div>`
+        : '';
 
       return `
-        <tr>
+        <tr class="eval-clickable-row${isOpen ? ' is-expanded' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this.querySelector('.btn-eval-expand'), event)">
           <td>
             <div class="table-team-id-name-cluster">
               <span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span>
               <span class="table-team-name-main">${escapeHtml(t.team_name)}</span>
             </div>
-            <div class="table-team-proj-sub">${escapeHtml(t.project_title || '')}</div>
-            ${t.school ? `<div class="table-team-school-sub">${escapeHtml(t.school)}</div>` : ''}
           </td>
-          <td><span class="status-pill-badge pill-blue">${escapeHtml(t.theme)}</span></td>
           <td style="text-align:center;">
             <span class="table-panel-badge">${escapeHtml(t.panel_code)}</span>
-            <div style="font-size:11px; color:#64748b; margin-top:2px;">${escapeHtml(t.panel_venue || '')}</div>
           </td>
           <td style="text-align:center;">${inScoreHtml}</td>
           <td style="text-align:center;">${exScoreHtml}</td>
-          <td style="text-align:center;">${combinedHtml}</td>
-          <td style="text-align:center;"><span class="status-pill-badge ${statusPillClass}">${escapeHtml(t.overall_status_label)}</span></td>
+          <td style="text-align:center;">
+            <span class="status-pill-badge ${statusPillClass}">${escapeHtml(t.overall_status_label)}</span>
+            ${combinedHtml}
+          </td>
+          <td style="text-align:center;" onclick="event.stopPropagation()">
+            <button type="button" class="btn-eval-expand${isOpen ? ' is-open' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this, event)" aria-label="Toggle details" title="View details">
+              <svg class="chevron-eval-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </td>
         </tr>
+        ${renderEvalDetailDrawer(t, 6)}
       `;
     }).join('');
   }
@@ -5413,31 +5516,38 @@ function renderThemeLeaderboard() {
   // 1. Render Ranked Teams
   if (tbody) {
     if (allRanked.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both internal and external evaluations yet in this theme.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both internal and external evaluations yet in this theme.</td></tr>';
     } else if (displayedRanked.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams meet the Top ${topNVal} cutoff in this theme.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams meet the Top ${topNVal} cutoff in this theme.</td></tr>`;
     } else {
       tbody.innerHTML = displayedRanked.map(t => {
+        const idStr = String(t.team_id || t.id);
+        const isOpen = expandedEvalTeams.has(idStr);
         let badgeClass = 'rank-badge-other';
         if (t.rank === 1) badgeClass = 'rank-badge-1';
         else if (t.rank === 2) badgeClass = 'rank-badge-2';
         else if (t.rank === 3) badgeClass = 'rank-badge-3';
 
         return `
-          <tr>
+          <tr class="eval-clickable-row${isOpen ? ' is-expanded' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this.querySelector('.btn-eval-expand'), event)">
             <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
             <td>
               <div class="table-team-id-name-cluster">
                 <span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span>
                 <span class="table-team-name-main">${escapeHtml(t.team_name)}</span>
               </div>
-              ${t.school ? `<div class="table-team-school-sub">${escapeHtml(t.school)}</div>` : ''}
             </td>
-            <td style="color:#334155;">${escapeHtml(t.project_title)}</td>
+            <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(t.panel_code)}</span></td>
             <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
             <td style="text-align:center;" class="mono">${t.external_marks} / 50</td>
             <td style="text-align:center;"><strong class="mono score-combined-badge">${t.combined_score} / 100</strong></td>
+            <td style="text-align:center;" onclick="event.stopPropagation()">
+              <button type="button" class="btn-eval-expand${isOpen ? ' is-open' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this, event)" aria-label="Toggle details" title="View details">
+                <svg class="chevron-eval-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+            </td>
           </tr>
+          ${renderEvalDetailDrawer(t, 7)}
         `;
       }).join('');
     }
@@ -5452,21 +5562,27 @@ function renderThemeLeaderboard() {
       pendBody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All teams in this theme have completed evaluations!</td></tr>';
     } else {
       pendBody.innerHTML = group.pending_teams.map(pt => {
+        const idStr = String(pt.team_id || pt.id);
+        const isOpen = expandedEvalTeams.has(idStr);
         return `
-          <tr>
+          <tr class="eval-clickable-row${isOpen ? ' is-expanded' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this.querySelector('.btn-eval-expand'), event)">
             <td>
               <div class="table-team-id-name-cluster">
                 <span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span>
                 <span class="table-team-name-main">${escapeHtml(pt.team_name)}</span>
               </div>
-              ${pt.school ? `<div class="table-team-school-sub">${escapeHtml(pt.school)}</div>` : ''}
             </td>
-            <td style="color:#475569;">${escapeHtml(pt.project_title)}</td>
             <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
             <td style="text-align:center;">${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
             <td style="text-align:center;">${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
             <td style="text-align:center;"><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
+            <td style="text-align:center;" onclick="event.stopPropagation()">
+              <button type="button" class="btn-eval-expand${isOpen ? ' is-open' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this, event)" aria-label="Toggle details" title="View details">
+                <svg class="chevron-eval-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+            </td>
           </tr>
+          ${renderEvalDetailDrawer(pt, 6)}
         `;
       }).join('');
     }
@@ -5578,27 +5694,33 @@ async function loadOverallRankings() {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both evaluations yet.</td></tr>';
       } else {
         tbody.innerHTML = data.ranked_teams.map(t => {
+          const idStr = String(t.team_id || t.id);
+          const isOpen = expandedEvalTeams.has(idStr);
           let badgeClass = 'rank-badge-other';
           if (t.rank === 1) badgeClass = 'rank-badge-1';
           else if (t.rank === 2) badgeClass = 'rank-badge-2';
           else if (t.rank === 3) badgeClass = 'rank-badge-3';
 
           return `
-            <tr>
+            <tr class="eval-clickable-row${isOpen ? ' is-expanded' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this.querySelector('.btn-eval-expand'), event)">
               <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
               <td>
                 <div class="table-team-id-name-cluster">
                   <span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span>
                   <span class="table-team-name-main">${escapeHtml(t.team_name)}</span>
                 </div>
-                ${t.school ? `<div class="table-team-school-sub">${escapeHtml(t.school)}</div>` : ''}
               </td>
-              <td style="color:#334155;">${escapeHtml(t.project_title)}</td>
-              <td><span class="status-pill-badge pill-blue">${escapeHtml(t.theme)}</span></td>
+              <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(t.panel_code)}</span></td>
               <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
               <td style="text-align:center;" class="mono">${t.external_marks} / 50</td>
               <td style="text-align:center;"><strong class="mono score-combined-badge">${t.combined_score} / 100</strong></td>
+              <td style="text-align:center;" onclick="event.stopPropagation()">
+                <button type="button" class="btn-eval-expand${isOpen ? ' is-open' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this, event)" aria-label="Toggle details" title="View details">
+                  <svg class="chevron-eval-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+              </td>
             </tr>
+            ${renderEvalDetailDrawer(t, 7)}
           `;
         }).join('');
       }
@@ -5607,25 +5729,30 @@ async function loadOverallRankings() {
     // 2. Render Pending Teams
     if (pendBody) {
       if (data.pending_teams.length === 0) {
-        pendBody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All registered teams are fully evaluated!</td></tr>';
+        pendBody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All registered teams are fully evaluated!</td></tr>';
       } else {
         pendBody.innerHTML = data.pending_teams.map(pt => {
+          const idStr = String(pt.team_id || pt.id);
+          const isOpen = expandedEvalTeams.has(idStr);
           return `
-            <tr>
+            <tr class="eval-clickable-row${isOpen ? ' is-expanded' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this.querySelector('.btn-eval-expand'), event)">
               <td>
                 <div class="table-team-id-name-cluster">
                   <span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span>
                   <span class="table-team-name-main">${escapeHtml(pt.team_name)}</span>
                 </div>
-                ${pt.school ? `<div class="table-team-school-sub">${escapeHtml(pt.school)}</div>` : ''}
               </td>
-              <td style="color:#475569;">${escapeHtml(pt.project_title)}</td>
-              <td><span class="status-pill-badge pill-blue">${escapeHtml(pt.theme)}</span></td>
               <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
               <td style="text-align:center;">${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
               <td style="text-align:center;">${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
               <td style="text-align:center;"><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
+              <td style="text-align:center;" onclick="event.stopPropagation()">
+                <button type="button" class="btn-eval-expand${isOpen ? ' is-open' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this, event)" aria-label="Toggle details" title="View details">
+                  <svg class="chevron-eval-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+              </td>
             </tr>
+            ${renderEvalDetailDrawer(pt, 6)}
           `;
         }).join('');
       }

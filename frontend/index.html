@@ -30,7 +30,7 @@
     })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261114_eval_fluid_v4" />
+  <link rel="stylesheet" href="/style.css?v=20261114_eval_dropdown_v6" />
 </head>
 <body>
 
@@ -899,27 +899,25 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-status-table" id="eval-status-table">
                       <colgroup>
-                        <col style="width: 32%;">
-                        <col style="width: 18%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
+                        <col style="width: 38%;">
+                        <col style="width: 12%;">
+                        <col style="width: 14%;">
+                        <col style="width: 14%;">
+                        <col style="width: 16%;">
+                        <col style="width: 6%;">
                       </colgroup>
                       <thead>
                         <tr>
                           <th>Team (ID & Name)</th>
-                          <th>Theme / Domain</th>
                           <th style="text-align: center;">Panel</th>
                           <th style="text-align: center;">Internal (/50)</th>
                           <th style="text-align: center;">External (/50)</th>
-                          <th style="text-align: center;">Combined (/100)</th>
-                          <th style="text-align: center;">Status</th>
+                          <th style="text-align: center;">Evaluation Status</th>
+                          <th style="text-align: center;">Details</th>
                         </tr>
                       </thead>
                       <tbody id="eval-status-table-body">
-                        <tr><td colspan="7" class="text-center loading-cell">Loading evaluation records...</td></tr>
+                        <tr><td colspan="6" class="text-center loading-cell">Loading evaluation records...</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -935,16 +933,16 @@
               <div id="eval-tab-pane-themes" class="eval-subtab-pane hidden">
                 <div class="glass-card eval-report-card eval-filter-card" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
                   <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <label for="rank-theme-selector" style="font-size: 13.5px; font-weight: 700;">Theme / Domain:</label>
-                      <select id="rank-theme-selector" class="alloc-panel-select" onchange="handleThemeSelectorChange()" style="min-width: 240px; font-weight: 700;">
+                    <div class="eval-filter-group">
+                      <label for="rank-theme-selector" class="eval-filter-label">Theme / Domain:</label>
+                      <select id="rank-theme-selector" class="alloc-panel-select" onchange="handleThemeSelectorChange()" style="min-width: 240px;">
                         <!-- Populated dynamically -->
                       </select>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <label for="rank-topn-selector" style="font-size: 13.5px; font-weight: 700;">Leaderboard Scope:</label>
-                      <select id="rank-topn-selector" class="alloc-panel-select" onchange="handleTopNChange()" style="min-width: 130px; font-weight: 700;">
+                    <div class="eval-filter-group">
+                      <label for="rank-topn-selector" class="eval-filter-label">Leaderboard Scope:</label>
+                      <select id="rank-topn-selector" class="alloc-panel-select" onchange="handleTopNChange()" style="min-width: 130px;">
                         <option value="ALL">All Eligible</option>
                         <option value="1">Top 1</option>
                         <option value="2">Top 2</option>
@@ -979,24 +977,26 @@
                     <table class="eval-table eval-ranking-table" id="theme-rankings-table">
                       <colgroup>
                         <col style="width: 7%;">
-                        <col style="width: 28%;">
-                        <col style="width: 35%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
+                        <col style="width: 38%;">
+                        <col style="width: 11%;">
+                        <col style="width: 12%;">
+                        <col style="width: 12%;">
+                        <col style="width: 14%;">
+                        <col style="width: 6%;">
                       </colgroup>
                       <thead>
                         <tr>
                           <th style="text-align: center;">Rank</th>
                           <th>Team (ID & Name)</th>
-                          <th>Project Title</th>
+                          <th style="text-align: center;">Panel</th>
                           <th style="text-align: center;">Internal (/50)</th>
                           <th style="text-align: center;">External (/50)</th>
                           <th style="text-align: center;">Total (/100)</th>
+                          <th style="text-align: center;">Details</th>
                         </tr>
                       </thead>
                       <tbody id="theme-rankings-table-body">
-                        <tr><td colspan="6" class="text-center loading-cell">Loading leaderboard...</td></tr>
+                        <tr><td colspan="7" class="text-center loading-cell">Loading leaderboard...</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -1015,21 +1015,21 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-pending-table" id="theme-pending-table">
                       <colgroup>
-                        <col style="width: 28%;">
-                        <col style="width: 32%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
+                        <col style="width: 42%;">
+                        <col style="width: 12%;">
+                        <col style="width: 13%;">
+                        <col style="width: 13%;">
+                        <col style="width: 14%;">
+                        <col style="width: 6%;">
                       </colgroup>
                       <thead>
                         <tr>
                           <th>Team (ID & Name)</th>
-                          <th>Project Title</th>
                           <th style="text-align: center;">Panel</th>
                           <th style="text-align: center;">Internal</th>
                           <th style="text-align: center;">External</th>
                           <th style="text-align: center;">Status</th>
+                          <th style="text-align: center;">Details</th>
                         </tr>
                       </thead>
                       <tbody id="theme-pending-table-body">
@@ -1057,22 +1057,22 @@
                     <table class="eval-table eval-ranking-table" id="overall-rankings-table">
                       <colgroup>
                         <col style="width: 7%;">
-                        <col style="width: 25%;">
-                        <col style="width: 28%;">
-                        <col style="width: 16%;">
-                        <col style="width: 8%;">
-                        <col style="width: 8%;">
-                        <col style="width: 8%;">
+                        <col style="width: 38%;">
+                        <col style="width: 11%;">
+                        <col style="width: 12%;">
+                        <col style="width: 12%;">
+                        <col style="width: 14%;">
+                        <col style="width: 6%;">
                       </colgroup>
                       <thead>
                         <tr>
                           <th style="text-align: center;">Rank</th>
                           <th>Team (ID & Name)</th>
-                          <th>Project Title</th>
-                          <th>Theme / Domain</th>
+                          <th style="text-align: center;">Panel</th>
                           <th style="text-align: center;">Internal (/50)</th>
                           <th style="text-align: center;">External (/50)</th>
                           <th style="text-align: center;">Total (/100)</th>
+                          <th style="text-align: center;">Details</th>
                         </tr>
                       </thead>
                       <tbody id="overall-rankings-table-body">
@@ -1095,27 +1095,25 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-pending-table" id="overall-pending-table">
                       <colgroup>
-                        <col style="width: 24%;">
-                        <col style="width: 25%;">
-                        <col style="width: 17%;">
-                        <col style="width: 8%;">
-                        <col style="width: 8%;">
-                        <col style="width: 8%;">
-                        <col style="width: 10%;">
+                        <col style="width: 42%;">
+                        <col style="width: 12%;">
+                        <col style="width: 13%;">
+                        <col style="width: 13%;">
+                        <col style="width: 14%;">
+                        <col style="width: 6%;">
                       </colgroup>
                       <thead>
                         <tr>
                           <th>Team (ID & Name)</th>
-                          <th>Project Title</th>
-                          <th>Theme / Domain</th>
                           <th style="text-align: center;">Panel</th>
                           <th style="text-align: center;">Internal</th>
                           <th style="text-align: center;">External</th>
-                          <th style="text-align: center;">Status</th>
+                          <th style="text-align: center;">Status / Reason</th>
+                          <th style="text-align: center;">Details</th>
                         </tr>
                       </thead>
                       <tbody id="overall-pending-table-body">
-                        <tr><td colspan="7" class="text-center">No pending teams</td></tr>
+                        <tr><td colspan="6" class="text-center">No pending teams</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -1938,6 +1936,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261114_eval_rankings_fixed_v3"></script>
+  <script src="/app.js?v=20261114_eval_drawer_v5"></script>
 </body>
 </html>
