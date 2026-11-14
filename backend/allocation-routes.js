@@ -10,7 +10,9 @@ async function authAdmin(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Please log in again.' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Access denied: Admin only' });
+    if (decoded.role !== 'admin' && decoded.role !== 'institute_admin') {
+      return res.status(403).json({ error: 'Access denied: Admin only' });
+    }
     const validated = await validateSession(decoded);
     if (!validated) return res.status(401).json({ error: 'Password changed or session invalid. Please log in again.' });
     req.user = validated;
@@ -20,13 +22,13 @@ async function authAdmin(req, res, next) {
   }
 }
 
-// Read-only allocation access middleware: Admin, Jury Admin, and Judge/Jury
+// Read-only allocation access middleware: Admin, Institute Admin, Jury Admin, and Judge/Jury
 async function authReadAllocations(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Please log in to view allocations.' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const allowed = ['admin', 'jury-admin', 'judge', 'jury'];
+    const allowed = ['admin', 'institute_admin', 'jury-admin', 'judge', 'jury'];
     if (!allowed.includes(decoded.role)) {
       return res.status(403).json({ error: 'Access denied: Read allocations permission required.' });
     }
@@ -108,7 +110,7 @@ router.get('/allocations/revisions', async (req, res) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      if (['admin', 'jury-admin', 'judge', 'jury'].includes(decoded.role)) {
+      if (['admin', 'institute_admin', 'jury-admin', 'judge', 'jury'].includes(decoded.role)) {
         user = decoded;
       }
     } catch {
@@ -118,7 +120,7 @@ router.get('/allocations/revisions', async (req, res) => {
 
   try {
     const revisions = await allocService.getRevisionHistory();
-    if (user && user.role === 'admin') {
+    if (user && (user.role === 'admin' || user.role === 'institute_admin')) {
       return res.json({ revisions });
     }
     const published = (revisions || []).filter(r => r.status === 'PUBLISHED');
