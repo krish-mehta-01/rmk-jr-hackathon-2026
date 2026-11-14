@@ -24,21 +24,22 @@ function formatMarkedBy(r) {
 }
 
 const COLS = [
-  { key: 'sl', label: 'Sl.', width: 18, align: 'center' },
+  { key: 'sl', label: 'Sl. No.', width: 16, align: 'center' },
   { key: 'team_code', label: 'Team ID', width: 46, align: 'center' },
-  { key: 'team_name', label: 'Team Name', width: 52, align: 'left' },
-  { key: 'project_title', label: 'Idea / Project Title', width: 132, align: 'left' },
-  { key: 'venue', label: 'Allocated Venue', width: 96, align: 'left' },
-  { key: 'panel_no', label: 'Panel', width: 36, align: 'center' },
-  { key: 'category', label: 'Theme Track', width: 84, align: 'left' },
-  { key: 'college_name', label: 'School Name', width: 92, align: 'left' },
-  { key: 'leader_name', label: 'Team Leader', width: 44, align: 'left' },
-  { key: 'mobile_no', label: 'Mobile', width: 42, align: 'center' },
-  { key: 'email', label: 'Leader Email', width: 36, align: 'left' },
-  { key: 'mentor_name', label: 'Mentor', width: 30, align: 'left' },
-  { key: 'status', label: 'Status', width: 32, align: 'center' },
-  { key: 'marked_by', label: 'Method', width: 30, align: 'center' },
-  { key: 'check_in_time', label: 'Scanned Time', width: 40, align: 'center' }
+  { key: 'team_name', label: 'Team Name', width: 50, align: 'left' },
+  { key: 'project_title', label: 'Idea / Project Title', width: 124, align: 'left' },
+  { key: 'leader_name', label: 'Team Leader', width: 42, align: 'left' },
+  { key: 'members', label: 'Team Members', width: 44, align: 'left' },
+  { key: 'mentor_name', label: 'Mentor Name', width: 26, align: 'left' },
+  { key: 'mobile_no', label: 'Contact Mobile', width: 40, align: 'center' },
+  { key: 'email', label: 'Leader Email', width: 32, align: 'left' },
+  { key: 'college_name', label: 'School Name', width: 82, align: 'left' },
+  { key: 'category', label: 'Theme Track', width: 76, align: 'left' },
+  { key: 'panel_no', label: 'Panel No.', width: 34, align: 'center' },
+  { key: 'venue', label: 'Allocated Venue', width: 94, align: 'left' },
+  { key: 'status', label: 'Attendance Status', width: 34, align: 'center' },
+  { key: 'marked_by', label: 'Marked By / Mode', width: 30, align: 'center' },
+  { key: 'check_in_time', label: 'Check-In Timestamp', width: 40, align: 'center' }
 ];
 
 function drawTableHeader(doc, startY) {
@@ -50,7 +51,7 @@ function drawTableHeader(doc, startY) {
   const totalW = COLS.reduce((sum, c) => sum + c.width, 0);
   doc.rect(startX, startY, totalW, hHeight).fill('#059669');
 
-  doc.fillColor('#FFFFFF').fontSize(6.5).font('Helvetica-Bold');
+  doc.fillColor('#FFFFFF').fontSize(6.2).font('Helvetica-Bold');
   COLS.forEach(c => {
     doc.text(c.label, curX + 2, startY + 5, {
       width: c.width - 4,
@@ -88,14 +89,15 @@ function drawTableRow(doc, row, slNo, startY, isEven) {
     team_code: row.team_code || '—',
     team_name: row.team_name || '—',
     project_title: row.project_title || '—',
-    venue: row.venue || '—',
-    panel_no: row.panel_no ? `Panel ${row.panel_no}` : '—',
-    category: row.category || '—',
-    college_name: row.college_name || '—',
     leader_name: row.leader_name || '—',
+    members: row.members || '—',
+    mentor_name: row.mentor_name || '—',
     mobile_no: row.mobile_no || '—',
     email: row.email || '—',
-    mentor_name: row.mentor_name || '—',
+    college_name: row.college_name || '—',
+    category: row.category || '—',
+    panel_no: row.panel_no ? `Panel ${row.panel_no}` : '—',
+    venue: row.venue || '—',
     status: statusStr,
     marked_by: methodStr,
     check_in_time: timeStr
@@ -104,12 +106,12 @@ function drawTableRow(doc, row, slNo, startY, isEven) {
   COLS.forEach(c => {
     const val = rowValues[c.key] || '—';
     if (c.key === 'status') {
-      doc.font('Helvetica-Bold').fontSize(6.2);
+      doc.font('Helvetica-Bold').fontSize(6.0);
       doc.fillColor(isPresent ? '#15803D' : '#64748B');
     } else if (c.key === 'team_code') {
-      doc.font('Helvetica-Bold').fontSize(6.2).fillColor('#0F172A');
+      doc.font('Helvetica-Bold').fontSize(6.0).fillColor('#0F172A');
     } else {
-      doc.font('Helvetica').fontSize(6.2).fillColor('#1E293B');
+      doc.font('Helvetica').fontSize(6.0).fillColor('#1E293B');
     }
 
     doc.text(val, curX + 2, startY + 4, {

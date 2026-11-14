@@ -46,21 +46,22 @@ const cellBorders = {
 };
 
 const colWidths = [
-  400,   // 0. Sl
+  380,   // 0. Sl. No.
   850,   // 1. Team ID
-  1050,  // 2. Team Name
-  2700,  // 3. Idea / Project Title (HIGH PRIORITY: Maximum Space)
-  1900,  // 4. Allocated Venue (HIGH PRIORITY: Maximum Space)
-  720,   // 5. Panel (Spacious: Panel 15)
-  1600,  // 6. Theme Track (Spacious)
-  1750,  // 7. School / Institution (Spacious)
-  850,   // 8. Team Leader
-  800,   // 9. Contact Mobile
-  600,   // 10. Leader Email (Reduced Space)
-  480,   // 11. Mentor Name (Very Much Less Space)
-  700,   // 12. Status
-  700,   // 13. Scan Method
-  950    // 14. Scanned Time (IST)
+  1000,  // 2. Team Name
+  2400,  // 3. Idea / Project Title (More space)
+  800,   // 4. Team Leader
+  850,   // 5. Team Members
+  450,   // 6. Mentor Name (Very much less)
+  750,   // 7. Contact Mobile
+  550,   // 8. Leader Email (Reduced)
+  1700,  // 9. School Name (More space)
+  1500,  // 10. Theme Track (More space)
+  700,   // 11. Panel No. (More space)
+  1950,  // 12. Allocated Venue (More space)
+  700,   // 13. Attendance Status
+  680,   // 14. Marked By / Mode
+  920    // 15. Check-In Timestamp
 ];
 
 function createHeaderCell(text, width) {
@@ -108,9 +109,10 @@ function createDataCell(text, width, isCenter = false, isStatus = false, isPrese
 
 function createHeaderRow() {
   const headers = [
-    'Sl.', 'Team ID', 'Team Name', 'Idea / Project Title', 'Allocated Venue',
-    'Panel', 'Theme Track', 'School / Institution', 'Team Leader', 'Contact Mobile',
-    'Leader Email', 'Mentor Name', 'Status', 'Scan Method', 'Scanned Time (IST)'
+    'Sl. No.', 'Team ID', 'Team Name', 'Idea / Project Title', 'Team Leader',
+    'Team Members', 'Mentor Name', 'Contact Mobile', 'Leader Email',
+    'School Name', 'Theme Track', 'Panel No.', 'Allocated Venue',
+    'Attendance Status', 'Marked By / Mode', 'Check-In Timestamp'
   ];
 
   return new TableRow({
@@ -130,17 +132,18 @@ function createTeamRow(r, index, isEven) {
     createDataCell(r.team_code || '—', colWidths[1], true, false, false, isEven),
     createDataCell(r.team_name || '—', colWidths[2], false, false, false, isEven),
     createDataCell(r.project_title || '—', colWidths[3], false, false, false, isEven),
-    createDataCell(r.venue || '—', colWidths[4], false, false, false, isEven),
-    createDataCell(r.panel_no ? `Panel ${r.panel_no}` : '—', colWidths[5], true, false, false, isEven),
-    createDataCell(r.category || '—', colWidths[6], false, false, false, isEven),
-    createDataCell(r.college_name || '—', colWidths[7], false, false, false, isEven),
-    createDataCell(r.leader_name || '—', colWidths[8], false, false, false, isEven),
-    createDataCell(r.mobile_no || '—', colWidths[9], true, false, false, isEven),
-    createDataCell(r.email || '—', colWidths[10], false, false, false, isEven),
-    createDataCell(r.mentor_name || '—', colWidths[11], false, false, false, isEven),
-    createDataCell(statusStr, colWidths[12], true, true, isPresent, isEven),
-    createDataCell(methodStr, colWidths[13], true, false, false, isEven),
-    createDataCell(timeStr, colWidths[14], true, false, false, isEven)
+    createDataCell(r.leader_name || '—', colWidths[4], false, false, false, isEven),
+    createDataCell(r.members || '—', colWidths[5], false, false, false, isEven),
+    createDataCell(r.mentor_name || '—', colWidths[6], false, false, false, isEven),
+    createDataCell(r.mobile_no || '—', colWidths[7], true, false, false, isEven),
+    createDataCell(r.email || '—', colWidths[8], false, false, false, isEven),
+    createDataCell(r.college_name || '—', colWidths[9], false, false, false, isEven),
+    createDataCell(r.category || '—', colWidths[10], false, false, false, isEven),
+    createDataCell(r.panel_no ? `Panel ${r.panel_no}` : '—', colWidths[11], true, false, false, isEven),
+    createDataCell(r.venue || '—', colWidths[12], false, false, false, isEven),
+    createDataCell(statusStr, colWidths[13], true, true, isPresent, isEven),
+    createDataCell(methodStr, colWidths[14], true, false, false, isEven),
+    createDataCell(timeStr, colWidths[15], true, false, false, isEven)
   ];
 
   return new TableRow({ children: cells });
