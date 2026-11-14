@@ -26,10 +26,27 @@ async function authAdminOrJuryAdmin(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role === 'admin' || decoded.role === 'jury-admin') {
+    if (decoded.role === 'admin' || decoded.role === 'jury-admin' || decoded.role === 'institute_admin') {
       const validated = await validateSession(decoded);
       if (!validated) return res.status(401).json({ error: 'Password changed or session invalid. Please log in again.' });
       req.user = validated;
+
+      // Institute Admin & Jury Admin have direct executive access
+      if (req.user.role === 'institute_admin' || req.user.role === 'jury-admin' || req.user.username === 'RMK@123' || req.user.username === 'instituteadmin') {
+        return next();
+      }
+
+      // Regular Admin must provide valid section authorization key
+      const authKey = req.headers['x-auth-key'] || req.headers['x-eval-password'] || req.query.auth_key;
+      const validKeys = ['Krish@1may06', 'KrishMehta@rmkec.ac.in'];
+      if (!authKey || !validKeys.includes(String(authKey).trim())) {
+        return res.status(403).json({
+          error: 'Restricted Access: Evaluation & Rankings is protected. Authorization password required.',
+          requires_eval_auth: true,
+          is_locked: true
+        });
+      }
+
       return next();
     }
     return res.status(403).json({ error: 'Access denied: Administrator privileges required.' });

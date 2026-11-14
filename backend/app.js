@@ -145,8 +145,9 @@ app.post('/api/admin/login', async (req, res) => {
     }
 
     loginLimiter.clear(req.ip);
+    const role = admin.role || (admin.username === 'RMK@123' || admin.username === 'instituteadmin' ? 'institute_admin' : 'admin');
     const token = signAdminToken(admin);
-    res.json({ token, name: admin.name, username: admin.username });
+    res.json({ token, name: admin.name, username: admin.username, role });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

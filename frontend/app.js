@@ -6,12 +6,20 @@
 
 // Team leaders use the site root; admins use /rmkjrhackathon2026-adminlogin (flag set in index.html)
 const IS_ADMIN_PAGE = document.documentElement.classList.contains('admin-page');
+const IS_INSTITUTE_ADMIN_PAGE = document.documentElement.classList.contains('institute-admin-page');
 const IS_JURY_ADMIN_PAGE = document.documentElement.classList.contains('jury-admin-page');
 const IS_JURY_PAGE = document.documentElement.classList.contains('jury-page');
 
 let teamToken = null;
 let adminToken = null;
 let teamData = null;
+let currentEvalAuthKey = null; // Volatile unlock key for Evaluation & Rankings in Admin view
+
+function isInstituteAdmin() {
+  const role = localStorage.getItem('rmk_admin_role');
+  const user = (localStorage.getItem('rmk_admin_username') || '').trim();
+  return role === 'institute_admin' || user.toUpperCase() === 'RMK@123' || user.toLowerCase() === 'instituteadmin';
+}
 
 let juryAdminToken = null;
 let judgeToken = null;
@@ -113,6 +121,24 @@ function restoreSession() {
       refreshJudgeStatus();
     } else {
       showView('view-jury-login');
+    }
+    return;
+  }
+
+  if (IS_INSTITUTE_ADMIN_PAGE) {
+    document.title = 'RMK Jr. Hackathon 2026 — Institute Admin';
+    const subTitle = document.querySelector('.auth-portal-sub');
+    if (subTitle) subTitle.textContent = 'Institute Administration Portal';
+    const userInp = document.getElementById('admin-username');
+    if (userInp && !userInp.value) userInp.value = 'RMK@123';
+    const adminBtnText = document.querySelector('#admin-login-btn .btn-text');
+    if (adminBtnText) adminBtnText.textContent = 'Sign in to Institute Admin';
+
+    if (adminToken) {
+      initAdminDashboard();
+      showView('view-admin');
+    } else {
+      showView('view-auth');
     }
     return;
   }
@@ -246,6 +272,10 @@ async function handleAdminLogin(e) {
 
     adminToken = data.token;
     localStorage.setItem('rmk_admin_token', adminToken);
+    const assignedRole = data.role || (username.toUpperCase() === 'RMK@123' || username.toLowerCase() === 'instituteadmin' ? 'institute_admin' : 'admin');
+    localStorage.setItem('rmk_admin_role', assignedRole);
+    localStorage.setItem('rmk_admin_username', data.username || username);
+    if (data.name) localStorage.setItem('rmk_admin_name', data.name);
 
     initAdminDashboard();
     showView('view-admin');
@@ -264,9 +294,13 @@ async function handleAdminLogin(e) {
 // Logs out of this page's role only, and returns to this page's login form
 function logout(message) {
   closeScanner();
-  if (IS_ADMIN_PAGE) {
+  if (IS_ADMIN_PAGE || IS_INSTITUTE_ADMIN_PAGE) {
     adminToken = null;
+    currentEvalAuthKey = null;
     localStorage.removeItem('rmk_admin_token');
+    localStorage.removeItem('rmk_admin_role');
+    localStorage.removeItem('rmk_admin_username');
+    localStorage.removeItem('rmk_admin_name');
   } else {
     teamToken = null;
     teamData = null;
@@ -724,12 +758,51 @@ async function submitAttendance(qrCodeValue) {
 // ADMIN DASHBOARD
 // ─────────────────────────────────────────────────────────────
 function initAdminDashboard() {
+  updateAdminSidebarRoleBadge();
   loadAdminStats();
   loadTeamsTable();
   loadPermanentVenueQR();
 }
 
+function updateAdminSidebarRoleBadge() {
+  const badge = document.getElementById('admin-sidebar-badge');
+  const lockIcon = document.getElementById('eval-tab-lock-indicator');
+  const isInst = isInstituteAdmin();
+
+  if (badge) {
+    badge.classList.remove('hidden');
+    if (isInst) {
+      badge.textContent = 'Institute Administration';
+      badge.classList.add('badge-institute');
+    } else {
+      badge.textContent = 'Admin Portal';
+      badge.classList.remove('badge-institute');
+    }
+  }
+
+  if (lockIcon) {
+    if (isInst) {
+      lockIcon.classList.add('hidden');
+    } else {
+      lockIcon.classList.remove('hidden');
+    }
+  }
+}
+
 function switchAdminSection(secName) {
+  // If attempting to switch to Evaluation & Rankings and NOT Institute Admin:
+  if (secName === 'eval-reports' && !isInstituteAdmin()) {
+    if (!currentEvalAuthKey) {
+      openEvalAuthModal();
+      return; // Do NOT switch sections until password is verified
+    }
+  }
+
+  // If navigating away from eval-reports, clear volatile unlock key
+  if (secName !== 'eval-reports') {
+    currentEvalAuthKey = null;
+  }
+
   const alinkTable = document.getElementById('alink-table');
   const alinkThemes = document.getElementById('alink-themes');
   const alinkQR = document.getElementById('alink-qr');
@@ -786,6 +859,137 @@ function switchAdminSection(secName) {
     }
     initEvaluationReportsView();
   }
+}
+
+function openEvalAuthModal() {
+  const modal = document.getElementById('modal-eval-auth');
+  const input = document.getElementById('eval-auth-password-input');
+  const errEl = document.getElementById('eval-auth-error');
+  if (errEl) {
+    errEl.classList.add('hidden');
+    errEl.textContent = '';
+  }
+  if (input) {
+    input.value = '';
+  }
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+  setTimeout(() => {
+    if (input) input.focus();
+  }, 100);
+}
+
+function closeEvalAuthModal() {
+  const modal = document.getElementById('modal-eval-auth');
+  const input = document.getElementById('eval-auth-password-input');
+  const errEl = document.getElementById('eval-auth-error');
+  if (errEl) {
+    errEl.classList.add('hidden');
+    errEl.textContent = '';
+  }
+  if (input) {
+    input.value = '';
+  }
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+}
+
+async function handleEvalAuthSubmit(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('eval-auth-password-input');
+  const errEl = document.getElementById('eval-auth-error');
+  const submitBtn = document.getElementById('btn-eval-auth-submit');
+  const pwd = (input?.value || '').trim();
+
+  if (!pwd) {
+    if (errEl) {
+      errEl.textContent = 'Please enter the authorization password.';
+      errEl.classList.remove('hidden');
+    }
+    return;
+  }
+
+  const validKeys = ['Krish@1may06', 'KrishMehta@rmkec.ac.in'];
+  if (!validKeys.includes(pwd)) {
+    if (errEl) {
+      errEl.textContent = 'Incorrect authorization password. Access denied.';
+      errEl.classList.remove('hidden');
+    }
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+    return;
+  }
+
+  if (submitBtn) submitBtn.disabled = true;
+  try {
+    const token = getEffectiveAdminToken();
+    const res = await fetch('/api/admin/reports/evaluations/status?limit=1', {
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'X-Auth-Key': pwd
+      }
+    });
+
+    if (res.status === 403) {
+      const d = await res.json().catch(() => ({}));
+      if (errEl) {
+        errEl.textContent = d.error || 'Incorrect authorization password. Access denied.';
+        errEl.classList.remove('hidden');
+      }
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      return;
+    }
+
+    currentEvalAuthKey = pwd;
+    closeEvalAuthModal();
+    showToast('Evaluation & Rankings unlocked', 'success');
+    proceedToEvalReportsSection();
+  } catch (err) {
+    console.error('[ERROR] handleEvalAuthSubmit:', err);
+    currentEvalAuthKey = pwd;
+    closeEvalAuthModal();
+    proceedToEvalReportsSection();
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+function proceedToEvalReportsSection() {
+  const alinkTable = document.getElementById('alink-table');
+  const alinkThemes = document.getElementById('alink-themes');
+  const alinkQR = document.getElementById('alink-qr');
+  const alinkAllocations = document.getElementById('alink-allocations');
+  const alinkEvalReports = document.getElementById('alink-eval-reports');
+
+  const secTable = document.getElementById('admin-sec-table');
+  const secThemes = document.getElementById('admin-sec-themes');
+  const secQR = document.getElementById('admin-sec-qr');
+  const secAllocations = document.getElementById('admin-sec-allocations');
+  const secEvalReports = document.getElementById('admin-sec-eval-reports');
+
+  [alinkTable, alinkThemes, alinkQR, alinkAllocations].forEach(btn => btn && btn.classList.remove('active'));
+  [secTable, secThemes, secQR, secAllocations].forEach(pane => {
+    if (pane) {
+      pane.classList.add('hidden');
+      pane.classList.remove('active');
+    }
+  });
+
+  if (alinkEvalReports) alinkEvalReports.classList.add('active');
+  if (secEvalReports) {
+    secEvalReports.classList.remove('hidden');
+    secEvalReports.classList.add('active');
+  }
+  initEvaluationReportsView();
 }
 
 async function loadAdminStats() {
@@ -5419,12 +5623,25 @@ async function loadEvaluationStatusReport() {
   if (panel && panel !== 'ALL') params.set('panel', panel);
   if (status && status !== 'ALL') params.set('status', status);
 
+  const headers = { Authorization: 'Bearer ' + token };
+  if (currentEvalAuthKey) headers['X-Auth-Key'] = currentEvalAuthKey;
+
   try {
     const res = await fetch(`/api/admin/reports/evaluations/status?${params.toString()}`, {
-      headers: { Authorization: 'Bearer ' + token }
+      headers
     });
     if (res.status === 401) {
       showToast('Admin session expired. Please log in again.', 'error');
+      return;
+    }
+    if (res.status === 403) {
+      const errData = await res.json().catch(() => ({}));
+      if (errData.requires_eval_auth) {
+        currentEvalAuthKey = null;
+        openEvalAuthModal();
+        return;
+      }
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${errData.error || 'Access denied'}</td></tr>`;
       return;
     }
     if (!res.ok) {
@@ -5899,8 +6116,19 @@ async function loadThemeRankings() {
   }
 
   try {
+    const headers = { Authorization: 'Bearer ' + token };
+    if (currentEvalAuthKey) headers['X-Auth-Key'] = currentEvalAuthKey;
+
     const url = chosenTheme ? `/api/admin/reports/rankings/theme?theme=${encodeURIComponent(chosenTheme)}` : '/api/admin/reports/rankings/theme';
-    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    const res = await fetch(url, { headers });
+    if (res.status === 403) {
+      const errData = await res.json().catch(() => ({}));
+      if (errData.requires_eval_auth) {
+        currentEvalAuthKey = null;
+        openEvalAuthModal();
+        return;
+      }
+    }
     if (!res.ok) {
       if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load rankings</td></tr>';
       return;
@@ -5950,9 +6178,20 @@ async function loadOverallRankings() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center loading-cell">Loading grand leaderboard...</td></tr>';
 
   try {
+    const headers = { Authorization: 'Bearer ' + token };
+    if (currentEvalAuthKey) headers['X-Auth-Key'] = currentEvalAuthKey;
+
     const res = await fetch('/api/admin/reports/rankings/overall', {
-      headers: { Authorization: 'Bearer ' + token }
+      headers
     });
+    if (res.status === 403) {
+      const errData = await res.json().catch(() => ({}));
+      if (errData.requires_eval_auth) {
+        currentEvalAuthKey = null;
+        openEvalAuthModal();
+        return;
+      }
+    }
     if (!res.ok) {
       if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load overall leaderboard</td></tr>';
       return;
@@ -6060,18 +6299,28 @@ async function downloadEvaluationExcel(endpoint) {
   }
 
   let queryParam = '';
+  const qParams = [];
   if (endpoint.includes('theme')) {
     const exportSelect = document.getElementById('export-theme-topn-select');
     const rankSelect = document.getElementById('rank-topn-selector');
     const topN = (exportSelect && exportSelect.value) || (rankSelect && rankSelect.value) || '3';
-    queryParam = `?topN=${encodeURIComponent(topN)}`;
+    qParams.push(`topN=${encodeURIComponent(topN)}`);
+  }
+  if (currentEvalAuthKey) {
+    qParams.push(`auth_key=${encodeURIComponent(currentEvalAuthKey)}`);
+  }
+  if (qParams.length > 0) {
+    queryParam = `?${qParams.join('&')}`;
   }
 
   showToast('Generating executive Excel workbook from live database...', 'info');
 
   try {
+    const headers = { Authorization: 'Bearer ' + token };
+    if (currentEvalAuthKey) headers['X-Auth-Key'] = currentEvalAuthKey;
+
     const res = await fetch(`/api/admin/reports/export/${endpoint}${queryParam}`, {
-      headers: { Authorization: 'Bearer ' + token }
+      headers
     });
 
     if (!res.ok) {
@@ -6130,3 +6379,9 @@ window.syncExportTopNToRankSelector = syncExportTopNToRankSelector;
 window.downloadCurrentThemeExcel = downloadCurrentThemeExcel;
 window.loadOverallRankings = loadOverallRankings;
 window.downloadEvaluationExcel = downloadEvaluationExcel;
+window.openEvalAuthModal = openEvalAuthModal;
+window.closeEvalAuthModal = closeEvalAuthModal;
+window.handleEvalAuthSubmit = handleEvalAuthSubmit;
+window.proceedToEvalReportsSection = proceedToEvalReportsSection;
+window.isInstituteAdmin = isInstituteAdmin;
+window.updateAdminSidebarRoleBadge = updateAdminSidebarRoleBadge;

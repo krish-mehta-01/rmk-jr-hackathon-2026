@@ -26,12 +26,13 @@ function getPasswordSig(hashOrValue) {
 const PERMANENT_EXPIRES_IN = '36500d'; // 100 years: practically forever
 
 function signAdminToken(admin) {
+  const role = admin.role || (admin.username === 'RMK@123' || admin.username === 'instituteadmin' ? 'institute_admin' : 'admin');
   return jwt.sign(
     {
       id: admin.id,
       username: admin.username,
       name: admin.name,
-      role: 'admin',
+      role: role,
       pwd_sig: getPasswordSig(admin.password_hash)
     },
     JWT_SECRET,
@@ -92,15 +93,15 @@ async function validateSession(decoded) {
   if (!decoded || !decoded.role || !decoded.id) return null;
 
   try {
-    if (decoded.role === 'admin') {
-      const [rows] = await pool.execute('SELECT id, username, name, password_hash FROM admins WHERE id = ?', [decoded.id]);
+    if (decoded.role === 'admin' || decoded.role === 'institute_admin') {
+      const [rows] = await pool.execute('SELECT id, username, name, password_hash, role FROM admins WHERE id = ?', [decoded.id]);
       if (rows.length === 0) return null;
       const admin = rows[0];
       // If token has pwd_sig, verify it matches current password_hash
       if (decoded.pwd_sig && decoded.pwd_sig !== getPasswordSig(admin.password_hash)) {
         return null; // Password changed!
       }
-      return { ...decoded, name: admin.name, username: admin.username };
+      return { ...decoded, name: admin.name, username: admin.username, role: admin.role || decoded.role };
     }
 
     if (decoded.role === 'jury-admin') {
@@ -153,7 +154,14 @@ function requireRole(expectedRole) {
 
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      if (decoded.role !== expectedRole) {
+      
+      const isRoleAllowed = Array.isArray(expectedRole)
+        ? expectedRole.includes(decoded.role)
+        : (expectedRole === 'admin' 
+            ? (decoded.role === 'admin' || decoded.role === 'institute_admin') 
+            : decoded.role === expectedRole);
+
+      if (!isRoleAllowed) {
         return res.status(403).json({ error: 'Access denied: insufficient privileges.' });
       }
 
