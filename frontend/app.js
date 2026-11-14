@@ -1101,8 +1101,9 @@ function renderTeamsRows(teams) {
             <div><dt>Idea Title</dt><dd>${escapeHtml(t.project_title || '—')}</dd></div>
             <div><dt>Team Members</dt><dd>${membersListItems(t, false) ? `<ol class="members-ol">${membersListItems(t, false)}</ol>` : '—'}</dd></div>
             <div><dt>Leader Contact</dt><dd class="mono">${escapeHtml(t.mobile_no || '—')}</dd></div>
-            <div><dt>Scanned Time</dt><dd>${scannedAt}</dd></div>
+            <div><dt>Theme</dt><dd>${escapeHtml(t.category || '—')}</dd></div>
             <div><dt>Attendance Mode</dt><dd>${isPresent ? (t.marked_by || 'QR Scan') : '—'}</dd></div>
+            <div><dt>Scanned Time</dt><dd>${scannedAt}</dd></div>
           </dl>
           <button type="button" class="glass-btn-table-action ${isPresent ? 'btn-action-marked' : 'btn-action-unmarked'}" data-team-id="${id}">
             ${isPresent ? 'Mark Not Scanned' : 'Mark Scanned'}
