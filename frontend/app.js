@@ -5256,23 +5256,39 @@ const expandedEvalTeams = new Set();
 function toggleEvalDetailsRow(teamId, btn, event) {
   if (event) event.stopPropagation();
   const idStr = String(teamId);
-  const isOpen = !expandedEvalTeams.has(idStr);
-  if (isOpen) expandedEvalTeams.add(idStr);
-  else expandedEvalTeams.delete(idStr);
+  const target = event ? event.target : btn;
+  const parentRow = btn ? btn.closest('tr') : (target ? target.closest('tr') : null);
+  if (!parentRow) return;
 
-  const detailRow = document.querySelector(`tr[data-eval-detail-for="${idStr}"]`);
-  if (detailRow) {
-    detailRow.classList.toggle('hidden', !isOpen);
+  // Prevent toggling if click was inside the detail row itself
+  if (parentRow.classList.contains('eval-detail-row')) return;
+
+  // CRITICAL FIX: Find the detail row directly attached to THIS table row (next sibling),
+  // NEVER use document.querySelector which selects from the first table in another tab!
+  const detailRow = (parentRow.nextElementSibling && parentRow.nextElementSibling.classList.contains('eval-detail-row'))
+    ? parentRow.nextElementSibling
+    : (parentRow.parentElement ? parentRow.parentElement.querySelector(`tr.eval-detail-row[data-eval-detail-for="${idStr}"]`) : null);
+
+  if (!detailRow) return;
+
+  const willOpen = detailRow.classList.contains('hidden') || detailRow.style.display === 'none';
+
+  if (willOpen) {
+    expandedEvalTeams.add(idStr);
+    detailRow.classList.remove('hidden');
+    detailRow.style.display = 'table-row';
+    parentRow.classList.add('is-expanded');
+  } else {
+    expandedEvalTeams.delete(idStr);
+    detailRow.classList.add('hidden');
+    detailRow.style.display = 'none';
+    parentRow.classList.remove('is-expanded');
   }
 
-  const parentRow = btn ? btn.closest('tr') : (event ? event.target.closest('tr') : null);
-  if (parentRow && !parentRow.classList.contains('eval-detail-row')) {
-    parentRow.classList.toggle('is-expanded', isOpen);
-    const expandBtn = parentRow.querySelector('.btn-eval-expand');
-    if (expandBtn) {
-      expandBtn.setAttribute('aria-expanded', String(isOpen));
-      expandBtn.classList.toggle('is-open', isOpen);
-    }
+  const expandBtn = parentRow.querySelector('.btn-eval-expand');
+  if (expandBtn) {
+    expandBtn.setAttribute('aria-expanded', String(willOpen));
+    expandBtn.classList.toggle('is-open', willOpen);
   }
 }
 window.toggleEvalDetailsRow = toggleEvalDetailsRow;
@@ -5292,7 +5308,7 @@ function renderEvalDetailDrawer(t, colspan = 6) {
   ` : '';
 
   return `
-    <tr class="eval-detail-row${isOpen ? '' : ' hidden'}" data-eval-detail-for="${idStr}">
+    <tr class="eval-detail-row${isOpen ? '' : ' hidden'}" style="display: ${isOpen ? 'table-row' : 'none'};" data-eval-detail-for="${idStr}">
       <td colspan="${colspan}">
         <div class="eval-detail-card">
           <div class="eval-detail-grid">
