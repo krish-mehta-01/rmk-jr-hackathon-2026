@@ -463,30 +463,6 @@ app.get('/api/admin/export', authAdmin, async (req, res) => {
   }
 });
 
-function findMasterDocx() {
-  const candidatePaths = [
-    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Master_Attendance.docx'),
-    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Master_Attendance.docx'),
-    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Master_Attendance.docx')
-  ];
-  for (const p of candidatePaths) {
-    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
-  }
-  return null;
-}
-
-function findMasterPdf() {
-  const candidatePaths = [
-    path.join(__dirname, '..', 'public', 'exports', 'RMK_Junior_Hackathon_2026_Master_Attendance.pdf'),
-    path.join(__dirname, '..', 'RMK_Junior_Hackathon_2026_Master_Attendance.pdf'),
-    path.join(__dirname, '..', 'scratch', 'RMK_Junior_Hackathon_2026_Master_Attendance.pdf')
-  ];
-  for (const p of candidatePaths) {
-    if (fs.existsSync(p) && fs.statSync(p).size > 0) return p;
-  }
-  return null;
-}
-
 // Download Master Attendance Word document (.docx) - Live Dynamic DB
 app.get('/api/admin/export/master-doc', authAdmin, async (req, res) => {
   try {
@@ -834,4 +810,6 @@ module.exports = app;
 
 
 
-// Deploy trigger: 2026-11-14T09:33:17.385Z
+
+
+// Deploy trigger: 2026-11-14T11:30:29.211Z
