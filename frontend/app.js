@@ -96,7 +96,7 @@ function restoreSession() {
   teamToken = localStorage.getItem('rmk_team_token') || null;
 
   if (IS_JURY_ADMIN_PAGE) {
-    document.title = 'RMK Jr. Hackathon 2026 — Jury Admin';
+    document.title = 'RMK Jr. Hackathon 2026 — Super Admin';
     if (juryAdminToken) {
       initJuryAdminDashboard();
       showView('view-jury-admin');
@@ -3166,11 +3166,32 @@ function closeJudgePasswordModal(force = false) {
   }
 }
 
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+
+  if (btn) {
+    const eyeShow = btn.querySelector('.eye-show');
+    const eyeHide = btn.querySelector('.eye-hide');
+    if (eyeShow && eyeHide) {
+      if (isPassword) {
+        eyeShow.classList.add('hidden');
+        eyeHide.classList.remove('hidden');
+      } else {
+        eyeShow.classList.remove('hidden');
+        eyeHide.classList.add('hidden');
+      }
+    }
+  }
+}
+window.togglePasswordVisibility = togglePasswordVisibility;
+
 async function handleJudgeChangePassword(e) {
   e.preventDefault();
   const currentPwd = document.getElementById('pwd-current').value;
   const newPwd = document.getElementById('pwd-new').value;
-  const confirmPwd = document.getElementById('pwd-confirm').value;
   const errBox = document.getElementById('pwd-error');
   const btn = document.getElementById('btn-save-pwd');
   const btnText = btn.querySelector('.btn-text');
@@ -3186,12 +3207,6 @@ async function handleJudgeChangePassword(e) {
 
   if (newPwd === currentPwd || newPwd === 'rmkjrh2026' || newPwd === 'rmkjh2026') {
     errBox.textContent = 'New password cannot be the default password. Please choose a private password.';
-    errBox.classList.remove('hidden');
-    return;
-  }
-
-  if (newPwd !== confirmPwd) {
-    errBox.textContent = 'New password and confirmation do not match.';
     errBox.classList.remove('hidden');
     return;
   }
@@ -5272,16 +5287,22 @@ function toggleEvalDetailsRow(teamId, btn, event) {
   if (!detailRow) return;
 
   const willOpen = detailRow.classList.contains('hidden') || detailRow.style.display === 'none';
+  const td = detailRow.querySelector('td');
+  const card = detailRow.querySelector('.eval-detail-card');
 
   if (willOpen) {
     expandedEvalTeams.add(idStr);
     detailRow.classList.remove('hidden');
     detailRow.style.display = 'table-row';
+    if (td) td.style.display = 'table-cell';
+    if (card) card.style.display = 'block';
     parentRow.classList.add('is-expanded');
   } else {
     expandedEvalTeams.delete(idStr);
     detailRow.classList.add('hidden');
     detailRow.style.display = 'none';
+    if (td) td.style.display = 'none';
+    if (card) card.style.display = 'none';
     parentRow.classList.remove('is-expanded');
   }
 
@@ -5309,17 +5330,35 @@ function renderEvalDetailDrawer(t, colspan = 6) {
 
   return `
     <tr class="eval-detail-row${isOpen ? '' : ' hidden'}" style="display: ${isOpen ? 'table-row' : 'none'};" data-eval-detail-for="${idStr}">
-      <td colspan="${colspan}">
-        <div class="eval-detail-card">
-          <div class="eval-detail-grid">
-            <div class="eval-detail-item eval-detail-full">
-              <span class="eval-detail-label">Project Title:</span>
-              <span class="eval-detail-val eval-detail-project-title">${escapeHtml(t.project_title || '—')}</span>
+      <td colspan="${colspan}" style="display: ${isOpen ? 'table-cell' : 'none'};">
+        <div class="eval-detail-card" style="display: ${isOpen ? 'block' : 'none'};">
+          <!-- ONE-LINE HEADLINE BAR FOR PROJECT TITLE, THEME, VENUE, PANEL -->
+          <div class="eval-detail-headline-bar">
+            <div class="eval-headline-field eval-headline-title">
+              <span class="eval-headline-label">PROJECT TITLE:</span>
+              <span class="eval-headline-value eval-project-title-bold">${escapeHtml(t.project_title || '—')}</span>
             </div>
+            <div class="eval-headline-divider"></div>
+            <div class="eval-headline-field">
+              <span class="eval-headline-label">THEME:</span>
+              <span class="eval-headline-value"><span class="status-pill-badge pill-blue">${escapeHtml(t.theme || 'General')}</span></span>
+            </div>
+            <div class="eval-headline-divider"></div>
+            <div class="eval-headline-field">
+              <span class="eval-headline-label">VENUE:</span>
+              <span class="eval-headline-value eval-venue-name">${escapeHtml(t.panel_venue || 'Venue Pending')}</span>
+            </div>
+            <div class="eval-headline-divider"></div>
+            <div class="eval-headline-field">
+              <span class="eval-headline-label">PANEL:</span>
+              <span class="eval-headline-value"><span class="table-panel-badge">${escapeHtml(t.panel_code || '—')}</span></span>
+            </div>
+          </div>
 
+          <div class="eval-detail-grid" style="margin-top: 14px;">
             <div class="eval-detail-item">
-              <span class="eval-detail-label">Theme / Domain:</span>
-              <span class="eval-detail-val"><span class="status-pill-badge pill-blue">${escapeHtml(t.theme || 'General')}</span></span>
+              <span class="eval-detail-label">School / Institution:</span>
+              <span class="eval-detail-val">${escapeHtml(t.school || t.college_name || '—')}</span>
             </div>
 
             <div class="eval-detail-item">
@@ -5341,19 +5380,6 @@ function renderEvalDetailDrawer(t, colspan = 6) {
             <div class="eval-detail-item">
               <span class="eval-detail-label">Team Members:</span>
               <span class="eval-detail-val">${escapeHtml(t.members || '—')}</span>
-            </div>
-
-            <div class="eval-detail-item">
-              <span class="eval-detail-label">Institution / School:</span>
-              <span class="eval-detail-val">${escapeHtml(t.school || t.college_name || '—')}</span>
-            </div>
-
-            <div class="eval-detail-item">
-              <span class="eval-detail-label">Panel & Venue:</span>
-              <span class="eval-detail-val">
-                <span class="table-panel-badge">${escapeHtml(t.panel_code || '—')}</span>
-                <span style="color:#64748b; font-size:12px; margin-left:5px;">${escapeHtml(t.panel_venue || 'Venue Pending')}</span>
-              </span>
             </div>
 
             ${remarksHtml}
@@ -5386,11 +5412,11 @@ function renderEvaluationStatusTable(teams) {
 
       const inScoreHtml = t.internal_status === 'SUBMITTED' 
         ? `<strong class="mono" style="color:var(--accent-green-dark); font-size:13.5px;">${t.internal_marks}</strong> <span style="font-size:11px; color:#64748b;">/ 50</span>`
-        : (t.internal_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted" style="font-size:12px;">Pending</span>');
+        : (t.internal_status === 'DRAFT' ? '<span class="status-pill-badge pill-amber">Draft</span>' : '<span class="status-pill-badge pill-amber">Pending</span>');
 
       const exScoreHtml = t.external_status === 'SUBMITTED' 
         ? `<strong class="mono" style="color:var(--accent-green-dark); font-size:13.5px;">${t.external_marks}</strong> <span style="font-size:11px; color:#64748b;">/ 50</span>`
-        : (t.external_status === 'DRAFT' ? '<span class="status-pill-badge pill-absent">Draft</span>' : '<span class="text-muted" style="font-size:12px;">Pending</span>');
+        : (t.external_status === 'DRAFT' ? '<span class="status-pill-badge pill-amber">Draft</span>' : '<span class="status-pill-badge pill-amber">Pending</span>');
 
       const combinedHtml = t.is_fully_evaluated && t.combined_score !== null
         ? `<div class="mono" style="font-weight:800; font-size:14px; color:var(--accent-green-dark);">${t.combined_score} / 100</div>`
@@ -5589,8 +5615,8 @@ function renderThemeLeaderboard() {
               </div>
             </td>
             <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
-            <td style="text-align:center;">${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
-            <td style="text-align:center;">${pt.external_status === 'SUBMITTED' ? pt.external_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
+            <td style="text-align:center;">${pt.internal_status === 'SUBMITTED' ? `<strong class="mono" style="color:var(--accent-green-dark); font-size:13.5px;">${pt.internal_marks}</strong> <span style="font-size:11px; color:#64748b;">/ 50</span>` : '<span class="status-pill-badge pill-amber">Pending</span>'}</td>
+            <td style="text-align:center;">${pt.external_status === 'SUBMITTED' ? `<strong class="mono" style="color:var(--accent-green-dark); font-size:13.5px;">${pt.external_marks}</strong> <span style="font-size:11px; color:#64748b;">/ 50</span>` : '<span class="status-pill-badge pill-amber">Pending</span>'}</td>
             <td style="text-align:center;"><span class="status-pill-badge pill-amber">${escapeHtml(pt.overall_status_label)}</span></td>
             <td style="text-align:center;" onclick="event.stopPropagation()">
               <button type="button" class="btn-eval-expand${isOpen ? ' is-open' : ''}" onclick="toggleEvalDetailsRow('${idStr}', this, event)" aria-label="Toggle details" title="View details">

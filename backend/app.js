@@ -979,6 +979,11 @@ app.get(['/j8k2m9q7w4', '/j8k2m9q7w4/*'], (req, res) => {
   res.redirect(301, '/rmkjrhackathon2026-jurylogin');
 });
 
+// Legacy jury-admin URL redirect -> official super admin URL
+app.get(['/rmkjrhackathon2026-jury-admin', '/rmkjrhackathon2026-juryadmin'], (req, res) => {
+  res.redirect(301, '/rmkjrhackathon2026-superadmindhaneshkrish');
+});
+
 // Unknown API routes return JSON, everything else gets the app
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.get('*', (req, res) => {

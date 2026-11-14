@@ -113,6 +113,13 @@ def build_2d_authoritative_map():
     draw.line([380, 260, 1400, 260], fill=road_border, width=2)
     draw.line([460, 320, 1400, 320], fill=road_border, width=2)
 
+    # Road between RJ Block and SV Block (connecting from left road to east road & VR):
+    draw.rectangle([380, 600, 1400, 680], fill=road_fill)
+    draw.line([380, 600, 1400, 600], fill=road_border, width=2)
+    draw.line([380, 680, 1400, 680], fill=road_border, width=2)
+    for dx in range(480, 1380, 40):
+        draw.line([dx, 640, dx + 24, 640], fill=(255, 255, 255), width=3)
+
     # Vertical Connector Road / Corridor between RJ/SV and VR Block (as drawn in user's sketch):
     # Runs from y=320 down to y=900 at x=1310 to 1390
     draw.rectangle([1310, 320, 1390, 900], fill=road_fill)
@@ -218,16 +225,11 @@ def build_2d_authoritative_map():
     for wy in range(430, 510, 8):
         draw.line([1410, wy, 1435, wy + 4], fill=(217, 119, 6), width=2)
 
-    # ════════════════════════════════════════════════════════════════════════
-    # BUILDING 4: LOWER RIGHT ACADEMIC BLOCK (South of VR, East of RJ)
-    # Matching the exact rectangular block drawn below VR in user's sketch!
-    # ════════════════════════════════════════════════════════════════════════
-    lr_x1, lr_y1 = 1450, 710
-    lr_x2, lr_y2 = 1840, 870
-
-    draw.rounded_rectangle([lr_x1 + 8, lr_y1 + 10, lr_x2 + 8, lr_y2 + 10], radius=8, fill=(0, 0, 0, 50))
-    draw.rounded_rectangle([lr_x1, lr_y1, lr_x2, lr_y2], radius=8, fill=(241, 245, 249), outline=(148, 163, 184), width=3)
-    draw.text(((lr_x1 + lr_x2)//2, (lr_y1 + lr_y2)//2), "ACADEMIC & LAB WING", fill=(100, 116, 139), font=f_badge, anchor="mm")
+    # Ground east of RJ Block: Green lawn & palm trees (Strictly 3 buildings only: RJ, SV, VR)
+    draw.rounded_rectangle([1390, 680, 2100, 900], radius=12, fill=garden_bg, outline=lawn_border, width=2)
+    for tx in [1480, 1620, 1760, 1900]:
+        draw.ellipse([tx - 18, 770, tx + 18, 806], fill=(46, 125, 50))
+        draw.ellipse([tx - 12, 755, tx + 12, 785], fill=(76, 175, 80))
 
     # ════════════════════════════════════════════════════════════════════════
     # 6. STEP-BY-STEP DIRECTIONAL ROUTE ARROWS
