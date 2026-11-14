@@ -3645,7 +3645,7 @@ async function openEvaluationModal(teamId) {
 
   document.getElementById('eval-modal-team-code').textContent = project.team_code;
   document.getElementById('eval-modal-team-name').textContent = project.team_name;
-  document.getElementById('eval-modal-proj-title').textContent = `${project.project_title || '—'} • ${project.category || 'Innovation'}`;
+  document.getElementById('eval-modal-proj-title').textContent = project.project_title || '—';
 
   const schoolEl = document.getElementById('eval-modal-school');
   if (schoolEl) schoolEl.textContent = project.college_name || 'Institution / School';
