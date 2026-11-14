@@ -1042,14 +1042,14 @@ async function loadTeamsTable() {
     });
     if (sessionExpired(res)) return;
     if (!res.ok) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center">Failed to load teams. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load teams. Please refresh.</td></tr>';
       return;
     }
 
     const data = await res.json();
     renderTeamsRows(data.teams || []);
   } catch {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Network error loading teams.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Network error loading teams.</td></tr>';
   }
 }
 
@@ -1061,7 +1061,7 @@ const expandedTeams = new Set();
 function renderTeamsRows(teams) {
   const tbody = document.getElementById('teams-table-body');
   if (teams.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No teams found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No teams found.</td></tr>';
     return;
   }
 
@@ -1081,9 +1081,6 @@ function renderTeamsRows(teams) {
           <div class="table-team-id mono">${escapeHtml(t.team_code || '')}</div>
           <div class="table-team-title">${escapeHtml(t.team_name || '—')}</div>
         </td>
-        <td data-label="Theme">
-          <span class="team-theme-tag">${escapeHtml(t.category || 'General Track')}</span>
-        </td>
         <td data-label="Team Leader">${escapeHtml(t.leader_name || '—')}</td>
         <td data-label="Mentor">${escapeHtml(t.mentor_name || '—')}</td>
         <td data-label="School">${escapeHtml(t.college_name || '—')}</td>
@@ -1097,10 +1094,9 @@ function renderTeamsRows(teams) {
         </td>
       </tr>
       <tr class="team-detail-row${isOpen ? '' : ' hidden'}" data-detail-for="${id}">
-        <td colspan="7">
+        <td colspan="6">
           <div class="team-detail-body">
           <dl class="team-detail-grid">
-            <div><dt>Theme Track</dt><dd><span class="team-theme-pill">${escapeHtml(t.category || 'General Track')}</span></dd></div>
             <div><dt>Panel & Venue</dt><dd><strong>${t.panel_no ? `Panel ${t.panel_no}` : '—'}</strong> · ${escapeHtml(t.venue || '—')}</dd></div>
             <div><dt>Idea Title</dt><dd>${escapeHtml(t.project_title || '—')}</dd></div>
             <div><dt>Team Members</dt><dd>${membersListItems(t, false) ? `<ol class="members-ol">${membersListItems(t, false)}</ol>` : '—'}</dd></div>
