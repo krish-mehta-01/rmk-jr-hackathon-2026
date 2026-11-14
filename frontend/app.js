@@ -2906,10 +2906,10 @@ function printQRCode() {
           <h1>RMK Junior Hackathon 2026</h1>
           <div class="qr"><img src="${permanentQRCodeData}" alt="Hackathon Presence QR Code" /></div>
           <div class="portal-link-box">
-            <span class="portal-link-label">Website / Attendance Portal</span>
+            <span class="portal-link-label">Official Portal</span>
             <span class="portal-link-url">rmkjuniorhackathon2026.onrender.com</span>
           </div>
-          <p class="instruction">Scan with any phone camera or log in to the portal above to mark team presence.</p>
+          <p class="instruction">Scan with any smartphone camera to mark attendance or register on-spot for walk-in teams.</p>
         </div>
       </body>
     </html>

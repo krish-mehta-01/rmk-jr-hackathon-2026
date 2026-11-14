@@ -71,7 +71,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <div class="qr-notice-text">
               <strong>Venue QR Code Detected</strong>
-              <span>Enter Team ID & Phone to mark attendance</span>
+              <span>Enter Team ID & Phone to mark attendance, or register on-spot below</span>
             </div>
           </div>
 
@@ -825,20 +825,9 @@
 
             </div>
 
-            <!-- Pane 2: Hackathon Day Presence & On-Spot QR Standees -->
+            <!-- Pane 2: Hackathon Day Official QR Standee -->
             <div id="admin-sec-qr" class="admin-tab-pane hidden">
-              <!-- Standee Mode Switcher -->
-              <div class="standee-mode-tabs">
-                <button type="button" class="standee-tab-btn active" id="tab-standee-attendance" onclick="switchStandeeMode('attendance')">
-                  Attendance QR Standee (Check-in)
-                </button>
-                <button type="button" class="standee-tab-btn" id="tab-standee-onspot" onclick="switchStandeeMode('onspot')">
-                  On-Spot Registration Standee (Walk-in Teams)
-                </button>
-              </div>
-
-              <!-- Attendance Standee Container -->
-              <div class="glass-card laptop-standee-bento" id="standee-attendance-container">
+              <div class="glass-card laptop-standee-bento">
                 <div class="standee-flex-row">
                   
                   <!-- Physical Standee Poster Preview -->
@@ -853,6 +842,7 @@
                     </div>
 
                     <h2 class="standee-event-heading">RMK Junior Hackathon 2026</h2>
+                    <div class="standee-sub-pill">VENUE ATTENDANCE & ON-SPOT REGISTRATION</div>
                     
                     <div class="qr-canvas-holder" id="admin-qr-container">
                       <div class="qr-loading">Generating Standee QR...</div>
@@ -863,15 +853,15 @@
                     </div>
 
                     <div class="standee-instruction-text">
-                      Scan with any phone camera or log in above to mark team presence.
+                      Scan with any smartphone camera to mark team presence or register on-spot for walk-in teams.
                     </div>
                   </div>
 
                   <!-- Standee Controls & Info -->
                   <div class="standee-details-col">
-                    <h3>Hackathon Day Venue Standee</h3>
+                    <h3>Official Venue Standee</h3>
                     <p class="standee-desc-muted">
-                      Display this standee at all venue entry gates. Teams scan this QR with their smartphone cameras to confirm their attendance and unlock their venue pass.
+                      Display this official standee across all venue entry gates and registration helpdesks. When scanned, it opens the portal: pre-registered teams can mark their presence, and walk-in teams can register on-spot and receive their venue pass.
                     </p>
                     
                     <div class="standee-btn-cluster">
@@ -882,59 +872,6 @@
                       <button type="button" class="glass-btn glass-btn-secondary" onclick="printQRCode()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                         Print Official Standee
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              <!-- On-Spot Registration Standee Container -->
-              <div class="glass-card laptop-standee-bento hidden" id="standee-onspot-container">
-                <div class="standee-flex-row">
-                  
-                  <!-- Physical On-Spot Standee Poster Preview -->
-                  <div class="standee-frame-card" id="standee-onspot-printable-card">
-                    
-                    <div class="standee-header-branding">
-                      <div class="standee-logos-row">
-                        <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="standee-rmk-group-img" />
-                        <div class="standee-pipe"></div>
-                        <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="standee-hackathon-img" />
-                      </div>
-                    </div>
-
-                    <h2 class="standee-event-heading">RMK Junior Hackathon 2026</h2>
-                    <div class="standee-sub-pill onspot-pill">WALK-IN / ON-SPOT REGISTRATION</div>
-                    
-                    <div class="qr-canvas-holder" id="admin-onspot-qr-container">
-                      <div class="qr-loading">Generating On-Spot Registration QR...</div>
-                    </div>
-
-                    <div class="standee-url-link">
-                      <a href="https://rmkjuniorhackathon2026.onrender.com/#on-spot" target="_blank" rel="noopener noreferrer">rmkjuniorhackathon2026.onrender.com/#on-spot</a>
-                    </div>
-
-                    <div class="standee-instruction-text">
-                      Scan with any smartphone camera to register your team, get auto-allocated venue sitting, and generate your live pass instantly.
-                    </div>
-                  </div>
-
-                  <!-- Standee Controls & Info -->
-                  <div class="standee-details-col">
-                    <h3>On-Spot Registration Standee</h3>
-                    <p class="standee-desc-muted">
-                      Display this standee at the registration desk / helpdesk. Walk-in teams scan this QR to open the registration form, auto-allocate their venue & panel, and get their live pass immediately.
-                    </p>
-                    
-                    <div class="standee-btn-cluster">
-                      <button type="button" class="glass-btn glass-btn-primary" onclick="downloadOnSpotQRCode()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Download On-Spot QR (PNG)
-                      </button>
-                      <button type="button" class="glass-btn glass-btn-secondary" onclick="printOnSpotQRCode()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                        Print Official On-Spot Standee
                       </button>
                     </div>
                   </div>

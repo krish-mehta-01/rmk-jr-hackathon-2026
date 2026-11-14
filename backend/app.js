@@ -378,18 +378,20 @@ app.post('/api/public/on-spot-register', async (req, res) => {
 app.get('/api/public/on-spot-qr-code', async (req, res) => {
   try {
     const QRCode = require('qrcode');
-    const qrImage = await QRCode.toDataURL(`${PUBLIC_URL}/#on-spot`, {
+    // Unified QR: encodes venue attendance URL with presence code, redirecting to the main portal
+    const qrImage = await QRCode.toDataURL(`${PUBLIC_URL}/#p=${PRESENCE_QR_CODE_64}`, {
       width: 480,
       margin: 2,
       errorCorrectionLevel: 'M',
       color: { dark: '#0f172a', light: '#ffffff' }
     });
-    res.json({ qr_code: qrImage, url: `${PUBLIC_URL}/#on-spot` });
+    res.json({ qr_code: qrImage, url: `${PUBLIC_URL}/` });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to generate on-spot registration QR code' });
+    res.status(500).json({ error: 'Failed to generate QR code' });
   }
 });
+
 
 // ─────────────────────────────────────────────
 // QR CODE ROUTES
