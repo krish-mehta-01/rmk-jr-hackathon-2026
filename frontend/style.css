@@ -7538,3 +7538,36 @@ tr.eval-detail-row.hidden .eval-detail-card,
   color: #b45309 !important;
   font-weight: 700 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* GENEROUS LEFT SPACING FOR TABLE FIRST COLUMNS                   */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* Evaluation tables - primary left padding for Team (ID & Name) */
+.eval-table th:first-child,
+.eval-table tr:not(.eval-detail-row) td:first-child,
+.eval-status-table th:first-child,
+.eval-status-table tr:not(.eval-detail-row) td:first-child,
+.eval-pending-table th:first-child,
+.eval-pending-table tr:not(.eval-detail-row) td:first-child {
+  padding-left: 24px !important;
+}
+
+/* Ranking tables - balanced left padding for Rank and Team columns */
+.eval-ranking-table th:first-child,
+.eval-ranking-table tr:not(.eval-detail-row) td:first-child {
+  padding-left: 18px !important;
+  text-align: center !important;
+}
+
+.eval-ranking-table th:nth-child(2),
+.eval-ranking-table tr:not(.eval-detail-row) td:nth-child(2) {
+  padding-left: 14px !important;
+}
+
+/* Glass data tables (Teams Status, Jury/Judge Projects, Allocations) */
+.glass-data-table th:first-child,
+.glass-data-table td:first-child {
+  padding-left: 22px !important;
+}
+
