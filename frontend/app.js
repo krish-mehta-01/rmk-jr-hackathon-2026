@@ -3116,8 +3116,12 @@ async function refreshJudgeStatus() {
     judgeMeData = data;
 
     if (data.must_change_password) {
+      // Must log in properly via login form before changing password
+      judgeToken = null;
+      judgeMeData = null;
+      localStorage.removeItem('rmk_judge_token');
       showView('view-jury-login');
-      openJudgePasswordModal();
+      closeJudgePasswordModal(true);
       return;
     }
 
@@ -5332,7 +5336,7 @@ function renderEvalDetailDrawer(t, colspan = 6) {
     <tr class="eval-detail-row${isOpen ? '' : ' hidden'}" style="display: ${isOpen ? 'table-row' : 'none'};" data-eval-detail-for="${idStr}">
       <td colspan="${colspan}" style="display: ${isOpen ? 'table-cell' : 'none'};">
         <div class="eval-detail-card" style="display: ${isOpen ? 'block' : 'none'};">
-          <!-- ONE-LINE HEADLINE BAR FOR PROJECT TITLE, THEME, VENUE, PANEL -->
+          <!-- ONE-LINE HEADLINE BAR FOR PROJECT TITLE, THEME, VENUE (Panel omitted as it is already in table column) -->
           <div class="eval-detail-headline-bar">
             <div class="eval-headline-field eval-headline-title">
               <span class="eval-headline-label">PROJECT TITLE:</span>
@@ -5348,38 +5352,38 @@ function renderEvalDetailDrawer(t, colspan = 6) {
               <span class="eval-headline-label">VENUE:</span>
               <span class="eval-headline-value eval-venue-name">${escapeHtml(t.panel_venue || 'Venue Pending')}</span>
             </div>
-            <div class="eval-headline-divider"></div>
-            <div class="eval-headline-field">
-              <span class="eval-headline-label">PANEL:</span>
-              <span class="eval-headline-value"><span class="table-panel-badge">${escapeHtml(t.panel_code || '—')}</span></span>
-            </div>
           </div>
 
-          <div class="eval-detail-grid" style="margin-top: 14px;">
-            <div class="eval-detail-item">
-              <span class="eval-detail-label">School / Institution:</span>
-              <span class="eval-detail-val">${escapeHtml(t.school || t.college_name || '—')}</span>
-            </div>
-
-            <div class="eval-detail-item">
+          <!-- 2x2 TILE GRID: ROW 1 = LEADER & MEMBERS, ROW 2 = MENTOR & SCHOOL -->
+          <div class="eval-detail-grid eval-detail-grid-2x2">
+            <!-- Row 1, Tile 1: Team Leader -->
+            <div class="eval-detail-tile">
               <span class="eval-detail-label">Team Leader:</span>
               <span class="eval-detail-val">
                 <strong>${escapeHtml(t.leader_name || '—')}</strong>
-                ${leaderPhone ? `<div style="margin-top:2px; font-size:12px; color:#2563eb;" class="mono"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:3px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>${escapeHtml(leaderPhone)}</div>` : ''}
+                ${leaderPhone ? `<div style="margin-top:4px; font-size:12px; color:#2563eb;" class="mono"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg><a href="tel:${escapeHtml(leaderPhone)}" style="color:#2563eb; text-decoration:none;">${escapeHtml(leaderPhone)}</a></div>` : ''}
               </span>
             </div>
 
-            <div class="eval-detail-item">
+            <!-- Row 1, Tile 2: Team Members -->
+            <div class="eval-detail-tile">
+              <span class="eval-detail-label">Team Members:</span>
+              <span class="eval-detail-val">${escapeHtml(t.members || '—')}</span>
+            </div>
+
+            <!-- Row 2, Tile 1: Mentor -->
+            <div class="eval-detail-tile">
               <span class="eval-detail-label">Mentor:</span>
               <span class="eval-detail-val">
                 <strong>${escapeHtml(t.mentor_name || '—')}</strong>
-                ${t.mentor_contact && t.mentor_contact !== '—' ? `<span style="color:#64748b; font-size:12px; margin-left:4px;" class="mono">(${escapeHtml(t.mentor_contact)})</span>` : ''}
+                ${t.mentor_contact && t.mentor_contact !== '—' ? `<span style="color:#64748b; font-size:12px; margin-left:6px;" class="mono">(${escapeHtml(t.mentor_contact)})</span>` : ''}
               </span>
             </div>
 
-            <div class="eval-detail-item">
-              <span class="eval-detail-label">Team Members:</span>
-              <span class="eval-detail-val">${escapeHtml(t.members || '—')}</span>
+            <!-- Row 2, Tile 2: School / Institution -->
+            <div class="eval-detail-tile">
+              <span class="eval-detail-label">School / Institution:</span>
+              <span class="eval-detail-val">${escapeHtml(t.school || t.college_name || '—')}</span>
             </div>
 
             ${remarksHtml}
