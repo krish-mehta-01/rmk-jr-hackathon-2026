@@ -7,3 +7,5 @@ scratch/
 __pycache__/
 *.pyc
 backend/evaluations_backup.json
+backend/backups/
+*.pdf
