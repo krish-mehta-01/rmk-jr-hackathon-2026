@@ -2250,6 +2250,108 @@ h4 {
 /* ════════════════════════════════════════════════════════════════
    SITTING PLACE & VENUE ALLOCATION HERO BENTO — team leader pass
    ════════════════════════════════════════════════════════════════ */
+#view-team {
+  overscroll-behavior-y: contain;
+}
+
+/* Pull-to-refresh swipe down indicator */
+.ptr-indicator {
+  height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 100%);
+  border-bottom: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  width: 100%;
+}
+
+.ptr-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.ptr-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #15803d;
+}
+
+.ptr-icon-arrow {
+  transition: transform 0.2s ease;
+}
+
+.ptr-ready .ptr-icon-arrow {
+  transform: rotate(180deg);
+}
+
+.ptr-icon-spinner {
+  animation: ptrSpin 0.75s linear infinite;
+}
+
+@keyframes ptrSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Topbar refresh button */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.topbar-refresh:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.topbar-refresh.refresh-spin svg {
+  animation: ptrSpin 0.7s linear infinite;
+}
+
+@media (max-width: 640px) {
+  .topbar-refresh .refresh-label {
+    display: none;
+  }
+  .topbar-refresh {
+    padding: 9px;
+    justify-content: center;
+  }
+  .topbar-refresh svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .pass-alloc-hero-card {
   background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
   border: 1.5px solid #bbf7d0;
@@ -2258,6 +2360,7 @@ h4 {
   margin: 16px 0 18px;
   box-shadow: 0 4px 14px rgba(22, 101, 52, 0.06);
   animation: fadeIn 0.2s ease-out;
+  box-sizing: border-box;
 }
 
 .pass-alloc-hero-header {
@@ -2298,20 +2401,25 @@ h4 {
 
 .pass-alloc-tiles-grid {
   display: grid;
-  grid-template-columns: 140px 1.5fr 1.2fr;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .pass-alloc-tile {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  padding: 13px 15px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
   transition: all 0.15s ease;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .pass-alloc-tile:hover {
@@ -2319,67 +2427,104 @@ h4 {
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
+.alloc-tile-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
 .alloc-tile-label {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #64748b;
-  margin-bottom: 4px;
 }
 
 .alloc-tile-value {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   color: #0f172a;
-  line-height: 1.3;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .alloc-tile-hint {
   font-size: 11px;
   font-weight: 500;
   color: #94a3b8;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
-/* Tile specifics */
-.alloc-tile-panel {
-  border-left: 3.5px solid #16a34a;
-  background: #f8fafc;
-}
-
-.alloc-tile-panel .alloc-tile-value {
-  font-size: 18px;
-  font-weight: 900;
-  color: #166534;
-}
-
+/* Sitting Venue tile */
 .alloc-tile-venue {
-  border-left: 3.5px solid #0284c7;
-  background: #f0f9ff;
+  border-left: 4px solid #0284c7;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
 }
 
-.alloc-tile-venue .alloc-tile-value {
+.alloc-tile-venue .alloc-tile-tag-row {
+  color: #0284c7;
+}
+
+.alloc-tile-venue .alloc-tile-label {
   color: #0369a1;
 }
 
-.alloc-tile-theme {
-  border-left: 3.5px solid #8b5cf6;
-  background: #faf5ff;
+.alloc-tile-venue .alloc-tile-value {
+  color: #0c4a6e;
+  font-size: 16.5px;
+  font-weight: 900;
 }
 
-.alloc-tile-theme .alloc-tile-value {
-  color: #6b21a8;
-  font-size: 13.5px;
+/* Evaluation Panel tile */
+.alloc-tile-panel {
+  border-left: 4px solid #16a34a;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
 }
 
-@media (max-width: 640px) {
-  .pass-alloc-tiles-grid {
-    grid-template-columns: 1fr 1fr;
+.alloc-tile-panel .alloc-tile-tag-row {
+  color: #16a34a;
+}
+
+.alloc-tile-panel .alloc-tile-label {
+  color: #15803d;
+}
+
+.alloc-tile-panel .alloc-tile-value {
+  color: #14532d;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* Theme badge under Idea Title */
+.pass-theme-badge {
+  display: inline-flex !important;
+  align-items: center;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 1.5px solid #d8b4fe;
+  color: #6b21a8 !important;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
+  margin-top: 2px;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+@media (max-width: 580px) {
+  .pass-alloc-hero-card {
+    padding: 14px 14px;
+    margin: 14px 0 16px;
   }
-  .alloc-tile-venue {
-    grid-column: span 2;
-    order: -1; /* Show venue prominently first on mobile! */
+  .pass-alloc-tiles-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .pass-alloc-tile {
+    padding: 12px 14px;
   }
 }
 

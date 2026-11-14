@@ -35,6 +35,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   takeVenueCodeFromLink();
   restoreSession();
+  initPullToRefresh();
 });
 
 // A QR opened with the phone's camera app lands here as /#p=<code>. Keep the code for this tab
@@ -294,6 +295,7 @@ function initTeamDashboard() {
   renderTeamDetails(teamData);
   renderPassStatus(teamData.is_present, teamData.check_in_time);
   renderVenueMap(teamData);
+  initPullToRefresh();
 }
 
 function renderVenueMap(team) {
@@ -343,6 +345,18 @@ function renderTeamDetails(team) {
 
   document.getElementById('pass-team-name').textContent = team.team_name || 'Team';
   document.getElementById('pass-project-title').textContent = team.project_title || team.team_name || '—';
+
+  // Theme shown down after idea title
+  const cleanTheme = (team.theme || team.category || '').trim();
+  const themeEl = document.getElementById('pass-theme-name');
+  if (themeEl) {
+    themeEl.textContent = cleanTheme || 'General Track';
+  }
+  const oldThemeEl = document.getElementById('pass-venue-theme');
+  if (oldThemeEl) {
+    oldThemeEl.textContent = cleanTheme || 'General Track';
+  }
+
   document.getElementById('pass-school-name').textContent = team.college_name || '—';
   document.getElementById('pass-mentor-name').textContent = team.mentor_name || '—';
 
@@ -357,11 +371,6 @@ function renderTeamDetails(team) {
     const venueEl = document.getElementById('pass-venue');
     if (venueEl) {
       venueEl.textContent = team.venue || 'Venue Pending';
-    }
-    const themeEl = document.getElementById('pass-venue-theme');
-    if (themeEl) {
-      const cleanTheme = (team.theme || team.category || '').trim();
-      themeEl.textContent = cleanTheme || 'General Track';
     }
   }
 
@@ -423,6 +432,129 @@ async function refreshTeamStatus() {
     return true;
   } catch {
     return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// PULL TO REFRESH & TOPBAR REFRESH (SWIPE DOWN ON MOBILE)
+// ─────────────────────────────────────────────────────────────
+let isPullToRefreshBound = false;
+
+function initPullToRefresh() {
+  if (isPullToRefreshBound) return;
+  const container = document.getElementById('view-team');
+  const ptr = document.getElementById('ptr-indicator');
+  const ptrLabel = document.getElementById('ptr-text');
+  const ptrArrow = document.querySelector('.ptr-icon-arrow');
+  const ptrSpinner = document.querySelector('.ptr-icon-spinner');
+  if (!container || !ptr) return;
+
+  isPullToRefreshBound = true;
+  let startY = 0;
+  let currentY = 0;
+  let isPulling = false;
+  let isRefreshing = false;
+  const PULL_THRESHOLD = 55; // px of downward drag to trigger refresh
+  const MAX_PULL = 85;
+
+  container.addEventListener('touchstart', (e) => {
+    // Only engage when scrolled to the very top and not already refreshing
+    if (container.scrollTop <= 2 && !isRefreshing && e.touches.length === 1) {
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      isPulling = false;
+    } else {
+      startY = 0;
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!startY || isRefreshing || e.touches.length !== 1) return;
+    currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+
+    if (container.scrollTop <= 2 && diff > 8) {
+      isPulling = true;
+      const pullDist = Math.min(MAX_PULL, diff * 0.42);
+      ptr.style.height = `${pullDist}px`;
+      ptr.style.opacity = String(Math.min(1, pullDist / 35));
+
+      if (pullDist >= PULL_THRESHOLD) {
+        if (ptrLabel) ptrLabel.textContent = 'Release to refresh';
+        ptr.classList.add('ptr-ready');
+      } else {
+        if (ptrLabel) ptrLabel.textContent = 'Pull down to refresh';
+        ptr.classList.remove('ptr-ready');
+      }
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchend', async () => {
+    if (!isPulling || isRefreshing) {
+      startY = 0;
+      isPulling = false;
+      return;
+    }
+
+    const diff = currentY - startY;
+    const pullDist = Math.min(MAX_PULL, diff * 0.42);
+
+    if (pullDist >= PULL_THRESHOLD) {
+      isRefreshing = true;
+      ptr.style.transition = 'height 0.2s ease, opacity 0.2s ease';
+      ptr.style.height = '46px';
+      ptr.classList.add('ptr-refreshing');
+      if (ptrArrow) ptrArrow.classList.add('hidden');
+      if (ptrSpinner) ptrSpinner.classList.remove('hidden');
+      if (ptrLabel) ptrLabel.textContent = 'Refreshing details...';
+
+      try {
+        await refreshTeamStatus();
+        if (ptrLabel) ptrLabel.textContent = '✓ Updated';
+      } catch {
+        if (ptrLabel) ptrLabel.textContent = 'Update failed';
+      }
+
+      setTimeout(() => {
+        ptr.style.height = '0px';
+        ptr.style.opacity = '0';
+        setTimeout(() => {
+          ptr.classList.remove('ptr-refreshing', 'ptr-ready');
+          if (ptrArrow) ptrArrow.classList.remove('hidden');
+          if (ptrSpinner) ptrSpinner.classList.add('hidden');
+          ptr.style.transition = '';
+          isRefreshing = false;
+          isPulling = false;
+        }, 250);
+      }, 450);
+    } else {
+      ptr.style.transition = 'height 0.2s ease, opacity 0.2s ease';
+      ptr.style.height = '0px';
+      ptr.style.opacity = '0';
+      setTimeout(() => {
+        ptr.classList.remove('ptr-ready');
+        ptr.style.transition = '';
+        isPulling = false;
+      }, 200);
+    }
+    startY = 0;
+  });
+}
+
+async function triggerManualPassRefresh() {
+  const btn = document.getElementById('btn-team-topbar-refresh');
+  if (btn) btn.classList.add('refresh-spin');
+  try {
+    const success = await refreshTeamStatus();
+    if (success) {
+      showToast('✓ Attendance & venue refreshed', 'info');
+    } else {
+      showToast('Could not refresh status', 'error');
+    }
+  } catch {
+    showToast('Failed to refresh', 'error');
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove('refresh-spin'), 600);
   }
 }
 
