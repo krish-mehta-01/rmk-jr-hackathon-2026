@@ -17,14 +17,9 @@ let currentEvalAuthKey = null; // Volatile unlock key for Evaluation & Rankings 
 
 function isInstituteAdmin() {
   if (IS_INSTITUTE_ADMIN_PAGE) return true;
-  const role = sessionStorage.getItem('rmk_inst_admin_role') ||
-               localStorage.getItem('rmk_institute_admin_role') ||
-               sessionStorage.getItem('rmk_admin_role') ||
-               localStorage.getItem('rmk_admin_role');
-  const user = (sessionStorage.getItem('rmk_inst_admin_username') ||
-                localStorage.getItem('rmk_institute_admin_username') ||
-                sessionStorage.getItem('rmk_admin_username') ||
-                localStorage.getItem('rmk_admin_username') || '').trim();
+  // If on regular admin page, check ONLY this page's own role so it never leaks from institute admin
+  const role = sessionStorage.getItem('rmk_admin_role') || localStorage.getItem('rmk_admin_role');
+  const user = (sessionStorage.getItem('rmk_admin_username') || localStorage.getItem('rmk_admin_username') || '').trim();
   return role === 'institute_admin' || user.toUpperCase() === 'RMK@123' || user.toLowerCase() === 'instituteadmin';
 }
 
@@ -118,14 +113,12 @@ function setupEventListeners() {
 // SESSION RESTORATION
 // ─────────────────────────────────────────────────────────────
 function restoreSession() {
-  // Isolate Institute Admin vs Desk Admin tokens so multiple tabs on the same device never clobber each other
+  // Strictly isolate Institute Admin vs Desk Admin tokens so multiple tabs on the same device never clobber each other
   if (IS_INSTITUTE_ADMIN_PAGE) {
     adminToken = sessionStorage.getItem('rmk_inst_admin_token') ||
-                 localStorage.getItem('rmk_institute_admin_token') ||
-                 (localStorage.getItem('rmk_admin_role') === 'institute_admin' ? localStorage.getItem('rmk_admin_token') : null) || null;
+                 localStorage.getItem('rmk_institute_admin_token') || null;
   } else if (IS_ADMIN_PAGE) {
     adminToken = sessionStorage.getItem('rmk_admin_token') ||
-                 (localStorage.getItem('rmk_admin_role') !== 'institute_admin' ? localStorage.getItem('rmk_admin_token') : null) ||
                  localStorage.getItem('rmk_admin_token') || null;
   } else {
     adminToken = localStorage.getItem('rmk_admin_token') || null;
@@ -5780,11 +5773,9 @@ async function handleOpenRevisionHistory() {
   }
 
   const activeToken = adminToken ||
-                      (IS_INSTITUTE_ADMIN_PAGE ? (sessionStorage.getItem('rmk_inst_admin_token') || localStorage.getItem('rmk_institute_admin_token')) : null) ||
-                      sessionStorage.getItem('rmk_admin_token') ||
-                      localStorage.getItem('rmk_admin_token') ||
-                      sessionStorage.getItem('rmk_inst_admin_token') ||
-                      localStorage.getItem('rmk_institute_admin_token') ||
+                      (IS_INSTITUTE_ADMIN_PAGE
+                        ? (sessionStorage.getItem('rmk_inst_admin_token') || localStorage.getItem('rmk_institute_admin_token'))
+                        : (sessionStorage.getItem('rmk_admin_token') || localStorage.getItem('rmk_admin_token'))) ||
                       juryAdminToken ||
                       sessionStorage.getItem('rmk_jury_admin_token') ||
                       localStorage.getItem('rmk_jury_admin_token') ||
@@ -5948,12 +5939,14 @@ let evalSearchDebounceTimer = null;
 let availableEvalThemes = [];
 
 function getEffectiveAdminToken() {
+  if (IS_INSTITUTE_ADMIN_PAGE) {
+    return adminToken ||
+           sessionStorage.getItem('rmk_inst_admin_token') ||
+           localStorage.getItem('rmk_institute_admin_token') || null;
+  }
   return adminToken ||
-         (IS_INSTITUTE_ADMIN_PAGE ? (sessionStorage.getItem('rmk_inst_admin_token') || localStorage.getItem('rmk_institute_admin_token')) : null) ||
          sessionStorage.getItem('rmk_admin_token') ||
          localStorage.getItem('rmk_admin_token') ||
-         sessionStorage.getItem('rmk_inst_admin_token') ||
-         localStorage.getItem('rmk_institute_admin_token') ||
          juryAdminToken ||
          sessionStorage.getItem('rmk_jury_admin_token') ||
          localStorage.getItem('rmk_jury_admin_token') || null;
