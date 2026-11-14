@@ -75,19 +75,19 @@ const masterHeaders = [
 const masterColWidths = [
   380,   // 0. Sl. No.
   850,   // 1. Team ID
-  1050,  // 2. Team Name
-  2600,  // 3. Idea / Project Title
-  900,   // 4. Team Leader
-  950,   // 5. Team Members
-  450,   // 6. Mentor Name
+  1100,  // 2. Team Name
+  2200,  // 3. Idea / Project Title
+  950,   // 4. Team Leader
+  1100,  // 5. Team Members
+  850,   // 6. Mentor Name
   750,   // 7. Contact Mobile
-  550,   // 8. Leader Email
+  1100,  // 8. Leader Email
   1750,  // 9. School Name
-  1500,  // 10. Theme Track
-  750,   // 11. Panel No.
-  2000,  // 12. Allocated Venue
-  750,   // 13. Attendance Status
-  700    // 14. Signature
+  1350,  // 10. Theme Track
+  700,   // 11. Panel No.
+  1500,  // 12. Allocated Venue
+  850,   // 13. Attendance Status
+  1270   // 14. Signature
 ];
 
 // 13 Canonical Columns for Venue-wise report (NO Venue column, has Theme Track and Signature)
@@ -100,17 +100,17 @@ const venueHeaders = [
 const venueColWidths = [
   400,   // 0. Sl. No.
   900,   // 1. Team ID
-  1200,  // 2. Team Name
-  3200,  // 3. Idea / Project Title
-  1000,  // 4. Team Leader
-  1100,  // 5. Team Members
-  500,   // 6. Mentor Name
+  1250,  // 2. Team Name
+  2500,  // 3. Idea / Project Title
+  1050,  // 4. Team Leader
+  1250,  // 5. Team Members
+  950,   // 6. Mentor Name
   800,   // 7. Contact Mobile
-  600,   // 8. Leader Email
-  2100,  // 9. School Name
-  1800,  // 10. Theme Track
-  900,   // 11. Attendance Status
-  1400   // 12. Signature
+  1200,  // 8. Leader Email
+  1950,  // 9. School Name
+  1500,  // 10. Theme Track
+  950,   // 11. Attendance Status
+  1200   // 12. Signature
 ];
 
 function createHeaderCell(text, width) {
@@ -119,7 +119,7 @@ function createHeaderCell(text, width) {
     shading: { fill: '166534', type: ShadingType.CLEAR }, // Deep Emerald Green matching Excel #166534
     borders: blackBorder,
     verticalAlign: VerticalAlign.CENTER,
-    margins: { top: 80, bottom: 80, left: 60, right: 60 },
+    margins: { top: 100, bottom: 100, left: 60, right: 60 },
     children: [
       new Paragraph({
         alignment: AlignmentType.CENTER,
@@ -153,7 +153,7 @@ function createDataCell(text, width, isCenter = false, isStatus = false, isPrese
     shading: { fill: cellShading, type: ShadingType.CLEAR },
     borders: cellBorders,
     verticalAlign: VerticalAlign.CENTER,
-    margins: { top: 60, bottom: 60, left: 50, right: 50 },
+    margins: { top: 120, bottom: 120, left: 70, right: 70 },
     children: [
       new Paragraph({
         alignment: isCenter ? AlignmentType.CENTER : AlignmentType.LEFT,
@@ -171,6 +171,7 @@ function createHeaderRow(type = 'master') {
 
   return new TableRow({
     tableHeader: true,
+    cantSplit: true,
     children: headers.map((h, i) => createHeaderCell(h, widths[i]))
   });
 }
@@ -195,7 +196,7 @@ function createTeamRow(r, index, isEven, type = 'master') {
       createDataCell(statusStr, venueColWidths[11], true, true, isPresent, isEven),
       createDataCell('', venueColWidths[12], true, false, false, isEven) // Signature blank
     ];
-    return new TableRow({ children: cells });
+    return new TableRow({ cantSplit: true, children: cells });
   }
 
   // Master / Theme (15 columns)
@@ -217,7 +218,7 @@ function createTeamRow(r, index, isEven, type = 'master') {
     createDataCell('', masterColWidths[14], true, false, false, isEven) // Signature blank
   ];
 
-  return new TableRow({ children: cells });
+  return new TableRow({ cantSplit: true, children: cells });
 }
 
 /**

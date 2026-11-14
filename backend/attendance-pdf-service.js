@@ -29,56 +29,51 @@ function formatMarkedBy(r) {
 }
 
 /**
- * Strict single-line text fitter that guarantees zero multi-line wrapping and zero page overflow in PDFKit.
- * Replaces newlines/tabs with spaces and truncates with ellipsis if width exceeds maxWidth.
+ * Cleans string for PDF rendering: removes raw newlines/tabs and normalizes spaces.
+ * NEVER truncates with ellipsis so staff gets complete visibility for printouts.
  */
-function fitText(doc, str, maxWidth) {
+function cleanString(str) {
   if (str === null || str === undefined) return '—';
   let s = String(str).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!s || s === '—') return '—';
-  if (doc.widthOfString(s) <= maxWidth) return s;
-  while (s.length > 1 && doc.widthOfString(s + '…') > maxWidth) {
-    s = s.slice(0, -1);
-  }
-  return s + '…';
+  return s || '—';
 }
 
 // Master Attendance (15 Canonical Columns matching Excel)
-// Sum: 18+46+50+120+46+48+26+40+32+88+76+36+94+46+44 = 810 pt (Exact printable width on A4 landscape)
+// Sum: 18+44+52+105+50+56+44+38+58+82+66+32+70+47+48 = 810 pt (Exact printable width on A4 landscape)
 const MASTER_COLS = [
   { key: 'sl', label: 'Sl. No.', width: 18, align: 'center' },
-  { key: 'team_code', label: 'Team ID', width: 46, align: 'center' },
-  { key: 'team_name', label: 'Team Name', width: 50, align: 'left' },
-  { key: 'project_title', label: 'Idea / Project Title', width: 120, align: 'left' },
-  { key: 'leader_name', label: 'Team Leader', width: 46, align: 'left' },
-  { key: 'members', label: 'Team Members', width: 48, align: 'left' },
-  { key: 'mentor_name', label: 'Mentor Name', width: 26, align: 'left' },
-  { key: 'mobile_no', label: 'Contact Mobile', width: 40, align: 'center' },
-  { key: 'email', label: 'Leader Email', width: 32, align: 'left' },
-  { key: 'college_name', label: 'School Name', width: 88, align: 'left' },
-  { key: 'category', label: 'Theme Track', width: 76, align: 'left' },
-  { key: 'panel_no', label: 'Panel No.', width: 36, align: 'center' },
-  { key: 'venue', label: 'Allocated Venue', width: 94, align: 'left' },
-  { key: 'status', label: 'Attendance Status', width: 46, align: 'center' },
-  { key: 'signature', label: 'Signature', width: 44, align: 'center' }
+  { key: 'team_code', label: 'Team ID', width: 44, align: 'center' },
+  { key: 'team_name', label: 'Team Name', width: 52, align: 'left' },
+  { key: 'project_title', label: 'Idea / Project Title', width: 105, align: 'left' },
+  { key: 'leader_name', label: 'Team Leader', width: 50, align: 'left' },
+  { key: 'members', label: 'Team Members', width: 56, align: 'left' },
+  { key: 'mentor_name', label: 'Mentor Name', width: 44, align: 'left' },
+  { key: 'mobile_no', label: 'Contact Mobile', width: 38, align: 'center' },
+  { key: 'email', label: 'Leader Email', width: 58, align: 'left' },
+  { key: 'college_name', label: 'School Name', width: 82, align: 'left' },
+  { key: 'category', label: 'Theme Track', width: 66, align: 'left' },
+  { key: 'panel_no', label: 'Panel No.', width: 32, align: 'center' },
+  { key: 'venue', label: 'Allocated Venue', width: 70, align: 'left' },
+  { key: 'status', label: 'Attendance Status', width: 47, align: 'center' },
+  { key: 'signature', label: 'Signature', width: 48, align: 'center' }
 ];
 
 // Venue-Wise Attendance (13 Columns - NO Venue column, has Theme Track and Signature)
-// Sum: 20+48+56+160+50+54+28+44+38+110+90+52+60 = 810 pt
+// Sum: 20+46+58+130+56+66+48+42+68+96+76+49+55 = 810 pt
 const VENUE_COLS = [
   { key: 'sl', label: 'Sl. No.', width: 20, align: 'center' },
-  { key: 'team_code', label: 'Team ID', width: 48, align: 'center' },
-  { key: 'team_name', label: 'Team Name', width: 56, align: 'left' },
-  { key: 'project_title', label: 'Idea / Project Title', width: 160, align: 'left' },
-  { key: 'leader_name', label: 'Team Leader', width: 50, align: 'left' },
-  { key: 'members', label: 'Team Members', width: 54, align: 'left' },
-  { key: 'mentor_name', label: 'Mentor Name', width: 28, align: 'left' },
-  { key: 'mobile_no', label: 'Contact Mobile', width: 44, align: 'center' },
-  { key: 'email', label: 'Leader Email', width: 38, align: 'left' },
-  { key: 'college_name', label: 'School Name', width: 110, align: 'left' },
-  { key: 'category', label: 'Theme Track', width: 90, align: 'left' },
-  { key: 'status', label: 'Attendance Status', width: 52, align: 'center' },
-  { key: 'signature', label: 'Signature', width: 60, align: 'center' }
+  { key: 'team_code', label: 'Team ID', width: 46, align: 'center' },
+  { key: 'team_name', label: 'Team Name', width: 58, align: 'left' },
+  { key: 'project_title', label: 'Idea / Project Title', width: 130, align: 'left' },
+  { key: 'leader_name', label: 'Team Leader', width: 56, align: 'left' },
+  { key: 'members', label: 'Team Members', width: 66, align: 'left' },
+  { key: 'mentor_name', label: 'Mentor Name', width: 48, align: 'left' },
+  { key: 'mobile_no', label: 'Contact Mobile', width: 42, align: 'center' },
+  { key: 'email', label: 'Leader Email', width: 68, align: 'left' },
+  { key: 'college_name', label: 'School Name', width: 96, align: 'left' },
+  { key: 'category', label: 'Theme Track', width: 76, align: 'left' },
+  { key: 'status', label: 'Attendance Status', width: 49, align: 'center' },
+  { key: 'signature', label: 'Signature', width: 55, align: 'center' }
 ];
 
 // Theme-Wise Attendance (15 Columns - HAS Theme Track, Panel, Venue, Status, Signature)
@@ -86,7 +81,7 @@ const THEME_COLS = MASTER_COLS;
 
 function drawTableHeader(doc, startY, cols = MASTER_COLS) {
   const startX = 16;
-  const hHeight = 18;
+  const hHeight = 20; // Expanded header height so wrapped labels fit completely without cutoffs
   const totalW = cols.reduce((sum, c) => sum + c.width, 0);
 
   // Background rect (Deep Emerald Green #166534 matching Excel)
@@ -97,18 +92,20 @@ function drawTableHeader(doc, startY, cols = MASTER_COLS) {
   doc.rect(startX, startY, totalW, hHeight).stroke();
 
   let curX = startX;
-  doc.fillColor('#FFFFFF').fontSize(5.8).font('Helvetica-Bold');
+  doc.fillColor('#FFFFFF').fontSize(5.6).font('Helvetica-Bold');
   cols.forEach((c, idx) => {
     if (idx > 0) {
       doc.strokeColor('#14532D').lineWidth(0.5);
       doc.moveTo(curX, startY).lineTo(curX, startY + hHeight).stroke();
     }
-    const safeLabel = fitText(doc, c.label, c.width - 2);
-    doc.fillColor('#FFFFFF').text(safeLabel, curX + 1, startY + 5, {
+    const labelText = c.label;
+    const textH = doc.heightOfString(labelText, { width: c.width - 2, lineBreak: true });
+    const textY = startY + Math.max(2, Math.round((hHeight - textH) / 2));
+
+    doc.fillColor('#FFFFFF').text(labelText, curX + 1, textY, {
       width: c.width - 2,
-      height: 10,
       align: c.align,
-      lineBreak: false
+      lineBreak: true // Wrap if necessary, NO ellipsis truncation
     });
     curX += c.width;
   });
@@ -116,23 +113,42 @@ function drawTableHeader(doc, startY, cols = MASTER_COLS) {
   return startY + hHeight;
 }
 
-function drawTableRow(doc, row, slNo, startY, isEven, cols = MASTER_COLS) {
+/**
+ * Calculates dynamic row height based on actual text contents across all cells.
+ * Enforces a generous minimum cell height (28pt) so staff printouts have ample readability and signing space.
+ */
+function calculateRowHeight(doc, rowValues, cols) {
+  let maxHeight = 28; // Minimum generous row height for physical printout
+  cols.forEach(c => {
+    if (c.key === 'signature' || c.key === 'status') return;
+    const text = cleanString(rowValues[c.key]);
+    if (!text || text === '—') return;
+
+    let fontName = 'Helvetica';
+    let fontSize = 5.6;
+    if (c.key === 'team_code' || c.key === 'panel_no') {
+      fontName = 'Helvetica-Bold';
+      fontSize = 5.6;
+    }
+    doc.font(fontName).fontSize(fontSize);
+    const cellW = c.width - 4;
+    const h = doc.heightOfString(text, { width: cellW, lineBreak: true });
+    const cellReqH = h + 8; // 4 pt top padding + 4 pt bottom padding
+    if (cellReqH > maxHeight) {
+      maxHeight = cellReqH;
+    }
+  });
+  return Math.ceil(maxHeight);
+}
+
+function drawTableRow(doc, row, slNo, startY, isEven, cols = MASTER_COLS, precomputedHeight = null, precomputedValues = null) {
   const startX = 16;
-  const rHeight = 16;
   const totalW = cols.reduce((sum, c) => sum + c.width, 0);
-
-  // Background: alternating pure white (#FFFFFF) and soft mint tint (#F0FDF4) matching Excel
-  const bg = isEven ? '#F0FDF4' : '#FFFFFF';
-  doc.rect(startX, startY, totalW, rHeight).fill(bg);
-
-  // Bottom border line
-  doc.strokeColor('#D1D5DB').lineWidth(0.4);
-  doc.moveTo(startX, startY + rHeight).lineTo(startX + totalW, startY + rHeight).stroke();
 
   const isPresent = Boolean(row.is_present);
   const statusStr = isPresent ? 'Scanned' : 'Not Scanned';
 
-  const rowValues = {
+  const rowValues = precomputedValues || {
     sl: String(slNo),
     team_code: row.team_code || '—',
     team_name: row.team_name || '—',
@@ -150,6 +166,16 @@ function drawTableRow(doc, row, slNo, startY, isEven, cols = MASTER_COLS) {
     signature: ''
   };
 
+  const rHeight = precomputedHeight || calculateRowHeight(doc, rowValues, cols);
+
+  // Background: alternating pure white (#FFFFFF) and soft mint tint (#F0FDF4) matching Excel
+  const bg = isEven ? '#F0FDF4' : '#FFFFFF';
+  doc.rect(startX, startY, totalW, rHeight).fill(bg);
+
+  // Bottom border line
+  doc.strokeColor('#CBD5E1').lineWidth(0.4);
+  doc.moveTo(startX, startY + rHeight).lineTo(startX + totalW, startY + rHeight).stroke();
+
   let curX = startX;
   cols.forEach((c, idx) => {
     // Vertical divider line
@@ -161,20 +187,19 @@ function drawTableRow(doc, row, slNo, startY, isEven, cols = MASTER_COLS) {
     const val = rowValues[c.key] || '—';
 
     if (c.key === 'signature') {
-      // Signature column: empty space for physical signature
+      // Signature column: dedicated empty box for staff signature on printout
     } else if (c.key === 'status') {
-      // Draw status badge pill matching Excel
+      // Status pill vertically centered within the expanded cell height
       const pillW = c.width - 6;
-      const pillH = 11;
+      const pillH = 12;
       const pillX = curX + 3;
-      const pillY = startY + 2.5;
+      const pillY = startY + Math.round((rHeight - pillH) / 2);
 
       if (isPresent) {
         doc.roundedRect(pillX, pillY, pillW, pillH, 2).fill('#22C55E');
         doc.font('Helvetica-Bold').fontSize(5.4).fillColor('#FFFFFF');
-        doc.text('Scanned', curX + 1, startY + 4.5, {
+        doc.text('Scanned', curX + 1, pillY + 2.5, {
           width: c.width - 2,
-          height: 10,
           align: 'center',
           lineBreak: false
         });
@@ -182,16 +207,15 @@ function drawTableRow(doc, row, slNo, startY, isEven, cols = MASTER_COLS) {
         doc.roundedRect(pillX, pillY, pillW, pillH, 2).fill('#F1F5F9');
         doc.strokeColor('#CBD5E1').lineWidth(0.3).roundedRect(pillX, pillY, pillW, pillH, 2).stroke();
         doc.font('Helvetica').fontSize(5.2).fillColor('#000000');
-        doc.text('Not Scanned', curX + 1, startY + 4.5, {
+        doc.text('Not Scanned', curX + 1, pillY + 2.5, {
           width: c.width - 2,
-          height: 10,
           align: 'center',
           lineBreak: false
         });
       }
     } else {
       let fontName = 'Helvetica';
-      let fontSize = 5.5;
+      let fontSize = 5.6;
       let fontColor = '#000000';
 
       if (c.key === 'team_code' || c.key === 'panel_no') {
@@ -200,13 +224,14 @@ function drawTableRow(doc, row, slNo, startY, isEven, cols = MASTER_COLS) {
       }
 
       doc.font(fontName).fontSize(fontSize).fillColor(fontColor);
-      const safeText = fitText(doc, val, c.width - 3);
+      const cleanVal = cleanString(val);
+      const textH = doc.heightOfString(cleanVal, { width: c.width - 4, lineBreak: true });
+      const textY = (rHeight > textH + 8) ? startY + Math.round((rHeight - textH) / 2) : startY + 4;
 
-      doc.text(safeText, curX + 1.5, startY + 4.5, {
-        width: c.width - 3,
-        height: 10,
+      doc.text(cleanVal, curX + 2, textY, {
+        width: c.width - 4,
         align: c.align,
-        lineBreak: false
+        lineBreak: true // Complete multi-line wrapping so entire text is visible
       });
     }
 
@@ -254,8 +279,29 @@ function buildMasterAttendancePdf(rows) {
       curY = drawTableHeader(doc, curY);
 
       rows.forEach((r, idx) => {
-        // If next row would exceed page boundary (550 pt)
-        if (curY + 16 > 550) {
+        const isPresent = Boolean(r.is_present);
+        const statusStr = isPresent ? 'Scanned' : 'Not Scanned';
+        const rowVals = {
+          sl: String(idx + 1),
+          team_code: r.team_code || '—',
+          team_name: r.team_name || '—',
+          project_title: r.project_title || '—',
+          leader_name: r.leader_name || '—',
+          members: r.members || '—',
+          mentor_name: r.mentor_name || '—',
+          mobile_no: r.mobile_no || '—',
+          email: r.email || '—',
+          college_name: r.college_name || '—',
+          category: r.category || '—',
+          panel_no: r.panel_no ? `Panel ${r.panel_no}` : '—',
+          venue: r.venue || 'TBD',
+          status: statusStr,
+          signature: ''
+        };
+        const rHeight = calculateRowHeight(doc, rowVals, MASTER_COLS);
+
+        // If next row would exceed printable page boundary (550 pt)
+        if (curY + rHeight > 550) {
           doc.addPage();
           doc.rect(16, 12, 810, 16).fillAndStroke('#DCFCE7', '#000000');
           doc.fontSize(8).fillColor('#000000').font('Helvetica-Bold').text(
@@ -263,9 +309,9 @@ function buildMasterAttendancePdf(rows) {
             16, 16, { align: 'center', width: 810 }
           );
           curY = 34;
-          curY = drawTableHeader(doc, curY);
+          curY = drawTableHeader(doc, curY, MASTER_COLS);
         }
-        curY = drawTableRow(doc, r, idx + 1, curY, idx % 2 === 1);
+        curY = drawTableRow(doc, r, idx + 1, curY, idx % 2 === 1, MASTER_COLS, rHeight, rowVals);
       });
 
       doc.end();
@@ -349,7 +395,26 @@ function buildVenueAttendancePdf(rows) {
         curY = drawTableHeader(doc, curY, VENUE_COLS);
 
         info.teams.forEach((t, idx) => {
-          if (curY + 16 > 550) {
+          const isPresent = Boolean(t.is_present);
+          const statusStr = isPresent ? 'Scanned' : 'Not Scanned';
+          const rowVals = {
+            sl: String(idx + 1),
+            team_code: t.team_code || '—',
+            team_name: t.team_name || '—',
+            project_title: t.project_title || '—',
+            leader_name: t.leader_name || '—',
+            members: t.members || '—',
+            mentor_name: t.mentor_name || '—',
+            mobile_no: t.mobile_no || '—',
+            email: t.email || '—',
+            college_name: t.college_name || '—',
+            category: t.category || '—',
+            status: statusStr,
+            signature: ''
+          };
+          const rHeight = calculateRowHeight(doc, rowVals, VENUE_COLS);
+
+          if (curY + rHeight > 550) {
             doc.addPage();
             doc.rect(16, 12, 810, 16).fillAndStroke('#DCFCE7', '#166534');
             doc.fontSize(8).fillColor('#14532D').font('Helvetica-Bold')
@@ -357,7 +422,7 @@ function buildVenueAttendancePdf(rows) {
             curY = 34;
             curY = drawTableHeader(doc, curY, VENUE_COLS);
           }
-          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1, VENUE_COLS);
+          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1, VENUE_COLS, rHeight, rowVals);
         });
       }
 
@@ -438,7 +503,28 @@ function buildThemeAttendancePdf(rows) {
         curY = drawTableHeader(doc, curY, THEME_COLS);
 
         info.teams.forEach((t, idx) => {
-          if (curY + 16 > 550) {
+          const isPresent = Boolean(t.is_present);
+          const statusStr = isPresent ? 'Scanned' : 'Not Scanned';
+          const rowVals = {
+            sl: String(idx + 1),
+            team_code: t.team_code || '—',
+            team_name: t.team_name || '—',
+            project_title: t.project_title || '—',
+            leader_name: t.leader_name || '—',
+            members: t.members || '—',
+            mentor_name: t.mentor_name || '—',
+            mobile_no: t.mobile_no || '—',
+            email: t.email || '—',
+            college_name: t.college_name || '—',
+            category: t.category || '—',
+            panel_no: t.panel_no ? `Panel ${t.panel_no}` : '—',
+            venue: t.venue || 'TBD',
+            status: statusStr,
+            signature: ''
+          };
+          const rHeight = calculateRowHeight(doc, rowVals, THEME_COLS);
+
+          if (curY + rHeight > 550) {
             doc.addPage();
             doc.rect(16, 12, 810, 16).fillAndStroke('#DCFCE7', '#166534');
             doc.fontSize(8).fillColor('#14532D').font('Helvetica-Bold')
@@ -446,7 +532,7 @@ function buildThemeAttendancePdf(rows) {
             curY = 34;
             curY = drawTableHeader(doc, curY, THEME_COLS);
           }
-          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1, THEME_COLS);
+          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1, THEME_COLS, rHeight, rowVals);
         });
       }
 
