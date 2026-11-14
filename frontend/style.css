@@ -7969,7 +7969,7 @@ tr.eval-detail-row.hidden .eval-detail-card,
 
 .onspot-main-shell {
   flex: 1;
-  padding: 32px 20px 60px 20px;
+  padding: 32px 20px 100px 20px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -8149,15 +8149,15 @@ tr.eval-detail-row.hidden .eval-detail-card,
 
 .onspot-actions-row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 16px;
 }
 
 .btn-onspot-submit {
-  flex: 1;
-  padding: 14px 20px;
-  font-size: 15px;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -8252,8 +8252,8 @@ tr.eval-detail-row.hidden .eval-detail-card,
   }
 
   .onspot-actions-row {
-    flex-direction: column-reverse;
-    gap: 10px;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .onspot-actions-row button {
@@ -8267,12 +8267,13 @@ tr.eval-detail-row.hidden .eval-detail-card,
 
 @media (max-width: 480px) {
   .onspot-main-shell {
-    padding: 10px 8px 36px 8px;
+    padding: 12px 10px 140px 10px !important;
   }
 
   .onspot-card {
-    padding: 16px 12px 22px 12px !important;
+    padding: 18px 14px 28px 14px !important;
     border-radius: 14px !important;
+    margin-bottom: 40px !important;
   }
 
   .form-group input,
