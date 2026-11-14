@@ -1,4 +1,4 @@
-// Build: v20261113_r19_themewise_filter_and_exports - Themewise filtering in Venue menu and Themewise PDF, Word, Excel exports
+// Build: v20261114_onspot_v3 - On-spot registration with mobile button ordering & unified auditorium QR
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)
