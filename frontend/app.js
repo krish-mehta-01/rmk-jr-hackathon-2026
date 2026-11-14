@@ -2909,7 +2909,7 @@ function printQRCode() {
             <span class="portal-link-label">Official Portal</span>
             <span class="portal-link-url">rmkjuniorhackathon2026.onrender.com</span>
           </div>
-          <p class="instruction">Scan with any smartphone camera to mark attendance or register on-spot for walk-in teams.</p>
+          <p class="instruction">Scan with any phone camera or log in above to mark team presence.</p>
         </div>
       </body>
     </html>
@@ -3099,7 +3099,6 @@ function printOnSpotQRCode() {
             <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" />
           </div>
           <h1>RMK Junior Hackathon 2026</h1>
-          <div class="sub-badge">WALK-IN / ON-SPOT REGISTRATION</div>
           <div class="qr"><img src="${onSpotQRCodeData}" alt="On-Spot Registration QR Code" /></div>
           <div class="portal-link-box">
             <span class="portal-link-label">Direct On-Spot Portal</span>
