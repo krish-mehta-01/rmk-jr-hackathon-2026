@@ -1080,6 +1080,7 @@ function renderTeamsRows(teams) {
         <td data-label="Team">
           <div class="table-team-id mono">${escapeHtml(t.team_code || '')}</div>
           <div class="table-team-title">${escapeHtml(t.team_name || '—')}</div>
+          ${t.category ? `<div class="table-team-theme"><span class="team-theme-tag">${escapeHtml(t.category)}</span></div>` : ''}
         </td>
         <td data-label="Team Leader">${escapeHtml(t.leader_name || '—')}</td>
         <td data-label="Mentor">${escapeHtml(t.mentor_name || '—')}</td>
@@ -1097,6 +1098,7 @@ function renderTeamsRows(teams) {
         <td colspan="6">
           <div class="team-detail-body">
           <dl class="team-detail-grid">
+            <div><dt>Theme Track</dt><dd><span class="team-theme-pill">${escapeHtml(t.category || 'General Track')}</span></dd></div>
             <div><dt>Panel & Venue</dt><dd><strong>${t.panel_no ? `Panel ${t.panel_no}` : '—'}</strong> · ${escapeHtml(t.venue || '—')}</dd></div>
             <div><dt>Idea Title</dt><dd>${escapeHtml(t.project_title || '—')}</dd></div>
             <div><dt>Team Members</dt><dd>${membersListItems(t, false) ? `<ol class="members-ol">${membersListItems(t, false)}</ol>` : '—'}</dd></div>
