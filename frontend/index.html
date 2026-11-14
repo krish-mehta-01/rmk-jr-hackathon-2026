@@ -33,7 +33,7 @@
     })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261114_v8" />
+  <link rel="stylesheet" href="/style.css?v=20261114_onspot_v1" />
 </head>
 <body>
 
@@ -101,6 +101,20 @@
                 <div class="btn-spinner hidden"></div>
               </button>
             </form>
+
+            <!-- Walk-in / On-Spot Registration Prompt -->
+            <div class="auth-onspot-divider">
+              <span>OR</span>
+            </div>
+            
+            <div class="auth-onspot-card">
+              <div class="onspot-card-badge">Walk-in Teams</div>
+              <p class="onspot-card-desc">Registering on-spot today at the venue?</p>
+              <button type="button" class="glass-btn-outline-primary" onclick="navigateToOnSpot()" id="btn-goto-onspot">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Register On-Spot at Venue
+              </button>
+            </div>
           </div>
 
           <!-- Admin Form (Fully Responsive) -->
@@ -133,6 +147,188 @@
 
         </div>
       </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!--  1B. ON-SPOT WALK-IN REGISTRATION VIEW      -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="view-onspot" class="app-view hidden">
+      <header class="app-topbar">
+        <div class="app-topbar-inner">
+          <div class="topbar-logos">
+            <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="topbar-logo-rmk" />
+            <div class="topbar-logo-divider"></div>
+            <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="topbar-logo-hackathon" />
+          </div>
+          <button type="button" class="topbar-logout" onclick="navigateToLogin()" aria-label="Back to Login" title="Back to Login">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span>Back to Login</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="onspot-main-shell">
+        <div class="glass-card onspot-card">
+          <div class="onspot-header-strip">
+            <div class="onspot-badge-pill">
+              <span class="status-indicator-dot dot-live"></span>
+              <span>WALK-IN / ON-SPOT REGISTRATION</span>
+            </div>
+            <h1 class="onspot-title">Register Your Team</h1>
+            <p class="onspot-subtitle">
+              Walk-in teams registering on-spot at the venue can register directly below. Your venue hall, sitting room, and evaluation panel will be assigned, attendance will be marked, and your official live student pass generated immediately.
+            </p>
+          </div>
+
+          <form id="form-onspot-register" class="glass-form onspot-form" novalidate>
+            <!-- Section 1: Institution & Project Domain -->
+            <div class="onspot-form-section">
+              <div class="section-badge-title">
+                <span class="sec-num">1</span>
+                <span>Institution & Project Theme</span>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="onspot-college-name">School / Institution Name <span class="req">*</span></label>
+                  <input type="text" id="onspot-college-name" placeholder="e.g. Velammal Vidyashram, Surapet" required autocomplete="organization" />
+                </div>
+                <div class="form-group">
+                  <label for="onspot-district">District / City</label>
+                  <input type="text" id="onspot-district" placeholder="e.g. Chennai, Tiruvallur" autocomplete="address-level2" />
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="onspot-category">Hackathon Theme / Domain <span class="req">*</span></label>
+                  <div class="select-wrapper">
+                    <select id="onspot-category" required>
+                      <option value="" disabled selected>Select Theme...</option>
+                      <option value="AI for Disater Management">AI for Disater Management</option>
+                      <option value="Agriculture">Agriculture</option>
+                      <option value="Clean and Green Environment">Clean and Green Environment</option>
+                      <option value="Education">Education</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="Indian Heritage and Digital Creativity">Indian Heritage and Digital Creativity</option>
+                      <option value="Renewable/Sustainable Energy">Renewable/Sustainable Energy</option>
+                      <option value="Robotics">Robotics</option>
+                      <option value="Smart Automation">Smart Automation</option>
+                      <option value="Smart Vehicles">Smart Vehicles</option>
+                      <option value="Traditional Games of Indian Ethos">Traditional Games of Indian Ethos</option>
+                      <option value="Virtual Reality Experience">Virtual Reality Experience</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="onspot-project-title">Project Title / Topic <span class="req">*</span></label>
+                  <input type="text" id="onspot-project-title" placeholder="e.g. Smart IoT Plant Monitoring" required />
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Team & Leader Details -->
+            <div class="onspot-form-section">
+              <div class="section-badge-title">
+                <span class="sec-num">2</span>
+                <span>Team & Leader Information</span>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="onspot-team-name">Team Name <span class="req">*</span></label>
+                  <input type="text" id="onspot-team-name" placeholder="e.g. EcoWarriors" required />
+                </div>
+                <div class="form-group">
+                  <label for="onspot-leader-name">Team Leader Full Name <span class="req">*</span></label>
+                  <input type="text" id="onspot-leader-name" placeholder="Full name of Team Leader" required autocomplete="name" />
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="onspot-mobile-no">Leader Mobile Number <span class="req">*</span></label>
+                  <div class="input-prefix-group">
+                    <span class="input-prefix">+91</span>
+                    <input type="tel" id="onspot-mobile-no" inputmode="numeric" maxlength="10" placeholder="10-digit mobile" required autocomplete="tel-national" />
+                  </div>
+                  <span class="field-hint">Used for pass login & verification</span>
+                </div>
+                <div class="form-group">
+                  <label for="onspot-email">Leader Email Address</label>
+                  <input type="email" id="onspot-email" placeholder="student@example.com" autocomplete="email" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: Team Members -->
+            <div class="onspot-form-section">
+              <div class="section-badge-title">
+                <span class="sec-num">3</span>
+                <span>Team Members (Other Students)</span>
+              </div>
+              <p class="section-hint-text">Each team may have 2 to 4 students including the leader.</p>
+              
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="onspot-member-2">Team Member 2 Name <span class="req">*</span></label>
+                  <input type="text" id="onspot-member-2" placeholder="Member 2 Full Name" required />
+                </div>
+                <div class="form-group">
+                  <label for="onspot-member-3">Team Member 3 Name <span class="optional">(Optional)</span></label>
+                  <input type="text" id="onspot-member-3" placeholder="Member 3 Full Name" />
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="onspot-member-4">Team Member 4 Name <span class="optional">(Optional)</span></label>
+                  <input type="text" id="onspot-member-4" placeholder="Member 4 Full Name" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 4: Accompanying Mentor / Teacher (Optional) -->
+            <div class="onspot-form-section">
+              <div class="section-badge-title">
+                <span class="sec-num">4</span>
+                <span>Accompanying Teacher / Mentor <span class="optional">(Optional)</span></span>
+              </div>
+              
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="onspot-mentor-name">Mentor / Teacher Name</label>
+                  <input type="text" id="onspot-mentor-name" placeholder="Teacher / Guide Name" />
+                </div>
+                <div class="form-group">
+                  <label for="onspot-mentor-contact">Mentor Mobile Number</label>
+                  <div class="input-prefix-group">
+                    <span class="input-prefix">+91</span>
+                    <input type="tel" id="onspot-mentor-contact" inputmode="numeric" maxlength="10" placeholder="10-digit mobile" />
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="onspot-mentor-email">Mentor Email Address</label>
+                <input type="email" id="onspot-mentor-email" placeholder="teacher@school.edu" />
+              </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="onspot-error" class="glass-alert-error hidden" role="alert"></div>
+
+            <!-- Submit Row -->
+            <div class="onspot-actions-row">
+              <button type="submit" class="glass-btn glass-btn-primary btn-onspot-submit" id="onspot-submit-btn">
+                <span class="btn-text">Register & Access Student Pass</span>
+                <div class="btn-spinner hidden"></div>
+              </button>
+              <button type="button" class="glass-btn glass-btn-secondary" onclick="navigateToLogin()">
+                Cancel / Back to Login
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
     </div>
 
 
@@ -629,9 +825,20 @@
 
             </div>
 
-            <!-- Pane 2: Hackathon Day Presence QR Standee -->
+            <!-- Pane 2: Hackathon Day Presence & On-Spot QR Standees -->
             <div id="admin-sec-qr" class="admin-tab-pane hidden">
-              <div class="glass-card laptop-standee-bento">
+              <!-- Standee Mode Switcher -->
+              <div class="standee-mode-tabs">
+                <button type="button" class="standee-tab-btn active" id="tab-standee-attendance" onclick="switchStandeeMode('attendance')">
+                  Attendance QR Standee (Check-in)
+                </button>
+                <button type="button" class="standee-tab-btn" id="tab-standee-onspot" onclick="switchStandeeMode('onspot')">
+                  On-Spot Registration Standee (Walk-in Teams)
+                </button>
+              </div>
+
+              <!-- Attendance Standee Container -->
+              <div class="glass-card laptop-standee-bento" id="standee-attendance-container">
                 <div class="standee-flex-row">
                   
                   <!-- Physical Standee Poster Preview -->
@@ -663,6 +870,9 @@
                   <!-- Standee Controls & Info -->
                   <div class="standee-details-col">
                     <h3>Hackathon Day Venue Standee</h3>
+                    <p class="standee-desc-muted">
+                      Display this standee at all venue entry gates. Teams scan this QR with their smartphone cameras to confirm their attendance and unlock their venue pass.
+                    </p>
                     
                     <div class="standee-btn-cluster">
                       <button type="button" class="glass-btn glass-btn-primary" onclick="downloadQRCode()">
@@ -672,6 +882,59 @@
                       <button type="button" class="glass-btn glass-btn-secondary" onclick="printQRCode()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                         Print Official Standee
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- On-Spot Registration Standee Container -->
+              <div class="glass-card laptop-standee-bento hidden" id="standee-onspot-container">
+                <div class="standee-flex-row">
+                  
+                  <!-- Physical On-Spot Standee Poster Preview -->
+                  <div class="standee-frame-card" id="standee-onspot-printable-card">
+                    
+                    <div class="standee-header-branding">
+                      <div class="standee-logos-row">
+                        <img src="/assets/rmk_group_logo.png" alt="RMK Group of Institutions" class="standee-rmk-group-img" />
+                        <div class="standee-pipe"></div>
+                        <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" class="standee-hackathon-img" />
+                      </div>
+                    </div>
+
+                    <h2 class="standee-event-heading">RMK Junior Hackathon 2026</h2>
+                    <div class="standee-sub-pill onspot-pill">WALK-IN / ON-SPOT REGISTRATION</div>
+                    
+                    <div class="qr-canvas-holder" id="admin-onspot-qr-container">
+                      <div class="qr-loading">Generating On-Spot Registration QR...</div>
+                    </div>
+
+                    <div class="standee-url-link">
+                      <a href="https://rmkjuniorhackathon2026.onrender.com/#on-spot" target="_blank" rel="noopener noreferrer">rmkjuniorhackathon2026.onrender.com/#on-spot</a>
+                    </div>
+
+                    <div class="standee-instruction-text">
+                      Scan with any smartphone camera to register your team, get auto-allocated venue sitting, and generate your live pass instantly.
+                    </div>
+                  </div>
+
+                  <!-- Standee Controls & Info -->
+                  <div class="standee-details-col">
+                    <h3>On-Spot Registration Standee</h3>
+                    <p class="standee-desc-muted">
+                      Display this standee at the registration desk / helpdesk. Walk-in teams scan this QR to open the registration form, auto-allocate their venue & panel, and get their live pass immediately.
+                    </p>
+                    
+                    <div class="standee-btn-cluster">
+                      <button type="button" class="glass-btn glass-btn-primary" onclick="downloadOnSpotQRCode()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download On-Spot QR (PNG)
+                      </button>
+                      <button type="button" class="glass-btn glass-btn-secondary" onclick="printOnSpotQRCode()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Print Official On-Spot Standee
                       </button>
                     </div>
                   </div>
@@ -2017,6 +2280,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261114_v8"></script>
+  <script src="/app.js?v=20261114_onspot_v1"></script>
 </body>
 </html>

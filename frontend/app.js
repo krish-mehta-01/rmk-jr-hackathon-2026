@@ -81,6 +81,9 @@ function setupEventListeners() {
   const formTeam = document.getElementById('form-team-login');
   if (formTeam) formTeam.addEventListener('submit', handleTeamLogin);
 
+  const formOnSpot = document.getElementById('form-onspot-register');
+  if (formOnSpot) formOnSpot.addEventListener('submit', handleOnSpotSubmit);
+
   const formAdmin = document.getElementById('form-admin-login');
   if (formAdmin) formAdmin.addEventListener('submit', handleAdminLogin);
 
@@ -92,6 +95,16 @@ function setupEventListeners() {
 
   const formJudgePwd = document.getElementById('form-judge-change-password');
   if (formJudgePwd) formJudgePwd.addEventListener('submit', handleJudgeChangePassword);
+
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash === '#on-spot') {
+      showView('view-onspot');
+    } else if (!window.location.hash || window.location.hash === '#login') {
+      if (!teamToken && !adminToken && !judgeToken && !juryAdminToken) {
+        showView('view-auth');
+      }
+    }
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -103,6 +116,11 @@ function restoreSession() {
   juryAdminToken = localStorage.getItem('rmk_jury_admin_token') || null;
   judgeToken = localStorage.getItem('rmk_judge_token') || null;
   teamToken = localStorage.getItem('rmk_team_token') || null;
+
+  if (window.location.hash === '#on-spot' || window.location.search.includes('onspot=1')) {
+    showView('view-onspot');
+    return;
+  }
 
   if (IS_JURY_ADMIN_PAGE) {
     document.title = 'RMK Jr. Hackathon 2026 — Super Admin';
@@ -237,6 +255,154 @@ async function handleTeamLogin(e) {
   } catch {
     errorEl.textContent = 'Connection error. Please try again.';
     errorEl.classList.remove('hidden');
+  } finally {
+    setButtonLoading(btn, false);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ON-SPOT WALK-IN REGISTRATION NAVIGATION & SUBMISSION
+// ─────────────────────────────────────────────────────────────
+function navigateToOnSpot() {
+  window.location.hash = 'on-spot';
+  const errEl = document.getElementById('onspot-error');
+  if (errEl) {
+    errEl.classList.add('hidden');
+    errEl.textContent = '';
+  }
+  showView('view-onspot');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function navigateToLogin() {
+  window.location.hash = '';
+  showView('view-auth');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showOnSpotError(msg) {
+  const errorEl = document.getElementById('onspot-error');
+  if (!errorEl) return;
+  errorEl.textContent = msg;
+  errorEl.classList.remove('hidden');
+  errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function handleOnSpotSubmit(e) {
+  e.preventDefault();
+  const errorEl = document.getElementById('onspot-error');
+  const btn = document.getElementById('onspot-submit-btn');
+
+  if (errorEl) {
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+  }
+
+  const collegeName = document.getElementById('onspot-college-name').value.trim();
+  const district = document.getElementById('onspot-district').value.trim();
+  const category = document.getElementById('onspot-category').value.trim();
+  const projectTitle = document.getElementById('onspot-project-title').value.trim();
+  const teamName = document.getElementById('onspot-team-name').value.trim();
+  const leaderName = document.getElementById('onspot-leader-name').value.trim();
+  const rawMobile = document.getElementById('onspot-mobile-no').value.trim();
+  const email = document.getElementById('onspot-email').value.trim();
+  const member2 = document.getElementById('onspot-member-2').value.trim();
+  const member3 = document.getElementById('onspot-member-3').value.trim();
+  const member4 = document.getElementById('onspot-member-4').value.trim();
+  const mentorName = document.getElementById('onspot-mentor-name').value.trim();
+  const mentorContact = document.getElementById('onspot-mentor-contact').value.trim();
+  const mentorEmail = document.getElementById('onspot-mentor-email').value.trim();
+
+  // Validate required fields
+  if (!collegeName) {
+    showOnSpotError('Please enter your School / Institution Name.');
+    return;
+  }
+  if (!category) {
+    showOnSpotError('Please select a Hackathon Theme.');
+    return;
+  }
+  if (!projectTitle) {
+    showOnSpotError('Please enter your Project Title.');
+    return;
+  }
+  if (!teamName) {
+    showOnSpotError('Please enter your Team Name.');
+    return;
+  }
+  if (!leaderName) {
+    showOnSpotError('Please enter the Team Leader Full Name.');
+    return;
+  }
+
+  const cleanPhone = rawMobile.replace(/\D/g, '').slice(-10);
+  if (!cleanPhone || cleanPhone.length !== 10) {
+    showOnSpotError('Please enter a valid 10-digit Leader Mobile Number.');
+    return;
+  }
+
+  if (!member2) {
+    showOnSpotError('Please enter at least one other team member (Member 2).');
+    return;
+  }
+
+  // Construct combined school name if district is provided
+  const fullSchoolName = district ? `${collegeName} (${district})` : collegeName;
+
+  // Construct full members list (Leader is always member 1)
+  const memberNames = [leaderName, member2, member3, member4].filter(Boolean);
+  const membersString = memberNames.join(', ');
+
+  setButtonLoading(btn, true);
+
+  try {
+    const res = await fetch('/api/public/on-spot-register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team_name: teamName,
+        leader_name: leaderName,
+        mobile_no: cleanPhone,
+        email: email || null,
+        college_name: fullSchoolName,
+        project_title: projectTitle,
+        category: category,
+        members: membersString,
+        mentor_name: mentorName || null,
+        mentor_contact: mentorContact ? mentorContact.replace(/\D/g, '').slice(-10) : null,
+        mentor_email: mentorEmail || null
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showOnSpotError(data.error || 'Registration failed. Please check your details.');
+      return;
+    }
+
+    // Success! Save credentials and pass data
+    teamToken = data.token;
+    teamData = data.team;
+    localStorage.setItem('rmk_team_token', teamToken);
+    localStorage.setItem('rmk_team_data', JSON.stringify(teamData));
+
+    // Reset the registration form
+    const formEl = document.getElementById('form-onspot-register');
+    if (formEl) formEl.reset();
+
+    // Clear hash and switch to official Student Pass view immediately
+    history.replaceState(null, '', location.pathname);
+    initTeamDashboard();
+    showView('view-team');
+    renderTeamDetails(teamData);
+    renderPassStatus(true, data.team.check_in_time);
+    renderVenueMap(teamData);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    showToast(`Registration Successful! Welcome, Team ${teamData.team_name}!`, 'success');
+  } catch (err) {
+    showOnSpotError('Connection error connecting to the registration server. Please try again.');
   } finally {
     setButtonLoading(btn, false);
   }
@@ -2744,6 +2910,202 @@ function printQRCode() {
             <span class="portal-link-url">rmkjuniorhackathon2026.onrender.com</span>
           </div>
           <p class="instruction">Scan with any phone camera or log in to the portal above to mark team presence.</p>
+        </div>
+      </body>
+    </html>
+  `);
+  w.document.close();
+  setTimeout(() => {
+    w.focus();
+    w.print();
+  }, 400);
+}
+
+// ─────────────────────────────────────────────────────────────
+// ON-SPOT REGISTRATION STANDEE QR CODE
+// ─────────────────────────────────────────────────────────────
+let onSpotQRCodeData = null;
+
+function switchStandeeMode(mode) {
+  const tabAttendance = document.getElementById('tab-standee-attendance');
+  const tabOnSpot = document.getElementById('tab-standee-onspot');
+  const containerAttendance = document.getElementById('standee-attendance-container');
+  const containerOnSpot = document.getElementById('standee-onspot-container');
+
+  if (mode === 'onspot') {
+    if (tabAttendance) tabAttendance.classList.remove('active');
+    if (tabOnSpot) tabOnSpot.classList.add('active');
+    if (containerAttendance) containerAttendance.classList.add('hidden');
+    if (containerOnSpot) containerOnSpot.classList.remove('hidden');
+    loadOnSpotQRCode();
+  } else {
+    if (tabOnSpot) tabOnSpot.classList.remove('active');
+    if (tabAttendance) tabAttendance.classList.add('active');
+    if (containerOnSpot) containerOnSpot.classList.add('hidden');
+    if (containerAttendance) containerAttendance.classList.remove('hidden');
+    loadPermanentVenueQR();
+  }
+}
+
+async function loadOnSpotQRCode() {
+  const container = document.getElementById('admin-onspot-qr-container');
+  if (!container) return;
+
+  if (onSpotQRCodeData) {
+    container.innerHTML = `<img src="${onSpotQRCodeData}" alt="On-Spot Registration Standee QR" />`;
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/public/on-spot-qr-code');
+    if (!res.ok) {
+      container.innerHTML = '<div class="qr-loading">Failed to load On-Spot QR.</div>';
+      return;
+    }
+
+    const data = await res.json();
+    onSpotQRCodeData = data.qr_code;
+    container.innerHTML = `<img src="${onSpotQRCodeData}" alt="On-Spot Registration Standee QR" />`;
+  } catch {
+    container.innerHTML = '<div class="qr-loading">Connection error loading On-Spot QR.</div>';
+  }
+}
+
+function downloadOnSpotQRCode() {
+  if (!onSpotQRCodeData) return;
+  const a = document.createElement('a');
+  a.href = onSpotQRCodeData;
+  a.download = 'RMK_Junior_Hackathon_2026_OnSpot_Registration_Standee_QR.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('On-Spot Standee QR downloaded successfully', 'success');
+}
+
+function printOnSpotQRCode() {
+  if (!onSpotQRCodeData) return;
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>RMK Jr. Hackathon 2026 — On-Spot Registration Standee</title>
+        <style>
+          @page { size: A4 portrait; margin: 12mm; }
+          * { box-sizing: border-box; }
+          body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #ffffff;
+            color: #0f172a;
+          }
+          .card {
+            text-align: center;
+            border: 2.5px solid #0f172a;
+            border-radius: 24px;
+            padding: 44px 36px 40px 36px;
+            max-width: 580px;
+            width: 100%;
+            box-sizing: border-box;
+            background: #ffffff;
+          }
+          .logos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 24px;
+          }
+          .logos img { height: 52px; object-fit: contain; }
+          .pipe { width: 2px; height: 38px; background: #10b981; }
+          h1 {
+            margin: 0 0 10px 0;
+            font-size: 27px;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            color: #0f172a;
+          }
+          .sub-badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1.5px solid #bfdbfe;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            padding: 5px 14px;
+            border-radius: 999px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+          }
+          .qr {
+            margin: 0 auto 18px auto;
+          }
+          .qr img {
+            width: 320px;
+            height: 320px;
+            margin: 0 auto;
+            display: block;
+          }
+          .portal-link-box {
+            margin: 16px auto 18px auto;
+            padding: 12px 24px;
+            border: 2px solid #2563eb;
+            border-radius: 12px;
+            background: #eff6ff;
+            display: inline-block;
+            max-width: 90%;
+            box-sizing: border-box;
+            text-align: center;
+          }
+          .portal-link-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #1e40af;
+            margin-bottom: 5px;
+            display: block;
+          }
+          .portal-link-url {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            font-size: 15.5px;
+            font-weight: 800;
+            color: #1d4ed8;
+            letter-spacing: -0.01em;
+            word-break: break-all;
+            display: block;
+          }
+          .instruction {
+            margin: 0;
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #475569;
+            line-height: 1.5;
+            max-width: 440px;
+            margin: 0 auto;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="logos">
+            <img src="/assets/rmk_group_logo.png" alt="RMK Group" />
+            <div class="pipe"></div>
+            <img src="/assets/rmk_jr_hackathon_2026_logo.png" alt="RMK Jr. Hackathon 2026" />
+          </div>
+          <h1>RMK Junior Hackathon 2026</h1>
+          <div class="sub-badge">WALK-IN / ON-SPOT REGISTRATION</div>
+          <div class="qr"><img src="${onSpotQRCodeData}" alt="On-Spot Registration QR Code" /></div>
+          <div class="portal-link-box">
+            <span class="portal-link-label">Direct On-Spot Portal</span>
+            <span class="portal-link-url">rmkjuniorhackathon2026.onrender.com/#on-spot</span>
+          </div>
+          <p class="instruction">Scan with any smartphone camera to register your team, auto-allocate your venue sitting, and generate your live pass instantly.</p>
         </div>
       </body>
     </html>

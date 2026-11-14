@@ -44,6 +44,20 @@ if (!/^\d{64}$/.test(PRESENCE_QR_CODE_64)) {
 // Public address encoded in the venue QR
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://rmkjuniorhackathon2026.onrender.com').replace(/\/+$/, '');
 
+// Clean mobile number to standard 10 digits
+function cleanMobile(raw) {
+  if (!raw) return '';
+  let str = String(raw).trim().replace(/[^0-9]/g, '');
+  if (str.startsWith('91') && str.length === 12) {
+    str = str.slice(2);
+  } else if (str.startsWith('0') && str.length === 11) {
+    str = str.slice(1);
+  } else if (str.length > 10) {
+    str = str.slice(-10);
+  }
+  return str;
+}
+
 // Timing-safe comparison against the venue QR code
 function verifyPresenceCode(input) {
   if (!input || typeof input !== 'string') return false;
@@ -167,7 +181,7 @@ app.post('/api/team/login', async (req, res) => {
     if (loginLimiter.isLimited(req.ip)) return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
 
     const [matches] = await pool.execute(
-      `SELECT ${TEAM_PASS_COLUMNS} FROM teams WHERE team_code = ? AND mobile_no = ?`,
+      `SELECT ${TEAM_PASS_COLUMNS}, mobile_no FROM teams WHERE team_code = ? AND mobile_no = ?`,
       [teamCode, phone]
     );
     if (matches.length === 0) {
@@ -182,6 +196,198 @@ app.post('/api/team/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// On-Spot Registration (Public for Walk-in Teams scanning Registration QR Standee)
+// Creates team in DB, auto-allocates optimal panel & venue for their theme,
+// links them to the active published jury revision, marks presence (is_present = TRUE),
+// and returns their live authentication token + team pass view immediately.
+app.post('/api/public/on-spot-register', async (req, res) => {
+  try {
+    const {
+      team_name,
+      leader_name,
+      mobile_no,
+      email,
+      college_name,
+      project_title,
+      category,
+      members,
+      mentor_name,
+      mentor_contact,
+      mentor_email
+    } = req.body;
+
+    const cleanPhone = cleanMobile(mobile_no);
+    if (!team_name || !String(team_name).trim()) {
+      return res.status(400).json({ error: 'Team Name is required.' });
+    }
+    if (!leader_name || !String(leader_name).trim()) {
+      return res.status(400).json({ error: 'Team Leader Name is required.' });
+    }
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      return res.status(400).json({ error: 'Valid 10-digit Leader Mobile Number is required.' });
+    }
+    if (!college_name || !String(college_name).trim()) {
+      return res.status(400).json({ error: 'School / Institution Name is required.' });
+    }
+    if (!project_title || !String(project_title).trim()) {
+      return res.status(400).json({ error: 'Project Title is required.' });
+    }
+    if (!category || !String(category).trim()) {
+      return res.status(400).json({ error: 'Hackathon Theme is required.' });
+    }
+
+    // 1. Duplicate check (phone and team name + school)
+    const [existing] = await pool.query(
+      'SELECT id, team_code, team_name, leader_name FROM teams WHERE mobile_no = ? OR (team_name = ? AND college_name = ?)',
+      [cleanPhone, team_name.trim(), college_name.trim()]
+    );
+    if (existing.length > 0) {
+      return res.status(409).json({
+        error: `A team with this mobile number or name is already registered (Team ID: ${existing[0].team_code}, Team: ${existing[0].team_name}). Please log in instead.`
+      });
+    }
+
+    // 2. Fetch active published revision
+    const [revRows] = await pool.query(
+      "SELECT id, revision_number FROM allocation_revisions WHERE status = 'PUBLISHED' AND is_active = TRUE LIMIT 1"
+    );
+    const activeRevisionId = revRows[0]?.id || 120004;
+
+    // 3. Auto-allocate optimal Panel & Venue based on Theme
+    const [themeVenueRows] = await pool.query('SELECT venue FROM theme_venues WHERE theme = ? LIMIT 1', [category.trim()]);
+    const defaultVenue = themeVenueRows[0]?.venue || 'Main Auditorium (RJ Block)';
+
+    const [matchingPanels] = await pool.query(`
+      SELECT p.id, p.venue, COUNT(a.id) as team_count
+      FROM jury_panels p
+      LEFT JOIN panel_project_assignments a ON a.panel_id = p.id AND a.revision_id = ?
+      WHERE p.id IN (SELECT DISTINCT panel_no FROM teams WHERE category = ? AND panel_no IS NOT NULL)
+      GROUP BY p.id, p.venue
+      ORDER BY team_count ASC, p.id ASC
+      LIMIT 1
+    `, [activeRevisionId, category.trim()]);
+
+    let assignedPanelNo = 15; // default fallback overflow panel
+    let assignedVenue = defaultVenue;
+
+    if (matchingPanels.length > 0) {
+      assignedPanelNo = matchingPanels[0].id;
+      assignedVenue = matchingPanels[0].venue || defaultVenue;
+    } else {
+      const [venuePanels] = await pool.query(`
+        SELECT p.id, p.venue, COUNT(a.id) as team_count
+        FROM jury_panels p
+        LEFT JOIN panel_project_assignments a ON a.panel_id = p.id AND a.revision_id = ?
+        WHERE p.venue = ?
+        GROUP BY p.id, p.venue
+        ORDER BY team_count ASC, p.id ASC
+        LIMIT 1
+      `, [activeRevisionId, defaultVenue]);
+      if (venuePanels.length > 0) {
+        assignedPanelNo = venuePanels[0].id;
+        assignedVenue = venuePanels[0].venue;
+      }
+    }
+
+    // 4. Auto-generate next sequential Team Code (RMKJH261XXX)
+    const [maxCodeRows] = await pool.query(
+      "SELECT team_code FROM teams WHERE team_code LIKE 'RMKJH261%' ORDER BY id DESC"
+    );
+    let maxNum = 295;
+    for (const row of maxCodeRows) {
+      const m = row.team_code && row.team_code.match(/RMKJH261(\d+)/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    }
+    const nextTeamCode = `RMKJH261${String(maxNum + 1).padStart(3, '0')}`;
+    const teamUuid = crypto.randomUUID();
+
+    // Format members list (include leader at start if not already there)
+    let membersText = String(members || '').trim();
+    if (!membersText) {
+      membersText = leader_name.trim();
+    } else if (!membersText.toLowerCase().includes(leader_name.trim().toLowerCase())) {
+      membersText = `${leader_name.trim()}, ${membersText}`;
+    }
+
+    // 5. Insert into teams table with is_present = TRUE and check_in_time = NOW()
+    const [insRes] = await pool.execute(`
+      INSERT INTO teams (
+        team_uuid, team_code, team_name, leader_name, mobile_no, email,
+        college_name, project_title, category, members, mentor_name,
+        mentor_contact, mentor_email, is_present, check_in_time, marked_by, panel_no, venue
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, NOW(), 'On-Spot Self Check-in', ?, ?)
+    `, [
+      teamUuid,
+      nextTeamCode,
+      team_name.trim(),
+      leader_name.trim(),
+      cleanPhone,
+      email ? String(email).trim() : null,
+      college_name.trim(),
+      project_title.trim(),
+      category.trim(),
+      membersText,
+      mentor_name ? String(mentor_name).trim() : null,
+      mentor_contact ? cleanMobile(mentor_contact) : null,
+      mentor_email ? String(mentor_email).trim() : null,
+      assignedPanelNo,
+      assignedVenue
+    ]);
+    const newTeamId = insRes.insertId;
+
+    // 6. Automatically assign into active published jury revision
+    try {
+      await pool.execute(`
+        INSERT INTO panel_project_assignments (
+          revision_id, panel_id, team_id, assigned_at, notes
+        ) VALUES (?, ?, ?, NOW(), 'On-Spot Registration at Helpdesk')
+      `, [activeRevisionId, assignedPanelNo, newTeamId]);
+    } catch (assignErr) {
+      console.warn('[WARN] Could not link on-spot team to allocation revision:', assignErr.message);
+    }
+
+    // 7. Fetch newly inserted team with pass columns
+    const [newTeamRows] = await pool.query(
+      `SELECT ${TEAM_PASS_COLUMNS}, mobile_no FROM teams WHERE id = ?`,
+      [newTeamId]
+    );
+    const newTeam = newTeamRows[0];
+    const token = signTeamToken(newTeam);
+
+    console.log(`[ON-SPOT REGISTRATION] Registered Team "${newTeam.team_name}" (${newTeam.team_code}) -> Panel ${assignedPanelNo}, Venue: "${assignedVenue}". Attendance marked PRESENT.`);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Registration and attendance marked successfully!',
+      token,
+      team: teamPassView(newTeam)
+    });
+  } catch (err) {
+    console.error('[ERROR] On-spot registration failed:', err);
+    return res.status(500).json({ error: 'Server error during on-spot registration: ' + err.message });
+  }
+});
+
+// On-Spot Registration Standee QR code image (Public or Admin)
+app.get('/api/public/on-spot-qr-code', async (req, res) => {
+  try {
+    const QRCode = require('qrcode');
+    const qrImage = await QRCode.toDataURL(`${PUBLIC_URL}/#on-spot`, {
+      width: 480,
+      margin: 2,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#0f172a', light: '#ffffff' }
+    });
+    res.json({ qr_code: qrImage, url: `${PUBLIC_URL}/#on-spot` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to generate on-spot registration QR code' });
   }
 });
 
