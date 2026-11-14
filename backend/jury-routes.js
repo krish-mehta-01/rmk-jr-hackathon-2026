@@ -612,13 +612,15 @@ router.post('/jury/register', authJudge, async (req, res) => {
 // 3. PROJECT EVALUATION ENDPOINTS
 // ─────────────────────────────────────────────────────────────
 
-// Helper function: verifies team is assigned to this panel in active published revision
+// Helper function: verifies team is assigned to this panel in active published revision or teams roster
 async function verifyActivePanelAssignment(teamId, panelId) {
   const [rows] = await pool.execute(`
-    SELECT a.id FROM panel_project_assignments a
+    SELECT 1 FROM panel_project_assignments a
     JOIN allocation_revisions rev ON rev.id = a.revision_id AND rev.is_active = TRUE AND rev.status = 'PUBLISHED'
     WHERE a.team_id = ? AND a.panel_id = ?
-  `, [teamId, panelId]);
+    UNION
+    SELECT 1 FROM teams WHERE id = ? AND panel_no = ?
+  `, [teamId, panelId, teamId, panelId]);
   return rows.length > 0;
 }
 
@@ -781,20 +783,27 @@ router.post('/jury/evaluations/:teamId/draft', authJudge, enforceJudgeReady, asy
     const teamId = parseInt(req.params.teamId, 10);
     const { scores, remarks } = req.body || {};
 
-    // Verify team is assigned to this panel in active published revision
+    // Verify team is assigned to this panel in active published revision or teams roster
     const isAssigned = await verifyActivePanelAssignment(teamId, req.user.panel_id);
     if (!isAssigned) {
       return res.status(403).json({ error: 'Access denied: This team is not assigned to your panel in the active published allocation.' });
     }
 
-    // Check if already SUBMITTED
+    // Check if already SUBMITTED (lookup by team_id, panel_id, and judge_type matching uq_team_panel_judge)
     const [existing] = await pool.execute(`
-      SELECT id, status FROM project_evaluations
-      WHERE team_id = ? AND panel_id = ? AND judge_id = ?
-    `, [teamId, req.user.panel_id, req.user.id]);
+      SELECT id, status, total_score FROM project_evaluations
+      WHERE team_id = ? AND panel_id = ? AND judge_type = ?
+    `, [teamId, req.user.panel_id, req.user.judge_type]);
 
     if (existing.length > 0 && existing[0].status === 'SUBMITTED') {
-      return res.status(400).json({ error: 'This evaluation has already been final-submitted and cannot be edited.' });
+      return res.status(200).json({
+        ok: true,
+        status: 'SUBMITTED',
+        message: 'This evaluation has already been final-submitted and cannot be edited as a draft.',
+        is_locked: true,
+        already_submitted: true,
+        total_score: Number(existing[0].total_score)
+      });
     }
 
     // Fetch criteria for score validation (max 10.00 each)
@@ -809,7 +818,7 @@ router.post('/jury/evaluations/:teamId/draft', authJudge, enforceJudgeReady, asy
     const validatedScores = [];
     if (Array.isArray(scores)) {
       for (const s of scores) {
-        const critId = parseInt(s.criterion_id, 10);
+        const critId = parseInt(s.criterion_id || s.criteria_id || s.id, 10);
         const max = critMaxMap.has(critId) ? critMaxMap.get(critId) : 10.00;
         const val = parseFloat(s.score);
         if (isNaN(val)) continue;
@@ -839,24 +848,27 @@ router.post('/jury/evaluations/:teamId/draft', authJudge, enforceJudgeReady, asy
       evalId = existing[0].id;
       await pool.execute(`
         UPDATE project_evaluations 
-        SET total_score = ?, remarks = ?, status = 'DRAFT'
+        SET total_score = ?, remarks = ?, status = 'DRAFT', judge_id = ?
         WHERE id = ?
-      `, [totalScore, remarks || '', evalId]);
+      `, [totalScore, remarks || '', req.user.id, evalId]);
     } else {
       const [ins] = await pool.execute(`
         INSERT INTO project_evaluations (team_id, panel_id, judge_id, judge_type, status, total_score, remarks)
         VALUES (?, ?, ?, ?, 'DRAFT', ?, ?)
+        ON DUPLICATE KEY UPDATE total_score = VALUES(total_score), remarks = VALUES(remarks), judge_id = VALUES(judge_id)
       `, [teamId, req.user.panel_id, req.user.id, req.user.judge_type, totalScore, remarks || '']);
-      evalId = ins.insertId;
+      evalId = ins.insertId || (existing.length > 0 ? existing[0].id : null);
     }
 
     // Upsert individual criterion scores
-    for (const s of validatedScores) {
-      await pool.execute(`
-        INSERT INTO evaluation_scores (evaluation_id, criterion_id, score, comments)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE score = VALUES(score), comments = VALUES(comments)
-      `, [evalId, s.criterion_id, s.score, s.comments]);
+    if (evalId) {
+      for (const s of validatedScores) {
+        await pool.execute(`
+          INSERT INTO evaluation_scores (evaluation_id, criterion_id, score, comments)
+          VALUES (?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE score = VALUES(score), comments = VALUES(comments)
+        `, [evalId, s.criterion_id, s.score, s.comments]);
+      }
     }
 
     res.json({ ok: true, status: 'DRAFT', total_score: totalScore });
@@ -896,34 +908,38 @@ async function handleEvaluationSubmit(req, res) {
       return res.status(400).json({ error: 'Team ID (or valid assignment_id / team_code) is required' });
     }
 
-    // 1. Verify team is assigned to this panel in active published revision
+    // 1. Verify team is assigned to this panel in active published revision or teams roster
     const [assignRows] = await conn.execute(`
-      SELECT a.id FROM panel_project_assignments a
+      SELECT 1 FROM panel_project_assignments a
       JOIN allocation_revisions rev ON rev.id = a.revision_id AND rev.is_active = TRUE AND rev.status = 'PUBLISHED'
       WHERE a.team_id = ? AND a.panel_id = ?
-    `, [teamId, req.user.panel_id]);
+      UNION
+      SELECT 1 FROM teams WHERE id = ? AND panel_no = ?
+    `, [teamId, req.user.panel_id, teamId, req.user.panel_id]);
 
     if (assignRows.length === 0) {
       await conn.rollback();
       return res.status(403).json({ error: 'Access denied: This team is not assigned to your panel in the active published allocation.' });
     }
 
-    // 2. Lock existing evaluation row FOR UPDATE to prevent race conditions & enforce PERMANENT LOCK
+    // 2. Lock existing evaluation row FOR UPDATE by team_id, panel_id, and judge_type (matching unique constraint uq_team_panel_judge)
     const [existing] = await conn.execute(`
-      SELECT id, status, total_score FROM project_evaluations
-      WHERE team_id = ? AND panel_id = ? AND judge_id = ?
+      SELECT id, status, total_score, judge_id FROM project_evaluations
+      WHERE team_id = ? AND panel_id = ? AND judge_type = ?
       FOR UPDATE
-    `, [teamId, req.user.panel_id, req.user.id]);
+    `, [teamId, req.user.panel_id, req.user.judge_type]);
 
     if (existing.length > 0 && existing[0].status === 'SUBMITTED') {
       await conn.rollback();
-      return res.status(400).json({ 
-        error: 'This evaluation has already been submitted and is locked.',
-        message: 'Evaluation is permanently locked against modifications.',
-        code: 'EVALUATION_LOCKED',
+      return res.status(200).json({ 
+        ok: true,
+        status: 'SUBMITTED',
+        evaluation_id: existing[0].id,
+        team_id: teamId,
+        total_score: Number(existing[0].total_score),
         is_locked: true,
         already_submitted: true,
-        total_score: Number(existing[0].total_score)
+        message: 'This evaluation has already been submitted and is locked.'
       });
     }
 
@@ -1010,9 +1026,10 @@ async function handleEvaluationSubmit(req, res) {
       const scoreMap = new Map();
       if (Array.isArray(body.scores)) {
         for (const s of body.scores) {
-          scoreMap.set(parseInt(s.criterion_id, 10), {
+          const cid = parseInt(s.criterion_id || s.criteria_id || s.id, 10);
+          scoreMap.set(cid, {
             val: parseFloat(s.score),
-            comment: s.comments ? String(s.comments).trim() : ''
+            comment: s.comments || s.comment ? String(s.comments || s.comment).trim() : ''
           });
         }
       }
@@ -1041,33 +1058,44 @@ async function handleEvaluationSubmit(req, res) {
       evalId = existing[0].id;
       await conn.execute(`
         UPDATE project_evaluations 
-        SET total_score = ?, remarks = ?, status = 'SUBMITTED', submitted_at = ?
+        SET total_score = ?, remarks = ?, status = 'SUBMITTED', judge_id = ?, submitted_at = ?
         WHERE id = ?
-      `, [totalScore, cleanRemarks, now, evalId]);
+      `, [totalScore, cleanRemarks, req.user.id, now, evalId]);
     } else {
       const [ins] = await conn.execute(`
         INSERT INTO project_evaluations (team_id, panel_id, judge_id, judge_type, status, total_score, remarks, submitted_at)
         VALUES (?, ?, ?, ?, 'SUBMITTED', ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+          total_score = VALUES(total_score),
+          remarks = VALUES(remarks),
+          status = 'SUBMITTED',
+          judge_id = VALUES(judge_id),
+          submitted_at = VALUES(submitted_at),
+          id = LAST_INSERT_ID(id)
       `, [teamId, req.user.panel_id, req.user.id, req.user.judge_type, totalScore, cleanRemarks, now]);
-      evalId = ins.insertId;
+      evalId = ins.insertId || (existing.length > 0 ? existing[0].id : null);
     }
 
-    for (const item of scoresToInsert) {
-      await conn.execute(`
-        INSERT INTO evaluation_scores (evaluation_id, criterion_id, score, comments)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE score = VALUES(score), comments = VALUES(comments)
-      `, [evalId, item.criterion_id, item.score, item.comment]);
+    if (evalId) {
+      for (const item of scoresToInsert) {
+        await conn.execute(`
+          INSERT INTO evaluation_scores (evaluation_id, criterion_id, score, comments)
+          VALUES (?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE score = VALUES(score), comments = VALUES(comments)
+        `, [evalId, item.criterion_id, item.score, item.comment]);
+      }
     }
-
-    // Audit log
-    await conn.execute(`
-      INSERT INTO evaluation_audit_logs (evaluation_id, action_by_type, action_by_id, action, new_data, ip_address)
-      VALUES (?, 'JUDGE', ?, 'SUBMIT_EVALUATION', ?, ?)
-    `, [evalId, req.user.id, JSON.stringify({ team_id: teamId, total_score: totalScore, rubric: rubricDetails, judge_type: req.user.judge_type }), req.ip])
-      .catch(e => console.warn('[WARN] Audit log insert failed:', e.message));
 
     await conn.commit();
+
+    // Audit log (executed asynchronously on pool AFTER successful transaction commit so audit errors never fail the user submission)
+    if (evalId) {
+      pool.execute(`
+        INSERT INTO evaluation_audit_logs (evaluation_id, action_by_type, action_by_id, action, new_data, ip_address)
+        VALUES (?, 'JUDGE', ?, 'SUBMIT_EVALUATION', ?, ?)
+      `, [evalId, req.user.id, JSON.stringify({ team_id: teamId, total_score: totalScore, rubric: rubricDetails, judge_type: req.user.judge_type }), req.ip])
+        .catch(e => console.warn('[WARN] Audit log insert failed:', e.message));
+    }
 
     res.json({
       ok: true,

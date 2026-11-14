@@ -28,31 +28,66 @@ function formatMarkedBy(r) {
   return 'Admin';
 }
 
-// 16 Canonical Columns matching Excel (excel-formatter.js) exactly
-// Sum of widths: 18+44+48+118+42+46+24+38+30+80+70+36+96+44+36+40 = 810 pt (Exact printable width on A4 landscape)
-const COLS = [
+/**
+ * Strict single-line text fitter that guarantees zero multi-line wrapping and zero page overflow in PDFKit.
+ * Replaces newlines/tabs with spaces and truncates with ellipsis if width exceeds maxWidth.
+ */
+function fitText(doc, str, maxWidth) {
+  if (str === null || str === undefined) return '—';
+  let s = String(str).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!s || s === '—') return '—';
+  if (doc.widthOfString(s) <= maxWidth) return s;
+  while (s.length > 1 && doc.widthOfString(s + '…') > maxWidth) {
+    s = s.slice(0, -1);
+  }
+  return s + '…';
+}
+
+// Master Attendance (15 Canonical Columns matching Excel)
+// Sum: 18+46+50+120+46+48+26+40+32+88+76+36+94+46+44 = 810 pt (Exact printable width on A4 landscape)
+const MASTER_COLS = [
   { key: 'sl', label: 'Sl. No.', width: 18, align: 'center' },
-  { key: 'team_code', label: 'Team ID', width: 44, align: 'center' },
-  { key: 'team_name', label: 'Team Name', width: 48, align: 'left' },
-  { key: 'project_title', label: 'Idea / Project Title', width: 118, align: 'left' },
-  { key: 'leader_name', label: 'Team Leader', width: 42, align: 'left' },
-  { key: 'members', label: 'Team Members', width: 46, align: 'left' },
-  { key: 'mentor_name', label: 'Mentor Name', width: 24, align: 'left' },
-  { key: 'mobile_no', label: 'Contact Mobile', width: 38, align: 'center' },
-  { key: 'email', label: 'Leader Email', width: 30, align: 'left' },
-  { key: 'college_name', label: 'School Name', width: 80, align: 'left' },
-  { key: 'category', label: 'Theme Track', width: 70, align: 'left' },
+  { key: 'team_code', label: 'Team ID', width: 46, align: 'center' },
+  { key: 'team_name', label: 'Team Name', width: 50, align: 'left' },
+  { key: 'project_title', label: 'Idea / Project Title', width: 120, align: 'left' },
+  { key: 'leader_name', label: 'Team Leader', width: 46, align: 'left' },
+  { key: 'members', label: 'Team Members', width: 48, align: 'left' },
+  { key: 'mentor_name', label: 'Mentor Name', width: 26, align: 'left' },
+  { key: 'mobile_no', label: 'Contact Mobile', width: 40, align: 'center' },
+  { key: 'email', label: 'Leader Email', width: 32, align: 'left' },
+  { key: 'college_name', label: 'School Name', width: 88, align: 'left' },
+  { key: 'category', label: 'Theme Track', width: 76, align: 'left' },
   { key: 'panel_no', label: 'Panel No.', width: 36, align: 'center' },
-  { key: 'venue', label: 'Allocated Venue', width: 96, align: 'left' },
-  { key: 'status', label: 'Attendance Status', width: 44, align: 'center' },
-  { key: 'marked_by', label: 'Marked By / Mode', width: 36, align: 'center' },
-  { key: 'check_in_time', label: 'Check-In Timestamp', width: 40, align: 'center' }
+  { key: 'venue', label: 'Allocated Venue', width: 94, align: 'left' },
+  { key: 'status', label: 'Attendance Status', width: 46, align: 'center' },
+  { key: 'signature', label: 'Signature', width: 44, align: 'center' }
 ];
 
-function drawTableHeader(doc, startY) {
+// Venue-Wise Attendance (13 Columns - NO Venue column, has Theme Track and Signature)
+// Sum: 20+48+56+160+50+54+28+44+38+110+90+52+60 = 810 pt
+const VENUE_COLS = [
+  { key: 'sl', label: 'Sl. No.', width: 20, align: 'center' },
+  { key: 'team_code', label: 'Team ID', width: 48, align: 'center' },
+  { key: 'team_name', label: 'Team Name', width: 56, align: 'left' },
+  { key: 'project_title', label: 'Idea / Project Title', width: 160, align: 'left' },
+  { key: 'leader_name', label: 'Team Leader', width: 50, align: 'left' },
+  { key: 'members', label: 'Team Members', width: 54, align: 'left' },
+  { key: 'mentor_name', label: 'Mentor Name', width: 28, align: 'left' },
+  { key: 'mobile_no', label: 'Contact Mobile', width: 44, align: 'center' },
+  { key: 'email', label: 'Leader Email', width: 38, align: 'left' },
+  { key: 'college_name', label: 'School Name', width: 110, align: 'left' },
+  { key: 'category', label: 'Theme Track', width: 90, align: 'left' },
+  { key: 'status', label: 'Attendance Status', width: 52, align: 'center' },
+  { key: 'signature', label: 'Signature', width: 60, align: 'center' }
+];
+
+// Theme-Wise Attendance (15 Columns - HAS Theme Track, Panel, Venue, Status, Signature)
+const THEME_COLS = MASTER_COLS;
+
+function drawTableHeader(doc, startY, cols = MASTER_COLS) {
   const startX = 16;
   const hHeight = 18;
-  const totalW = COLS.reduce((sum, c) => sum + c.width, 0);
+  const totalW = cols.reduce((sum, c) => sum + c.width, 0);
 
   // Background rect (Deep Emerald Green #166534 matching Excel)
   doc.rect(startX, startY, totalW, hHeight).fill('#166534');
@@ -63,16 +98,17 @@ function drawTableHeader(doc, startY) {
 
   let curX = startX;
   doc.fillColor('#FFFFFF').fontSize(5.8).font('Helvetica-Bold');
-  COLS.forEach((c, idx) => {
+  cols.forEach((c, idx) => {
     if (idx > 0) {
       doc.strokeColor('#14532D').lineWidth(0.5);
       doc.moveTo(curX, startY).lineTo(curX, startY + hHeight).stroke();
     }
-    doc.fillColor('#FFFFFF').text(c.label, curX + 1, startY + 5, {
+    const safeLabel = fitText(doc, c.label, c.width - 2);
+    doc.fillColor('#FFFFFF').text(safeLabel, curX + 1, startY + 5, {
       width: c.width - 2,
+      height: 10,
       align: c.align,
-      lineBreak: false,
-      ellipsis: true
+      lineBreak: false
     });
     curX += c.width;
   });
@@ -80,10 +116,10 @@ function drawTableHeader(doc, startY) {
   return startY + hHeight;
 }
 
-function drawTableRow(doc, row, slNo, startY, isEven) {
+function drawTableRow(doc, row, slNo, startY, isEven, cols = MASTER_COLS) {
   const startX = 16;
   const rHeight = 16;
-  const totalW = COLS.reduce((sum, c) => sum + c.width, 0);
+  const totalW = cols.reduce((sum, c) => sum + c.width, 0);
 
   // Background: alternating pure white (#FFFFFF) and soft mint tint (#F0FDF4) matching Excel
   const bg = isEven ? '#F0FDF4' : '#FFFFFF';
@@ -95,8 +131,6 @@ function drawTableRow(doc, row, slNo, startY, isEven) {
 
   const isPresent = Boolean(row.is_present);
   const statusStr = isPresent ? 'Scanned' : 'Not Scanned';
-  const methodStr = formatMarkedBy(row);
-  const timeStr = formatCheckInTime(row.check_in_time);
 
   const rowValues = {
     sl: String(slNo),
@@ -113,12 +147,11 @@ function drawTableRow(doc, row, slNo, startY, isEven) {
     panel_no: row.panel_no ? `Panel ${row.panel_no}` : '—',
     venue: row.venue || 'TBD',
     status: statusStr,
-    marked_by: methodStr,
-    check_in_time: timeStr
+    signature: ''
   };
 
   let curX = startX;
-  COLS.forEach((c, idx) => {
+  cols.forEach((c, idx) => {
     // Vertical divider line
     if (idx > 0) {
       doc.strokeColor('#E2E8F0').lineWidth(0.3);
@@ -127,7 +160,9 @@ function drawTableRow(doc, row, slNo, startY, isEven) {
 
     const val = rowValues[c.key] || '—';
 
-    if (c.key === 'status') {
+    if (c.key === 'signature') {
+      // Signature column: empty space for physical signature
+    } else if (c.key === 'status') {
       // Draw status badge pill matching Excel
       const pillW = c.width - 6;
       const pillH = 11;
@@ -139,6 +174,7 @@ function drawTableRow(doc, row, slNo, startY, isEven) {
         doc.font('Helvetica-Bold').fontSize(5.4).fillColor('#FFFFFF');
         doc.text('Scanned', curX + 1, startY + 4.5, {
           width: c.width - 2,
+          height: 10,
           align: 'center',
           lineBreak: false
         });
@@ -148,24 +184,29 @@ function drawTableRow(doc, row, slNo, startY, isEven) {
         doc.font('Helvetica').fontSize(5.2).fillColor('#000000');
         doc.text('Not Scanned', curX + 1, startY + 4.5, {
           width: c.width - 2,
+          height: 10,
           align: 'center',
           lineBreak: false
         });
       }
     } else {
+      let fontName = 'Helvetica';
+      let fontSize = 5.5;
+      let fontColor = '#000000';
+
       if (c.key === 'team_code' || c.key === 'panel_no') {
-        doc.font('Helvetica-Bold').fontSize(5.6).fillColor('#000000');
-      } else if (c.key === 'marked_by' && isPresent) {
-        doc.font('Helvetica-Bold').fontSize(5.5).fillColor('#000000');
-      } else {
-        doc.font('Helvetica').fontSize(5.5).fillColor('#000000');
+        fontName = 'Helvetica-Bold';
+        fontSize = 5.6;
       }
 
-      doc.text(val, curX + 1.5, startY + 4.5, {
+      doc.font(fontName).fontSize(fontSize).fillColor(fontColor);
+      const safeText = fitText(doc, val, c.width - 3);
+
+      doc.text(safeText, curX + 1.5, startY + 4.5, {
         width: c.width - 3,
+        height: 10,
         align: c.align,
-        lineBreak: false,
-        ellipsis: true
+        lineBreak: false
       });
     }
 
@@ -213,8 +254,8 @@ function buildMasterAttendancePdf(rows) {
       curY = drawTableHeader(doc, curY);
 
       rows.forEach((r, idx) => {
-        // If approaching page bottom
-        if (curY > 550) {
+        // If next row would exceed page boundary (550 pt)
+        if (curY + 16 > 550) {
           doc.addPage();
           doc.rect(16, 12, 810, 16).fillAndStroke('#DCFCE7', '#000000');
           doc.fontSize(8).fillColor('#000000').font('Helvetica-Bold').text(
@@ -305,18 +346,18 @@ function buildVenueAttendancePdf(rows) {
            .text(`PANEL ${pNo} — VENUE: ${(info.venue || 'TBD').toUpperCase()}  •  ${info.teams.length} Teams  •  ${pPres} Scanned (${pPct}%)`, 16, curY + 4, { align: 'center', width: 810 });
 
         curY += 20;
-        curY = drawTableHeader(doc, curY);
+        curY = drawTableHeader(doc, curY, VENUE_COLS);
 
         info.teams.forEach((t, idx) => {
-          if (curY > 550) {
+          if (curY + 16 > 550) {
             doc.addPage();
             doc.rect(16, 12, 810, 16).fillAndStroke('#DCFCE7', '#166534');
             doc.fontSize(8).fillColor('#14532D').font('Helvetica-Bold')
                .text(`PANEL ${pNo} — VENUE: ${(info.venue || 'TBD').toUpperCase()} (Contd.)`, 16, 16, { align: 'center', width: 810 });
             curY = 34;
-            curY = drawTableHeader(doc, curY);
+            curY = drawTableHeader(doc, curY, VENUE_COLS);
           }
-          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1);
+          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1, VENUE_COLS);
         });
       }
 
@@ -394,18 +435,18 @@ function buildThemeAttendancePdf(rows) {
            .text(`THEME: ${themeName.toUpperCase()} — VENUE: ${(info.venue || 'TBD').toUpperCase()}  •  ${info.teams.length} Teams  •  ${tPres} Scanned (${tPct}%)`, 16, curY + 4, { align: 'center', width: 810 });
 
         curY += 20;
-        curY = drawTableHeader(doc, curY);
+        curY = drawTableHeader(doc, curY, THEME_COLS);
 
         info.teams.forEach((t, idx) => {
-          if (curY > 550) {
+          if (curY + 16 > 550) {
             doc.addPage();
             doc.rect(16, 12, 810, 16).fillAndStroke('#DCFCE7', '#166534');
             doc.fontSize(8).fillColor('#14532D').font('Helvetica-Bold')
                .text(`THEME: ${themeName.toUpperCase()} (Contd.)`, 16, 16, { align: 'center', width: 810 });
             curY = 34;
-            curY = drawTableHeader(doc, curY);
+            curY = drawTableHeader(doc, curY, THEME_COLS);
           }
-          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1);
+          curY = drawTableRow(doc, t, idx + 1, curY, idx % 2 === 1, THEME_COLS);
         });
       }
 

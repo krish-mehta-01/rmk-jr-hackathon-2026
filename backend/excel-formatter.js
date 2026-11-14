@@ -90,8 +90,7 @@ async function buildPresenceExcel(rows) {
     { key: 'panel_no', header: 'Panel No.', width: 14 },
     { key: 'venue', header: 'Allocated Venue', width: 36 },
     { key: 'status', header: 'Attendance Status', width: 19 },
-    { key: 'marked_by', header: 'Marked By / Mode', width: 20 },
-    { key: 'check_in_time', header: 'Check-In Timestamp', width: 22 }
+    { key: 'signature', header: 'Signature', width: 24 }
   ];
 
   const totalCols = columns.length;
@@ -140,7 +139,7 @@ async function buildPresenceExcel(rows) {
     cell.value = col.header;
     cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
-    cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 11 || idx === 13 || idx === 14 || idx === 15) ? 'center' : 'left', vertical: 'middle' };
+    cell.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 11 || idx >= 13) ? 'center' : 'left', vertical: 'middle' };
     cell.border = BORDER_CELL;
     ws.getColumn(idx + 1).width = col.width;
   });
@@ -160,8 +159,6 @@ async function buildPresenceExcel(rows) {
     dRow.height = 22;
 
     const isPresent = Boolean(r.is_present);
-    const timeStr = r.check_in_time ? new Date(r.check_in_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'short' }) : '—';
-    const markedByStr = isPresent ? (r.marked_by || (r.qr_verification_token ? 'QR Scan' : 'Admin')) : '—';
 
     const values = [
       rowIdx + 1,
@@ -178,8 +175,7 @@ async function buildPresenceExcel(rows) {
       r.panel_no ? `Panel ${r.panel_no}` : '—',
       r.venue || 'TBD',
       isPresent ? 'Scanned' : 'Not Scanned',
-      markedByStr,
-      timeStr
+      '' // Signature blank column
     ];
 
     values.forEach((val, colIdx) => {
@@ -194,16 +190,11 @@ async function buildPresenceExcel(rows) {
       } else if (colIdx === 1) { // Team ID
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-      } else if (colIdx === 7 || colIdx === 15) {
+      } else if (colIdx === 7 || colIdx === 14) { // Contact Mobile & Signature
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
       } else if (colIdx === 11) { // Panel No
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-      } else if (colIdx === 14) { // Marked By / Mode
-        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        if (isPresent) {
-          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
-        }
       } else if (colIdx === 13) { // Attendance Status
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         if (isPresent) {
@@ -402,7 +393,7 @@ async function buildVenueWiseWorkbook(panelsMap) {
       { header: 'Sl. No.', width: 8 },
       { header: 'Team ID', width: 16 },
       { header: 'Team Name', width: 24 },
-      { header: 'Idea / Project Title', width: 32 },
+      { header: 'Idea / Project Title', width: 34 },
       { header: 'Team Leader', width: 22 },
       { header: 'Team Members', width: 30 },
       { header: 'Mentor Name', width: 20 },
@@ -411,8 +402,7 @@ async function buildVenueWiseWorkbook(panelsMap) {
       { header: 'School Name', width: 32 },
       { header: 'Theme Track', width: 26 },
       { header: 'Attendance Status', width: 18 },
-      { header: 'Marked By / Mode', width: 18 },
-      { header: 'Check-In Timestamp', width: 20 }
+      { header: 'Signature', width: 24 }
     ];
 
     // Row 1 & 2: Header on Clean White (logos flank this area)
@@ -485,8 +475,7 @@ async function buildVenueWiseWorkbook(panelsMap) {
         t.college_name || '—',
         t.category || '—',
         isPresent ? 'Scanned' : 'Not Scanned',
-        markedByStr,
-        timeStr
+        '' // Signature blank column
       ];
 
       vals.forEach((v, cIdx) => {
@@ -736,11 +725,11 @@ async function buildThemeWiseWorkbook(themesMap) {
     { header: 'Contact Mobile', width: 16 },
     { header: 'Leader Email', width: 26 },
     { header: 'School Name', width: 32 },
+    { header: 'Theme Track', width: 26 },
     { header: 'Panel No.', width: 14 },
     { header: 'Allocated Venue', width: 32 },
     { header: 'Attendance Status', width: 18 },
-    { header: 'Marked By / Mode', width: 18 },
-    { header: 'Check-In Timestamp', width: 20 }
+    { header: 'Signature', width: 24 }
   ];
 
   // Helper for safe Excel worksheet tab names (max 31 chars, no invalid chars : \ / ? * [ ])
@@ -809,7 +798,7 @@ async function buildThemeWiseWorkbook(themesMap) {
       c.value = col.header;
       c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.tblHeaderText } };
       c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.tblHeaderBg } };
-      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 10 || idx >= 12) ? 'center' : 'left', vertical: 'middle' };
+      c.alignment = { horizontal: (idx === 0 || idx === 1 || idx === 7 || idx === 11 || idx >= 13) ? 'center' : 'left', vertical: 'middle' };
       c.border = BORDER_CELL;
     });
 
@@ -824,8 +813,6 @@ async function buildThemeWiseWorkbook(themesMap) {
       const isEven = (tIdx % 2 === 0);
       const rowBg = isEven ? PALETTE.rowEven : PALETTE.rowOdd;
       const isPresent = Boolean(t.is_present);
-      const timeStr = t.check_in_time ? new Date(t.check_in_time).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'short' }) : '—';
-      const markedByStr = isPresent ? (t.marked_by || (t.qr_verification_token ? 'QR Scan' : 'Admin')) : '—';
 
       const rowValues = [
         tIdx + 1,
@@ -838,11 +825,11 @@ async function buildThemeWiseWorkbook(themesMap) {
         t.mobile_no || '—',
         t.email || '—',
         t.college_name || '—',
+        t.category || themeName || '—',
         t.panel_no ? `Panel ${t.panel_no}` : '—',
         t.venue || 'TBD',
         isPresent ? 'Scanned' : 'Not Scanned',
-        markedByStr,
-        timeStr
+        '' // Signature blank column
       ];
 
       rowValues.forEach((val, cIdx) => {
@@ -852,9 +839,9 @@ async function buildThemeWiseWorkbook(themesMap) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
         cell.border = BORDER_CELL;
 
-        if (cIdx === 0 || cIdx === 1 || cIdx === 7 || cIdx === 10 || cIdx >= 12) {
+        if (cIdx === 0 || cIdx === 1 || cIdx === 7 || cIdx === 11 || cIdx >= 13) {
           cell.alignment = { horizontal: 'center', vertical: 'middle' };
-          if (cIdx === 1) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
+          if (cIdx === 1 || cIdx === 11) cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
         } else if (cIdx === 2 || cIdx === 4) {
           cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.rowText } };
           cell.alignment = { horizontal: 'left', vertical: 'middle' };
@@ -862,7 +849,7 @@ async function buildThemeWiseWorkbook(themesMap) {
           cell.alignment = { horizontal: 'left', vertical: 'middle' };
         }
 
-        if (cIdx === 12) {
+        if (cIdx === 13) {
           if (isPresent) {
             cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: PALETTE.pillPresentText } };
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.pillPresentBg } };

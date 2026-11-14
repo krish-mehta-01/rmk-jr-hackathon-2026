@@ -64,25 +64,53 @@ const cellBorders = {
   right: { style: BorderStyle.SINGLE, size: 1, color: 'CBD5E1' }
 };
 
-// 16 Canonical Columns matching Excel (excel-formatter.js) exactly
-// Generous space allocated to Idea / Project Title and Venue; reduced for Mentor Name and Email
-const colWidths = [
+// 15 Canonical Columns for Master & Theme reports matching Excel exactly
+// Sum = 15,900 dxa (exact printable width on A4 landscape with 450 margin)
+const masterHeaders = [
+  'Sl. No.', 'Team ID', 'Team Name', 'Idea / Project Title', 'Team Leader',
+  'Team Members', 'Mentor Name', 'Contact Mobile', 'Leader Email',
+  'School Name', 'Theme Track', 'Panel No.', 'Allocated Venue',
+  'Attendance Status', 'Signature'
+];
+const masterColWidths = [
   380,   // 0. Sl. No.
   850,   // 1. Team ID
-  1000,  // 2. Team Name
-  2500,  // 3. Idea / Project Title (High priority: more space)
-  850,   // 4. Team Leader
-  900,   // 5. Team Members
-  450,   // 6. Mentor Name (Very much less)
+  1050,  // 2. Team Name
+  2600,  // 3. Idea / Project Title
+  900,   // 4. Team Leader
+  950,   // 5. Team Members
+  450,   // 6. Mentor Name
   750,   // 7. Contact Mobile
-  550,   // 8. Leader Email (Reduced)
-  1650,  // 9. School Name (More space)
-  1450,  // 10. Theme Track (More space)
-  720,   // 11. Panel No. (More space)
-  1950,  // 12. Allocated Venue (High priority: more space)
+  550,   // 8. Leader Email
+  1750,  // 9. School Name
+  1500,  // 10. Theme Track
+  750,   // 11. Panel No.
+  2000,  // 12. Allocated Venue
   750,   // 13. Attendance Status
-  700,   // 14. Marked By / Mode
-  900    // 15. Check-In Timestamp
+  700    // 14. Signature
+];
+
+// 13 Canonical Columns for Venue-wise report (NO Venue column, has Theme Track and Signature)
+// Sum = 15,900 dxa
+const venueHeaders = [
+  'Sl. No.', 'Team ID', 'Team Name', 'Idea / Project Title', 'Team Leader',
+  'Team Members', 'Mentor Name', 'Contact Mobile', 'Leader Email',
+  'School Name', 'Theme Track', 'Attendance Status', 'Signature'
+];
+const venueColWidths = [
+  400,   // 0. Sl. No.
+  900,   // 1. Team ID
+  1200,  // 2. Team Name
+  3200,  // 3. Idea / Project Title
+  1000,  // 4. Team Leader
+  1100,  // 5. Team Members
+  500,   // 6. Mentor Name
+  800,   // 7. Contact Mobile
+  600,   // 8. Leader Email
+  2100,  // 9. School Name
+  1800,  // 10. Theme Track
+  900,   // 11. Attendance Status
+  1400   // 12. Signature
 ];
 
 function createHeaderCell(text, width) {
@@ -137,43 +165,56 @@ function createDataCell(text, width, isCenter = false, isStatus = false, isPrese
   });
 }
 
-function createHeaderRow() {
-  const headers = [
-    'Sl. No.', 'Team ID', 'Team Name', 'Idea / Project Title', 'Team Leader',
-    'Team Members', 'Mentor Name', 'Contact Mobile', 'Leader Email',
-    'School Name', 'Theme Track', 'Panel No.', 'Allocated Venue',
-    'Attendance Status', 'Marked By / Mode', 'Check-In Timestamp'
-  ];
+function createHeaderRow(type = 'master') {
+  const headers = type === 'venue' ? venueHeaders : masterHeaders;
+  const widths = type === 'venue' ? venueColWidths : masterColWidths;
 
   return new TableRow({
     tableHeader: true,
-    children: headers.map((h, i) => createHeaderCell(h, colWidths[i]))
+    children: headers.map((h, i) => createHeaderCell(h, widths[i]))
   });
 }
 
-function createTeamRow(r, index, isEven) {
+function createTeamRow(r, index, isEven, type = 'master') {
   const isPresent = Boolean(r.is_present);
   const statusStr = isPresent ? 'Scanned' : 'Not Scanned';
-  const timeStr = formatCheckInTime(r.check_in_time);
-  const methodStr = formatMarkedBy(r);
 
+  if (type === 'venue') {
+    const cells = [
+      createDataCell(String(index), venueColWidths[0], true, false, false, isEven),
+      createDataCell(r.team_code || '—', venueColWidths[1], true, false, false, isEven, true), // Team ID bold
+      createDataCell(r.team_name || '—', venueColWidths[2], false, false, false, isEven),
+      createDataCell(r.project_title || '—', venueColWidths[3], false, false, false, isEven),
+      createDataCell(r.leader_name || '—', venueColWidths[4], false, false, false, isEven),
+      createDataCell(r.members || '—', venueColWidths[5], false, false, false, isEven),
+      createDataCell(r.mentor_name || '—', venueColWidths[6], false, false, false, isEven),
+      createDataCell(r.mobile_no || '—', venueColWidths[7], true, false, false, isEven),
+      createDataCell(r.email || '—', venueColWidths[8], false, false, false, isEven),
+      createDataCell(r.college_name || '—', venueColWidths[9], false, false, false, isEven),
+      createDataCell(r.category || '—', venueColWidths[10], false, false, false, isEven),
+      createDataCell(statusStr, venueColWidths[11], true, true, isPresent, isEven),
+      createDataCell('', venueColWidths[12], true, false, false, isEven) // Signature blank
+    ];
+    return new TableRow({ children: cells });
+  }
+
+  // Master / Theme (15 columns)
   const cells = [
-    createDataCell(String(index), colWidths[0], true, false, false, isEven),
-    createDataCell(r.team_code || '—', colWidths[1], true, false, false, isEven, true), // Team ID bold
-    createDataCell(r.team_name || '—', colWidths[2], false, false, false, isEven),
-    createDataCell(r.project_title || '—', colWidths[3], false, false, false, isEven),
-    createDataCell(r.leader_name || '—', colWidths[4], false, false, false, isEven),
-    createDataCell(r.members || '—', colWidths[5], false, false, false, isEven),
-    createDataCell(r.mentor_name || '—', colWidths[6], false, false, false, isEven),
-    createDataCell(r.mobile_no || '—', colWidths[7], true, false, false, isEven),
-    createDataCell(r.email || '—', colWidths[8], false, false, false, isEven),
-    createDataCell(r.college_name || '—', colWidths[9], false, false, false, isEven),
-    createDataCell(r.category || '—', colWidths[10], false, false, false, isEven),
-    createDataCell(r.panel_no ? `Panel ${r.panel_no}` : '—', colWidths[11], true, false, false, isEven, true), // Panel bold
-    createDataCell(r.venue || 'TBD', colWidths[12], false, false, false, isEven),
-    createDataCell(statusStr, colWidths[13], true, true, isPresent, isEven),
-    createDataCell(methodStr, colWidths[14], true, false, false, isEven, isPresent),
-    createDataCell(timeStr, colWidths[15], true, false, false, isEven)
+    createDataCell(String(index), masterColWidths[0], true, false, false, isEven),
+    createDataCell(r.team_code || '—', masterColWidths[1], true, false, false, isEven, true), // Team ID bold
+    createDataCell(r.team_name || '—', masterColWidths[2], false, false, false, isEven),
+    createDataCell(r.project_title || '—', masterColWidths[3], false, false, false, isEven),
+    createDataCell(r.leader_name || '—', masterColWidths[4], false, false, false, isEven),
+    createDataCell(r.members || '—', masterColWidths[5], false, false, false, isEven),
+    createDataCell(r.mentor_name || '—', masterColWidths[6], false, false, false, isEven),
+    createDataCell(r.mobile_no || '—', masterColWidths[7], true, false, false, isEven),
+    createDataCell(r.email || '—', masterColWidths[8], false, false, false, isEven),
+    createDataCell(r.college_name || '—', masterColWidths[9], false, false, false, isEven),
+    createDataCell(r.category || '—', masterColWidths[10], false, false, false, isEven),
+    createDataCell(r.panel_no ? `Panel ${r.panel_no}` : '—', masterColWidths[11], true, false, false, isEven, true), // Panel bold
+    createDataCell(r.venue || 'TBD', masterColWidths[12], false, false, false, isEven),
+    createDataCell(statusStr, masterColWidths[13], true, true, isPresent, isEven),
+    createDataCell('', masterColWidths[14], true, false, false, isEven) // Signature blank
   ];
 
   return new TableRow({ children: cells });
@@ -303,9 +344,9 @@ async function buildMasterAttendanceDocx(rows) {
   const pct = total > 0 ? Math.round((present / total) * 100) : 0;
   const ribbonText = `MASTER PRESENCE & REGISTRATION ROSTER  •  ${total} Total Teams  •  ${present} Scanned (${pct}%)  •  15 Evaluation Panels`;
 
-  const tableRows = [createHeaderRow()];
+  const tableRows = [createHeaderRow('master')];
   rows.forEach((r, idx) => {
-    tableRows.push(createTeamRow(r, idx + 1, idx % 2 === 1));
+    tableRows.push(createTeamRow(r, idx + 1, idx % 2 === 1, 'master'));
   });
 
   const mainTable = new Table({
@@ -397,9 +438,9 @@ async function buildVenueAttendanceDocx(rows) {
     children.push(panelRibbon);
     children.push(new Paragraph({ spacing: { after: 60 } }));
 
-    const tRows = [createHeaderRow()];
+    const tRows = [createHeaderRow('venue')];
     info.teams.forEach((t, idx) => {
-      tRows.push(createTeamRow(t, idx + 1, idx % 2 === 1));
+      tRows.push(createTeamRow(t, idx + 1, idx % 2 === 1, 'venue'));
     });
 
     children.push(new Table({
@@ -487,9 +528,9 @@ async function buildThemeAttendanceDocx(rows) {
     children.push(themeRibbon);
     children.push(new Paragraph({ spacing: { after: 60 } }));
 
-    const tRows = [createHeaderRow()];
+    const tRows = [createHeaderRow('theme')];
     info.teams.forEach((t, idx) => {
-      tRows.push(createTeamRow(t, idx + 1, idx % 2 === 1));
+      tRows.push(createTeamRow(t, idx + 1, idx % 2 === 1, 'theme'));
     });
 
     children.push(new Table({

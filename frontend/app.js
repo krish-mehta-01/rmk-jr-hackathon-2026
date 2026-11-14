@@ -3937,14 +3937,17 @@ function closeEvaluationModal() {
   currentEvalExisting = null;
 }
 
+let isSubmittingEvaluation = false;
+
 function collectEvaluationScores() {
   const scores = [];
   document.querySelectorAll('.eval-criterion-card').forEach(card => {
     const critId = parseInt(card.dataset.critId, 10);
     const num = card.querySelector('.criterion-number-input');
+    const val = num ? parseFloat(num.value) : 0;
     scores.push({
       criterion_id: critId,
-      score: parseFloat(num.value) || 0
+      score: isNaN(val) ? 0 : val
     });
   });
   return scores;
@@ -3952,10 +3955,19 @@ function collectEvaluationScores() {
 
 async function saveEvaluationDraft() {
   if (!currentEvalTeamId) return;
+  if (isSubmittingEvaluation) return;
+
   const scores = collectEvaluationScores();
-  const remarks = document.getElementById('eval-remarks').value;
+  const remarks = (document.getElementById('eval-remarks')?.value || '').trim();
   const errBox = document.getElementById('eval-error');
-  errBox.classList.add('hidden');
+  if (errBox) errBox.classList.add('hidden');
+
+  const draftBtn = document.getElementById('btn-eval-draft');
+  const originalText = draftBtn ? draftBtn.textContent : 'Save draft';
+  if (draftBtn) {
+    draftBtn.disabled = true;
+    draftBtn.textContent = 'Saving...';
+  }
 
   try {
     const res = await fetch(`/api/jury/evaluations/${currentEvalTeamId}/draft`, {
@@ -3967,26 +3979,55 @@ async function saveEvaluationDraft() {
       body: JSON.stringify({ scores, remarks })
     });
 
-    const data = await res.json();
+    if (sessionExpired(res)) {
+      showToast('Session expired. Please log in again.', 'error');
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      errBox.textContent = data.error || 'Failed to save draft';
-      errBox.classList.remove('hidden');
+      if (errBox) {
+        errBox.textContent = data.error || 'Failed to save draft';
+        errBox.classList.remove('hidden');
+      }
       return;
     }
 
     showToast('Evaluation draft saved successfully', 'info');
-    loadJudgeProjects();
+    if (typeof loadJudgeProjects === 'function') {
+      loadJudgeProjects();
+    }
   } catch (err) {
     console.error('[ERROR] saveEvaluationDraft:', err);
-    errBox.textContent = 'Server connection error';
-    errBox.classList.remove('hidden');
+    if (errBox) {
+      errBox.textContent = 'Server connection error';
+      errBox.classList.remove('hidden');
+    }
+  } finally {
+    if (draftBtn) {
+      draftBtn.disabled = false;
+      draftBtn.textContent = originalText;
+    }
   }
 }
 
 function submitEvaluationFinal() {
   if (!currentEvalTeamId) return;
+  if (isSubmittingEvaluation) return;
+
   const errBox = document.getElementById('eval-error');
   if (errBox) errBox.classList.add('hidden');
+
+  // Client-side pre-validation
+  const scores = collectEvaluationScores();
+  if (!scores || scores.length < 5) {
+    if (errBox) {
+      errBox.textContent = 'Please rate all 5 evaluation criteria before submitting.';
+      errBox.classList.remove('hidden');
+    }
+    showToast('Please evaluate all 5 criteria before final submit.', 'error');
+    return;
+  }
 
   // Open dedicated in-app confirmation popup modal
   const confirmModal = document.getElementById('modal-eval-confirm');
@@ -4009,15 +4050,36 @@ function closeEvalConfirmModal() {
 }
 
 async function executeFinalEvaluationSubmit() {
+  if (isSubmittingEvaluation) return;
   closeEvalConfirmModal();
   if (!currentEvalTeamId) return;
+
   const errBox = document.getElementById('eval-error');
   if (errBox) errBox.classList.add('hidden');
 
-  const remarks = (document.getElementById('eval-remarks').value || '').trim();
+  const remarks = (document.getElementById('eval-remarks')?.value || '').trim();
   const scores = collectEvaluationScores();
-  const submitBtn = document.getElementById('btn-confirm-final-submit') || document.getElementById('btn-eval-submit');
-  if (submitBtn) submitBtn.disabled = true;
+  if (!scores || scores.length < 5) {
+    if (errBox) {
+      errBox.textContent = 'Please rate all 5 evaluation criteria before submitting.';
+      errBox.classList.remove('hidden');
+    }
+    showToast('Please evaluate all criteria before final submit.', 'error');
+    return;
+  }
+
+  isSubmittingEvaluation = true;
+  const evalSubmitBtn = document.getElementById('btn-eval-submit');
+  const evalDraftBtn = document.getElementById('btn-eval-draft');
+  const confirmBtn = document.getElementById('btn-confirm-final-submit');
+
+  const originalSubmitText = evalSubmitBtn ? evalSubmitBtn.textContent : 'Submit evaluation';
+  if (evalSubmitBtn) {
+    evalSubmitBtn.disabled = true;
+    evalSubmitBtn.textContent = 'Submitting & Locking...';
+  }
+  if (evalDraftBtn) evalDraftBtn.disabled = true;
+  if (confirmBtn) confirmBtn.disabled = true;
 
   try {
     const res = await fetch(`/api/jury/evaluations/${currentEvalTeamId}/submit`, {
@@ -4029,26 +4091,41 @@ async function executeFinalEvaluationSubmit() {
       body: JSON.stringify({ scores, remarks })
     });
 
-    const data = await res.json();
-    if (!res.ok) {
+    if (sessionExpired(res)) {
+      showToast('Session expired. Please log in again.', 'error');
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok && !data.already_submitted) {
       if (errBox) {
         errBox.textContent = data.error || 'Failed to submit evaluation';
         errBox.classList.remove('hidden');
       }
-      if (submitBtn) submitBtn.disabled = false;
+      showToast(data.error || 'Submission failed. Please check inputs.', 'error');
       return;
     }
 
     showToast('Final evaluation submitted and locked successfully!', 'success');
     closeEvaluationModal();
-    loadJudgeProjects();
+    if (typeof loadJudgeProjects === 'function') {
+      await loadJudgeProjects();
+    }
   } catch (err) {
     console.error('[ERROR] submitEvaluationFinal:', err);
     if (errBox) {
-      errBox.textContent = 'Server connection error';
+      errBox.textContent = 'Server connection error. Please try again.';
       errBox.classList.remove('hidden');
     }
-    if (submitBtn) submitBtn.disabled = false;
+    showToast('Network error while submitting evaluation.', 'error');
+  } finally {
+    isSubmittingEvaluation = false;
+    if (evalSubmitBtn) {
+      evalSubmitBtn.disabled = false;
+      evalSubmitBtn.textContent = originalSubmitText;
+    }
+    if (evalDraftBtn) evalDraftBtn.disabled = false;
+    if (confirmBtn) confirmBtn.disabled = false;
   }
 }
 window.submitEvaluationFinal = submitEvaluationFinal;
