@@ -3,6 +3,7 @@
   "private": true,
   "description": "RMK Jr. Hackathon 2026 presence portal",
   "scripts": {
+    "postinstall": "npm --prefix backend install",
     "start": "npm --prefix backend start",
     "dev": "npm --prefix backend run dev",
     "dev:frontend": "node frontend-server.js",
