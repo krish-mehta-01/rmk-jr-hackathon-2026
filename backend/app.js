@@ -11,6 +11,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { pool } = require('./db');
+const { signAdminToken, signTeamToken, requireRole } = require('./auth-helper');
 const { generateVenueExcel, findVenueDocx, findVenueExcel, findVenuePdf } = require('./venue-export');
 const { generateThemeExcel, findThemeDocx, findThemeExcel, findThemePdf } = require('./theme-export');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -110,22 +111,8 @@ app.use(express.static(path.join(__dirname, '..', 'frontend'), {
 }));
 
 // ─────────────────────────────────────────────
-// JWT Middleware
+// JWT Middleware & Auth
 // ─────────────────────────────────────────────
-function requireRole(role) {
-  return (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Please log in again.' });
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      if (decoded.role !== role) return res.status(403).json({ error: 'Access denied' });
-      req.user = decoded;
-      next();
-    } catch {
-      res.status(401).json({ error: 'Session expired. Please log in again.' });
-    }
-  };
-}
 const authAdmin = requireRole('admin');
 const authTeam = requireRole('team');
 
@@ -148,11 +135,7 @@ app.post('/api/admin/login', async (req, res) => {
     }
 
     loginLimiter.clear(req.ip);
-    const token = jwt.sign(
-      { id: admin.id, username: admin.username, name: admin.name, role: 'admin' },
-      JWT_SECRET,
-      { expiresIn: '12h' }
-    );
+    const token = signAdminToken(admin);
     res.json({ token, name: admin.name, username: admin.username });
   } catch (err) {
     console.error(err);
@@ -183,7 +166,7 @@ app.post('/api/team/login', async (req, res) => {
 
     loginLimiter.clear(req.ip);
     const team = matches[0];
-    const token = jwt.sign({ id: team.id, role: 'team' }, JWT_SECRET, { expiresIn: '12h' });
+    const token = signTeamToken(team);
     res.json({ token, team: teamPassView(team) });
   } catch (err) {
     console.error(err);

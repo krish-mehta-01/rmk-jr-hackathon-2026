@@ -6950,6 +6950,7 @@ section.hidden {
 
 .eval-table {
   width: 100% !important;
+  min-width: 0 !important;
   border-collapse: collapse !important;
   font-size: 13px !important;
   table-layout: fixed !important;
@@ -6974,8 +6975,8 @@ section.hidden {
   font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  padding: 12px 14px !important;
+  letter-spacing: 0.04em !important;
+  padding: 10px 8px !important;
   border-bottom: 2px solid #e2e8f0 !important;
   white-space: nowrap !important;
   text-align: left !important;
@@ -6984,73 +6985,67 @@ section.hidden {
 }
 
 .eval-table td {
-  padding: 12px 14px !important;
+  padding: 10px 8px !important;
   border-bottom: 1px solid #f1f5f9 !important;
   color: #1e293b !important;
   vertical-align: middle !important;
-  font-size: 13px !important;
+  font-size: 12.5px !important;
   box-sizing: border-box !important;
   white-space: normal !important;
-  line-height: 1.4 !important;
+  line-height: 1.35 !important;
   display: table-cell !important;
+  word-break: break-word !important;
 }
 
 .eval-table tr:hover td {
   background: #f8fafc !important;
 }
 
-/* Explicit column widths for Evaluation Status Table (#eval-status-table) */
-#eval-status-table { min-width: 1180px !important; }
-#eval-status-table th:nth-child(1), #eval-status-table td:nth-child(1) { width: 130px !important; }
-#eval-status-table th:nth-child(2), #eval-status-table td:nth-child(2) { width: 280px !important; }
-#eval-status-table th:nth-child(3), #eval-status-table td:nth-child(3) { width: 180px !important; }
-#eval-status-table th:nth-child(4), #eval-status-table td:nth-child(4) { width: 120px !important; text-align: center !important; }
-#eval-status-table th:nth-child(5), #eval-status-table td:nth-child(5) { width: 115px !important; text-align: center !important; }
-#eval-status-table th:nth-child(6), #eval-status-table td:nth-child(6) { width: 115px !important; text-align: center !important; }
-#eval-status-table th:nth-child(7), #eval-status-table td:nth-child(7) { width: 115px !important; text-align: center !important; }
-#eval-status-table th:nth-child(8), #eval-status-table td:nth-child(8) { width: 125px !important; text-align: center !important; }
+/* Cluster styling for Team ID & Team Name together everywhere */
+.table-team-id-name-cluster {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 2px !important;
+}
 
-/* Explicit column widths for Theme Rankings Table (#theme-rankings-table) */
-#theme-rankings-table { min-width: 1080px !important; }
-#theme-rankings-table th:nth-child(1), #theme-rankings-table td:nth-child(1) { width: 75px !important; text-align: center !important; }
-#theme-rankings-table th:nth-child(2), #theme-rankings-table td:nth-child(2) { width: 130px !important; }
-#theme-rankings-table th:nth-child(3), #theme-rankings-table td:nth-child(3) { width: 200px !important; }
-#theme-rankings-table th:nth-child(4), #theme-rankings-table td:nth-child(4) { width: 300px !important; }
-#theme-rankings-table th:nth-child(5), #theme-rankings-table td:nth-child(5) { width: 115px !important; text-align: center !important; }
-#theme-rankings-table th:nth-child(6), #theme-rankings-table td:nth-child(6) { width: 115px !important; text-align: center !important; }
-#theme-rankings-table th:nth-child(7), #theme-rankings-table td:nth-child(7) { width: 145px !important; text-align: center !important; }
+.table-team-id-name-cluster .table-team-code-pill {
+  flex-shrink: 0 !important;
+  font-size: 11px !important;
+  padding: 2px 7px !important;
+}
 
-/* Explicit column widths for Theme Pending Table (#theme-pending-table) */
-#theme-pending-table { min-width: 1080px !important; }
-#theme-pending-table th:nth-child(1), #theme-pending-table td:nth-child(1) { width: 130px !important; }
-#theme-pending-table th:nth-child(2), #theme-pending-table td:nth-child(2) { width: 200px !important; }
-#theme-pending-table th:nth-child(3), #theme-pending-table td:nth-child(3) { width: 280px !important; }
-#theme-pending-table th:nth-child(4), #theme-pending-table td:nth-child(4) { width: 95px !important; text-align: center !important; }
-#theme-pending-table th:nth-child(5), #theme-pending-table td:nth-child(5) { width: 115px !important; text-align: center !important; }
-#theme-pending-table th:nth-child(6), #theme-pending-table td:nth-child(6) { width: 115px !important; text-align: center !important; }
-#theme-pending-table th:nth-child(7), #theme-pending-table td:nth-child(7) { width: 145px !important; text-align: center !important; }
+.table-team-name-main {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  font-size: 12.5px !important;
+  line-height: 1.3 !important;
+}
 
-/* Explicit column widths for Overall Grand Leaderboard (#overall-rankings-table) */
-#overall-rankings-table { min-width: 1220px !important; }
-#overall-rankings-table th:nth-child(1), #overall-rankings-table td:nth-child(1) { width: 80px !important; text-align: center !important; }
-#overall-rankings-table th:nth-child(2), #overall-rankings-table td:nth-child(2) { width: 130px !important; }
-#overall-rankings-table th:nth-child(3), #overall-rankings-table td:nth-child(3) { width: 190px !important; }
-#overall-rankings-table th:nth-child(4), #overall-rankings-table td:nth-child(4) { width: 280px !important; }
-#overall-rankings-table th:nth-child(5), #overall-rankings-table td:nth-child(5) { width: 180px !important; }
-#overall-rankings-table th:nth-child(6), #overall-rankings-table td:nth-child(6) { width: 115px !important; text-align: center !important; }
-#overall-rankings-table th:nth-child(7), #overall-rankings-table td:nth-child(7) { width: 115px !important; text-align: center !important; }
-#overall-rankings-table th:nth-child(8), #overall-rankings-table td:nth-child(8) { width: 130px !important; text-align: center !important; }
+.table-team-proj-sub {
+  font-size: 11.5px !important;
+  color: #475569 !important;
+  margin-top: 2px !important;
+  line-height: 1.3 !important;
+}
 
-/* Explicit column widths for Overall Pending Table (#overall-pending-table) */
-#overall-pending-table { min-width: 1220px !important; }
-#overall-pending-table th:nth-child(1), #overall-pending-table td:nth-child(1) { width: 130px !important; }
-#overall-pending-table th:nth-child(2), #overall-pending-table td:nth-child(2) { width: 180px !important; }
-#overall-pending-table th:nth-child(3), #overall-pending-table td:nth-child(3) { width: 260px !important; }
-#overall-pending-table th:nth-child(4), #overall-pending-table td:nth-child(4) { width: 180px !important; }
-#overall-pending-table th:nth-child(5), #overall-pending-table td:nth-child(5) { width: 90px !important; text-align: center !important; }
-#overall-pending-table th:nth-child(6), #overall-pending-table td:nth-child(6) { width: 115px !important; text-align: center !important; }
-#overall-pending-table th:nth-child(7), #overall-pending-table td:nth-child(7) { width: 115px !important; text-align: center !important; }
-#overall-pending-table th:nth-child(8), #overall-pending-table td:nth-child(8) { width: 150px !important; text-align: center !important; }
+.table-team-school-sub {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  margin-top: 1px !important;
+  line-height: 1.2 !important;
+}
+
+/* Fluid responsive tables without fixed pixel overflow */
+#eval-status-table,
+#theme-rankings-table,
+#theme-pending-table,
+#overall-rankings-table,
+#overall-pending-table {
+  min-width: 0 !important;
+  width: 100% !important;
+}
 
 /* Fix Filter Bar in Theme Rankings */
 .eval-filter-card {

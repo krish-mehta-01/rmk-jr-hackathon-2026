@@ -30,7 +30,7 @@
     })();
   </script>
   <script src="/assets/jsQR.js"></script>
-  <link rel="stylesheet" href="/style.css?v=20261114_eval_rankings_fixed_v3" />
+  <link rel="stylesheet" href="/style.css?v=20261114_eval_fluid_v4" />
 </head>
 <body>
 
@@ -899,29 +899,27 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-status-table" id="eval-status-table">
                       <colgroup>
-                        <col style="width: 115px;">
-                        <col style="width: auto;">
-                        <col style="width: 180px;">
-                        <col style="width: 120px;">
-                        <col style="width: 110px;">
-                        <col style="width: 110px;">
-                        <col style="width: 125px;">
-                        <col style="width: 135px;">
+                        <col style="width: 32%;">
+                        <col style="width: 18%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
                       </colgroup>
                       <thead>
                         <tr>
-                          <th>Team ID</th>
-                          <th>Team Name & Project</th>
+                          <th>Team (ID & Name)</th>
                           <th>Theme / Domain</th>
-                          <th>Panel</th>
-                          <th>Internal Jury (/50)</th>
-                          <th>External Jury (/50)</th>
-                          <th>Combined (/100)</th>
-                          <th>Overall Status</th>
+                          <th style="text-align: center;">Panel</th>
+                          <th style="text-align: center;">Internal (/50)</th>
+                          <th style="text-align: center;">External (/50)</th>
+                          <th style="text-align: center;">Combined (/100)</th>
+                          <th style="text-align: center;">Status</th>
                         </tr>
                       </thead>
                       <tbody id="eval-status-table-body">
-                        <tr><td colspan="8" class="text-center loading-cell">Loading evaluation records...</td></tr>
+                        <tr><td colspan="7" class="text-center loading-cell">Loading evaluation records...</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -980,27 +978,25 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-ranking-table" id="theme-rankings-table">
                       <colgroup>
-                        <col style="width: 80px;">
-                        <col style="width: 125px;">
-                        <col style="width: 220px;">
-                        <col style="width: auto;">
-                        <col style="width: 115px;">
-                        <col style="width: 115px;">
-                        <col style="width: 135px;">
+                        <col style="width: 7%;">
+                        <col style="width: 28%;">
+                        <col style="width: 35%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
                       </colgroup>
                       <thead>
                         <tr>
                           <th style="text-align: center;">Rank</th>
-                          <th>Team ID</th>
-                          <th>Team Name</th>
+                          <th>Team (ID & Name)</th>
                           <th>Project Title</th>
                           <th style="text-align: center;">Internal (/50)</th>
                           <th style="text-align: center;">External (/50)</th>
-                          <th style="text-align: center;">Total Combined (/100)</th>
+                          <th style="text-align: center;">Total (/100)</th>
                         </tr>
                       </thead>
                       <tbody id="theme-rankings-table-body">
-                        <tr><td colspan="7" class="text-center loading-cell">Loading leaderboard...</td></tr>
+                        <tr><td colspan="6" class="text-center loading-cell">Loading leaderboard...</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -1019,27 +1015,25 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-pending-table" id="theme-pending-table">
                       <colgroup>
-                        <col style="width: 125px;">
-                        <col style="width: 200px;">
-                        <col style="width: auto;">
-                        <col style="width: 90px;">
-                        <col style="width: 120px;">
-                        <col style="width: 120px;">
-                        <col style="width: 135px;">
+                        <col style="width: 28%;">
+                        <col style="width: 32%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
                       </colgroup>
                       <thead>
                         <tr>
-                          <th>Team ID</th>
-                          <th>Team Name</th>
+                          <th>Team (ID & Name)</th>
                           <th>Project Title</th>
-                          <th>Panel</th>
-                          <th>Internal Jury</th>
-                          <th>External Jury</th>
-                          <th>Status</th>
+                          <th style="text-align: center;">Panel</th>
+                          <th style="text-align: center;">Internal</th>
+                          <th style="text-align: center;">External</th>
+                          <th style="text-align: center;">Status</th>
                         </tr>
                       </thead>
                       <tbody id="theme-pending-table-body">
-                        <tr><td colspan="7" class="text-center">No pending teams</td></tr>
+                        <tr><td colspan="6" class="text-center">No pending teams</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -1062,29 +1056,27 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-ranking-table" id="overall-rankings-table">
                       <colgroup>
-                        <col style="width: 85px;">
-                        <col style="width: 125px;">
-                        <col style="width: 200px;">
-                        <col style="width: auto;">
-                        <col style="width: 180px;">
-                        <col style="width: 115px;">
-                        <col style="width: 115px;">
-                        <col style="width: 135px;">
+                        <col style="width: 7%;">
+                        <col style="width: 25%;">
+                        <col style="width: 28%;">
+                        <col style="width: 16%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
                       </colgroup>
                       <thead>
                         <tr>
-                          <th style="text-align: center;">Overall Rank</th>
-                          <th>Team ID</th>
-                          <th>Team Name</th>
+                          <th style="text-align: center;">Rank</th>
+                          <th>Team (ID & Name)</th>
                           <th>Project Title</th>
                           <th>Theme / Domain</th>
                           <th style="text-align: center;">Internal (/50)</th>
                           <th style="text-align: center;">External (/50)</th>
-                          <th style="text-align: center;">Total Combined (/100)</th>
+                          <th style="text-align: center;">Total (/100)</th>
                         </tr>
                       </thead>
                       <tbody id="overall-rankings-table-body">
-                        <tr><td colspan="8" class="text-center loading-cell">Loading grand leaderboard...</td></tr>
+                        <tr><td colspan="7" class="text-center loading-cell">Loading grand leaderboard...</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -1103,29 +1095,27 @@
                   <div class="table-scroll-container eval-scroll-container">
                     <table class="eval-table eval-pending-table" id="overall-pending-table">
                       <colgroup>
-                        <col style="width: 125px;">
-                        <col style="width: 180px;">
-                        <col style="width: auto;">
-                        <col style="width: 175px;">
-                        <col style="width: 85px;">
-                        <col style="width: 115px;">
-                        <col style="width: 115px;">
-                        <col style="width: 135px;">
+                        <col style="width: 24%;">
+                        <col style="width: 25%;">
+                        <col style="width: 17%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 10%;">
                       </colgroup>
                       <thead>
                         <tr>
-                          <th>Team ID</th>
-                          <th>Team Name</th>
+                          <th>Team (ID & Name)</th>
                           <th>Project Title</th>
                           <th>Theme / Domain</th>
-                          <th>Panel</th>
-                          <th>Internal Status</th>
-                          <th>External Status</th>
-                          <th>Pending Reason</th>
+                          <th style="text-align: center;">Panel</th>
+                          <th style="text-align: center;">Internal</th>
+                          <th style="text-align: center;">External</th>
+                          <th style="text-align: center;">Status</th>
                         </tr>
                       </thead>
                       <tbody id="overall-pending-table-body">
-                        <tr><td colspan="8" class="text-center">No pending teams</td></tr>
+                        <tr><td colspan="7" class="text-center">No pending teams</td></tr>
                       </tbody>
                     </table>
                   </div>

@@ -3217,6 +3217,11 @@ async function handleJudgeChangePassword(e) {
       return;
     }
 
+    if (data.token) {
+      judgeToken = data.token;
+      localStorage.setItem('rmk_judge_token', judgeToken);
+    }
+
     if (judgeMeData) judgeMeData.must_change_password = false;
     closeJudgePasswordModal(true);
     showToast('Password updated successfully!', 'info');
@@ -5278,14 +5283,16 @@ function renderEvaluationStatusTable(teams) {
 
       return `
         <tr>
-          <td><span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span></td>
           <td>
-            <div class="table-team-name-main">${escapeHtml(t.team_name)}</div>
-            <div style="font-size:12px; color:#475569; margin-top:2px;">${escapeHtml(t.project_title)}</div>
-            <div style="font-size:11px; color:#94a3b8; margin-top:1px;">${escapeHtml(t.school || '')}</div>
+            <div class="table-team-id-name-cluster">
+              <span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span>
+              <span class="table-team-name-main">${escapeHtml(t.team_name)}</span>
+            </div>
+            <div class="table-team-proj-sub">${escapeHtml(t.project_title || '')}</div>
+            ${t.school ? `<div class="table-team-school-sub">${escapeHtml(t.school)}</div>` : ''}
           </td>
           <td><span class="status-pill-badge pill-blue">${escapeHtml(t.theme)}</span></td>
-          <td>
+          <td style="text-align:center;">
             <span class="table-panel-badge">${escapeHtml(t.panel_code)}</span>
             <div style="font-size:11px; color:#64748b; margin-top:2px;">${escapeHtml(t.panel_venue || '')}</div>
           </td>
@@ -5406,9 +5413,9 @@ function renderThemeLeaderboard() {
   // 1. Render Ranked Teams
   if (tbody) {
     if (allRanked.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both internal and external evaluations yet in this theme.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both internal and external evaluations yet in this theme.</td></tr>';
     } else if (displayedRanked.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams meet the Top ${topNVal} cutoff in this theme.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams meet the Top ${topNVal} cutoff in this theme.</td></tr>`;
     } else {
       tbody.innerHTML = displayedRanked.map(t => {
         let badgeClass = 'rank-badge-other';
@@ -5419,8 +5426,13 @@ function renderThemeLeaderboard() {
         return `
           <tr>
             <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
-            <td><span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span></td>
-            <td><div class="table-team-name-main">${escapeHtml(t.team_name)}</div></td>
+            <td>
+              <div class="table-team-id-name-cluster">
+                <span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span>
+                <span class="table-team-name-main">${escapeHtml(t.team_name)}</span>
+              </div>
+              ${t.school ? `<div class="table-team-school-sub">${escapeHtml(t.school)}</div>` : ''}
+            </td>
             <td style="color:#334155;">${escapeHtml(t.project_title)}</td>
             <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
             <td style="text-align:center;" class="mono">${t.external_marks} / 50</td>
@@ -5437,13 +5449,18 @@ function renderThemeLeaderboard() {
 
   if (pendBody) {
     if (!group.pending_teams || group.pending_teams.length === 0) {
-      pendBody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All teams in this theme have completed evaluations!</td></tr>';
+      pendBody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All teams in this theme have completed evaluations!</td></tr>';
     } else {
       pendBody.innerHTML = group.pending_teams.map(pt => {
         return `
           <tr>
-            <td><span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span></td>
-            <td><div class="table-team-name-main">${escapeHtml(pt.team_name)}</div></td>
+            <td>
+              <div class="table-team-id-name-cluster">
+                <span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span>
+                <span class="table-team-name-main">${escapeHtml(pt.team_name)}</span>
+              </div>
+              ${pt.school ? `<div class="table-team-school-sub">${escapeHtml(pt.school)}</div>` : ''}
+            </td>
             <td style="color:#475569;">${escapeHtml(pt.project_title)}</td>
             <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>
             <td style="text-align:center;">${pt.internal_status === 'SUBMITTED' ? pt.internal_marks + ' / 50' : '<span class="status-pill-badge pill-absent">Pending</span>'}</td>
@@ -5540,14 +5557,14 @@ async function loadOverallRankings() {
   const badge = document.getElementById('overall-rank-meta-badge');
   const pendCountLabel = document.getElementById('overall-pending-count-label');
 
-  if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center loading-cell">Loading grand leaderboard...</td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center loading-cell">Loading grand leaderboard...</td></tr>';
 
   try {
     const res = await fetch('/api/admin/reports/rankings/overall', {
       headers: { Authorization: 'Bearer ' + token }
     });
     if (!res.ok) {
-      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load overall leaderboard</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load overall leaderboard</td></tr>';
       return;
     }
 
@@ -5558,7 +5575,7 @@ async function loadOverallRankings() {
     // 1. Render Ranked Teams
     if (tbody) {
       if (data.ranked_teams.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both evaluations yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px; color:var(--text-muted); font-style:italic;">No teams have completed both evaluations yet.</td></tr>';
       } else {
         tbody.innerHTML = data.ranked_teams.map(t => {
           let badgeClass = 'rank-badge-other';
@@ -5569,8 +5586,13 @@ async function loadOverallRankings() {
           return `
             <tr>
               <td style="text-align:center;"><span class="rank-badge-cell ${badgeClass}">${t.rank}</span></td>
-              <td><span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span></td>
-              <td><div class="table-team-name-main">${escapeHtml(t.team_name)}</div></td>
+              <td>
+                <div class="table-team-id-name-cluster">
+                  <span class="table-team-code-pill mono">${escapeHtml(t.team_code)}</span>
+                  <span class="table-team-name-main">${escapeHtml(t.team_name)}</span>
+                </div>
+                ${t.school ? `<div class="table-team-school-sub">${escapeHtml(t.school)}</div>` : ''}
+              </td>
               <td style="color:#334155;">${escapeHtml(t.project_title)}</td>
               <td><span class="status-pill-badge pill-blue">${escapeHtml(t.theme)}</span></td>
               <td style="text-align:center;" class="mono">${t.internal_marks} / 50</td>
@@ -5585,13 +5607,18 @@ async function loadOverallRankings() {
     // 2. Render Pending Teams
     if (pendBody) {
       if (data.pending_teams.length === 0) {
-        pendBody.innerHTML = '<tr><td colspan="8" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All registered teams are fully evaluated!</td></tr>';
+        pendBody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:var(--accent-green-dark); font-weight:600;">All registered teams are fully evaluated!</td></tr>';
       } else {
         pendBody.innerHTML = data.pending_teams.map(pt => {
           return `
             <tr>
-              <td><span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span></td>
-              <td><div class="table-team-name-main">${escapeHtml(pt.team_name)}</div></td>
+              <td>
+                <div class="table-team-id-name-cluster">
+                  <span class="table-team-code-pill mono">${escapeHtml(pt.team_code)}</span>
+                  <span class="table-team-name-main">${escapeHtml(pt.team_name)}</span>
+                </div>
+                ${pt.school ? `<div class="table-team-school-sub">${escapeHtml(pt.school)}</div>` : ''}
+              </td>
               <td style="color:#475569;">${escapeHtml(pt.project_title)}</td>
               <td><span class="status-pill-badge pill-blue">${escapeHtml(pt.theme)}</span></td>
               <td style="text-align:center;"><span class="table-panel-badge">${escapeHtml(pt.panel_code)}</span></td>

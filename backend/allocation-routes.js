@@ -2,16 +2,18 @@ const express = require('express');
 const router = express.Router();
 const allocService = require('./allocation-service');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET;
+const { JWT_SECRET, validateSession } = require('./auth-helper');
 
 // Admin authentication middleware (strictly for mutations/draft actions)
-function authAdmin(req, res, next) {
+async function authAdmin(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Please log in again.' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'admin') return res.status(403).json({ error: 'Access denied: Admin only' });
-    req.user = decoded;
+    const validated = await validateSession(decoded);
+    if (!validated) return res.status(401).json({ error: 'Password changed or session invalid. Please log in again.' });
+    req.user = validated;
     next();
   } catch {
     res.status(401).json({ error: 'Session expired. Please log in again.' });
@@ -19,7 +21,7 @@ function authAdmin(req, res, next) {
 }
 
 // Read-only allocation access middleware: Admin, Jury Admin, and Judge/Jury
-function authReadAllocations(req, res, next) {
+async function authReadAllocations(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Please log in to view allocations.' });
   try {
@@ -28,7 +30,9 @@ function authReadAllocations(req, res, next) {
     if (!allowed.includes(decoded.role)) {
       return res.status(403).json({ error: 'Access denied: Read allocations permission required.' });
     }
-    req.user = decoded;
+    const validated = await validateSession(decoded);
+    if (!validated) return res.status(401).json({ error: 'Password changed or session invalid. Please log in again.' });
+    req.user = validated;
     next();
   } catch {
     res.status(401).json({ error: 'Session expired. Please log in again.' });

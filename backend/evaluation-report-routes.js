@@ -10,14 +10,14 @@ const {
 } = require('./evaluation-report-service');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET;
+const { JWT_SECRET, validateSession } = require('./auth-helper');
 
 /**
  * Authentication Middleware:
  * Strictly allows administrators (Main Admin with role 'admin' or Jury Admin with role 'jury-admin').
  * Strictly blocks ordinary judges (role 'judge') and unauthenticated requests.
  */
-function authAdminOrJuryAdmin(req, res, next) {
+async function authAdminOrJuryAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
@@ -27,7 +27,9 @@ function authAdminOrJuryAdmin(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role === 'admin' || decoded.role === 'jury-admin') {
-      req.user = decoded;
+      const validated = await validateSession(decoded);
+      if (!validated) return res.status(401).json({ error: 'Password changed or session invalid. Please log in again.' });
+      req.user = validated;
       return next();
     }
     return res.status(403).json({ error: 'Access denied: Administrator privileges required.' });

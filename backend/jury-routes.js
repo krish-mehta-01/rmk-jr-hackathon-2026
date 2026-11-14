@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('./db');
+const { signJuryAdminToken, signJudgeToken, validateSession } = require('./auth-helper');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -42,7 +43,7 @@ const juryLoginLimiter = createLimiter(25, 5 * 60 * 1000);
 // ─────────────────────────────────────────────
 // Auth Middleware
 // ─────────────────────────────────────────────
-function authJuryAdmin(req, res, next) {
+async function authJuryAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Please log in to the Jury Admin portal.' });
@@ -50,14 +51,16 @@ function authJuryAdmin(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'jury-admin') return res.status(403).json({ error: 'Access denied: Jury Admin only' });
-    req.user = decoded;
+    const validated = await validateSession(decoded);
+    if (!validated) return res.status(401).json({ error: 'Jury Admin session invalid or password changed. Please log in again.' });
+    req.user = validated;
     next();
   } catch {
     res.status(401).json({ error: 'Jury Admin session expired. Please log in again.' });
   }
 }
 
-function authJudge(req, res, next) {
+async function authJudge(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Please log in to the Jury portal.' });
@@ -65,7 +68,9 @@ function authJudge(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'judge') return res.status(403).json({ error: 'Access denied: Judge account required' });
-    req.user = decoded;
+    const validated = await validateSession(decoded);
+    if (!validated) return res.status(401).json({ error: 'Judge session invalid or password changed. Please log in again.' });
+    req.user = validated;
     next();
   } catch {
     res.status(401).json({ error: 'Judge session expired. Please log in again.' });
@@ -117,11 +122,7 @@ router.post('/jury-admin/login', async (req, res) => {
     }
 
     juryLoginLimiter.clear(req.ip);
-    const token = jwt.sign(
-      { id: admin.id, username: admin.username, name: admin.name, role: 'jury-admin' },
-      JWT_SECRET,
-      { expiresIn: '12h' }
-    );
+    const token = signJuryAdminToken(admin);
 
     res.json({ token, username: admin.username, name: admin.name });
   } catch (err) {
@@ -444,18 +445,7 @@ router.post('/jury/login', async (req, res) => {
 
     juryLoginLimiter.clear(req.ip);
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        panel_id: user.panel_id,
-        panel_code: user.panel_code,
-        username: user.username,
-        judge_type: user.judge_type,
-        role: 'judge'
-      },
-      JWT_SECRET,
-      { expiresIn: '12h' }
-    );
+    const token = signJudgeToken(user);
 
     res.json({
       token,
@@ -501,7 +491,12 @@ router.post('/jury/change-password', authJudge, async (req, res) => {
       [newHash, req.user.id]
     );
 
-    res.json({ ok: true, message: 'Password updated successfully' });
+    // Issue updated permanent token reflecting the new password signature
+    const [updatedRows] = await pool.execute('SELECT u.*, p.panel_code FROM jury_users u JOIN jury_panels p ON p.id = u.panel_id WHERE u.id = ?', [req.user.id]);
+    const updatedJudge = updatedRows[0] || { ...req.user, password_hash: newHash };
+    const newToken = signJudgeToken(updatedJudge);
+
+    res.json({ ok: true, message: 'Password updated successfully', token: newToken });
   } catch (err) {
     console.error('[ERROR] Judge Password Change:', err);
     res.status(500).json({ error: 'Failed to update password' });
