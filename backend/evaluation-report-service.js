@@ -296,6 +296,25 @@ async function getEvaluationStatusReport(filters = {}) {
     }
   }
 
+  // Sort teams:
+  // 1. Both evaluated (FULLY_EVALUATED)
+  // 2. Evaluated by only external (EXTERNAL_EVALUATED)
+  // 3. Evaluated by only internal (INTERNAL_EVALUATED)
+  // 4. Evaluated by none (NOT_EVALUATED)
+  // Within each group, arrange by team ID (team_code ascending)
+  filtered.sort((a, b) => {
+    const getPriority = (t) => {
+      if (t.overall_status === 'FULLY_EVALUATED') return 1;
+      if (t.overall_status === 'EXTERNAL_EVALUATED') return 2;
+      if (t.overall_status === 'INTERNAL_EVALUATED') return 3;
+      return 4;
+    };
+    const prioA = getPriority(a);
+    const prioB = getPriority(b);
+    if (prioA !== prioB) return prioA - prioB;
+    return String(a.team_code || '').localeCompare(String(b.team_code || ''), undefined, { numeric: true });
+  });
+
   return {
     summary: {
       total_teams: totalTeams,

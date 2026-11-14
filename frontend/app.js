@@ -5405,9 +5405,28 @@ function renderEvaluationStatusTable(teams) {
     return;
   }
 
+  // Strict User Sorting Specification:
+  // 1. Both evaluated teams (prio 1)
+  // 2. Evaluated by only external (prio 2)
+  // 3. Evaluated by only internal (prio 3)
+  // 4. Evaluated by none (prio 4)
+  // Within each group, arrange by team ID (team_code ascending)
+  const getPrio = (t) => {
+    if (t.overall_status === 'FULLY_EVALUATED') return 1;
+    if (t.overall_status === 'EXTERNAL_EVALUATED') return 2;
+    if (t.overall_status === 'INTERNAL_EVALUATED') return 3;
+    return 4;
+  };
+  const sortedTeams = [...teams].sort((a, b) => {
+    const pA = getPrio(a);
+    const pB = getPrio(b);
+    if (pA !== pB) return pA - pB;
+    return String(a.team_code || '').localeCompare(String(b.team_code || ''), undefined, { numeric: true });
+  });
+
   // 1. Desktop Table Rows
   if (tbody) {
-    tbody.innerHTML = teams.map(t => {
+    tbody.innerHTML = sortedTeams.map(t => {
       const idStr = String(t.team_id || t.id);
       const isOpen = expandedEvalTeams.has(idStr);
       let statusPillClass = 'pill-absent';
@@ -5456,7 +5475,7 @@ function renderEvaluationStatusTable(teams) {
 
   // 2. Mobile Cards
   if (mobileList) {
-    mobileList.innerHTML = teams.map(t => {
+    mobileList.innerHTML = sortedTeams.map(t => {
       let statusPillClass = 'pill-absent';
       if (t.overall_status === 'FULLY_EVALUATED') statusPillClass = 'pill-present';
       else if (t.overall_status === 'INTERNAL_EVALUATED' || t.overall_status === 'EXTERNAL_EVALUATED') statusPillClass = 'pill-amber';
