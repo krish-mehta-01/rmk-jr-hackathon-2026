@@ -16,8 +16,15 @@ let teamData = null;
 let currentEvalAuthKey = null; // Volatile unlock key for Evaluation & Rankings in Admin view
 
 function isInstituteAdmin() {
-  const role = localStorage.getItem('rmk_admin_role');
-  const user = (localStorage.getItem('rmk_admin_username') || '').trim();
+  if (IS_INSTITUTE_ADMIN_PAGE) return true;
+  const role = sessionStorage.getItem('rmk_inst_admin_role') ||
+               localStorage.getItem('rmk_institute_admin_role') ||
+               sessionStorage.getItem('rmk_admin_role') ||
+               localStorage.getItem('rmk_admin_role');
+  const user = (sessionStorage.getItem('rmk_inst_admin_username') ||
+                localStorage.getItem('rmk_institute_admin_username') ||
+                sessionStorage.getItem('rmk_admin_username') ||
+                localStorage.getItem('rmk_admin_username') || '').trim();
   return role === 'institute_admin' || user.toUpperCase() === 'RMK@123' || user.toLowerCase() === 'instituteadmin';
 }
 
@@ -111,11 +118,22 @@ function setupEventListeners() {
 // SESSION RESTORATION
 // ─────────────────────────────────────────────────────────────
 function restoreSession() {
-  // Always restore tokens from localStorage if present
-  adminToken = localStorage.getItem('rmk_admin_token') || null;
-  juryAdminToken = localStorage.getItem('rmk_jury_admin_token') || null;
-  judgeToken = localStorage.getItem('rmk_judge_token') || null;
-  teamToken = localStorage.getItem('rmk_team_token') || null;
+  // Isolate Institute Admin vs Desk Admin tokens so multiple tabs on the same device never clobber each other
+  if (IS_INSTITUTE_ADMIN_PAGE) {
+    adminToken = sessionStorage.getItem('rmk_inst_admin_token') ||
+                 localStorage.getItem('rmk_institute_admin_token') ||
+                 (localStorage.getItem('rmk_admin_role') === 'institute_admin' ? localStorage.getItem('rmk_admin_token') : null) || null;
+  } else if (IS_ADMIN_PAGE) {
+    adminToken = sessionStorage.getItem('rmk_admin_token') ||
+                 (localStorage.getItem('rmk_admin_role') !== 'institute_admin' ? localStorage.getItem('rmk_admin_token') : null) ||
+                 localStorage.getItem('rmk_admin_token') || null;
+  } else {
+    adminToken = localStorage.getItem('rmk_admin_token') || null;
+  }
+
+  juryAdminToken = sessionStorage.getItem('rmk_jury_admin_token') || localStorage.getItem('rmk_jury_admin_token') || null;
+  judgeToken = sessionStorage.getItem('rmk_judge_token') || localStorage.getItem('rmk_judge_token') || null;
+  teamToken = sessionStorage.getItem('rmk_team_token') || localStorage.getItem('rmk_team_token') || null;
 
   if (window.location.hash === '#on-spot' || window.location.search.includes('onspot=1')) {
     showView('view-onspot');
@@ -437,11 +455,25 @@ async function handleAdminLogin(e) {
     }
 
     adminToken = data.token;
-    localStorage.setItem('rmk_admin_token', adminToken);
     const assignedRole = data.role || (username.toUpperCase() === 'RMK@123' || username.toLowerCase() === 'instituteadmin' ? 'institute_admin' : 'admin');
-    localStorage.setItem('rmk_admin_role', assignedRole);
-    localStorage.setItem('rmk_admin_username', data.username || username);
-    if (data.name) localStorage.setItem('rmk_admin_name', data.name);
+
+    if (IS_INSTITUTE_ADMIN_PAGE || assignedRole === 'institute_admin') {
+      sessionStorage.setItem('rmk_inst_admin_token', adminToken);
+      sessionStorage.setItem('rmk_inst_admin_role', 'institute_admin');
+      sessionStorage.setItem('rmk_inst_admin_username', data.username || username);
+      localStorage.setItem('rmk_institute_admin_token', adminToken);
+      localStorage.setItem('rmk_institute_admin_role', 'institute_admin');
+      localStorage.setItem('rmk_institute_admin_username', data.username || username);
+      if (data.name) localStorage.setItem('rmk_institute_admin_name', data.name);
+    } else {
+      sessionStorage.setItem('rmk_admin_token', adminToken);
+      sessionStorage.setItem('rmk_admin_role', assignedRole);
+      sessionStorage.setItem('rmk_admin_username', data.username || username);
+      localStorage.setItem('rmk_admin_token', adminToken);
+      localStorage.setItem('rmk_admin_role', assignedRole);
+      localStorage.setItem('rmk_admin_username', data.username || username);
+      if (data.name) localStorage.setItem('rmk_admin_name', data.name);
+    }
 
     initAdminDashboard();
     showView('view-admin');
@@ -460,9 +492,22 @@ async function handleAdminLogin(e) {
 // Logs out of this page's role only, and returns to this page's login form
 function logout(message) {
   closeScanner();
-  if (IS_ADMIN_PAGE || IS_INSTITUTE_ADMIN_PAGE) {
+  if (IS_INSTITUTE_ADMIN_PAGE) {
     adminToken = null;
     currentEvalAuthKey = null;
+    sessionStorage.removeItem('rmk_inst_admin_token');
+    sessionStorage.removeItem('rmk_inst_admin_role');
+    sessionStorage.removeItem('rmk_inst_admin_username');
+    localStorage.removeItem('rmk_institute_admin_token');
+    localStorage.removeItem('rmk_institute_admin_role');
+    localStorage.removeItem('rmk_institute_admin_username');
+    localStorage.removeItem('rmk_institute_admin_name');
+  } else if (IS_ADMIN_PAGE) {
+    adminToken = null;
+    currentEvalAuthKey = null;
+    sessionStorage.removeItem('rmk_admin_token');
+    sessionStorage.removeItem('rmk_admin_role');
+    sessionStorage.removeItem('rmk_admin_username');
     localStorage.removeItem('rmk_admin_token');
     localStorage.removeItem('rmk_admin_role');
     localStorage.removeItem('rmk_admin_username');
@@ -471,6 +516,7 @@ function logout(message) {
     teamToken = null;
     teamData = null;
     autoScanTried = false;
+    sessionStorage.removeItem('rmk_team_token');
     localStorage.removeItem('rmk_team_token');
     localStorage.removeItem('rmk_team_data');
   }
@@ -3289,6 +3335,7 @@ async function handleJuryAdminLogin(e) {
     }
 
     juryAdminToken = data.token;
+    sessionStorage.setItem('rmk_jury_admin_token', juryAdminToken);
     localStorage.setItem('rmk_jury_admin_token', juryAdminToken);
     initJuryAdminDashboard();
     showView('view-jury-admin');
@@ -3306,6 +3353,7 @@ async function handleJuryAdminLogin(e) {
 
 function logoutJuryAdmin() {
   juryAdminToken = null;
+  sessionStorage.removeItem('rmk_jury_admin_token');
   localStorage.removeItem('rmk_jury_admin_token');
   showView('view-jury-admin-login');
   showToast('Logged out of Jury Admin portal', 'info');
@@ -5731,9 +5779,17 @@ async function handleOpenRevisionHistory() {
     `;
   }
 
-  const activeToken = adminToken || localStorage.getItem('rmk_admin_token') ||
-                      juryAdminToken || localStorage.getItem('rmk_jury_admin_token') ||
-                      judgeToken || localStorage.getItem('rmk_judge_token') || null;
+  const activeToken = adminToken ||
+                      (IS_INSTITUTE_ADMIN_PAGE ? (sessionStorage.getItem('rmk_inst_admin_token') || localStorage.getItem('rmk_institute_admin_token')) : null) ||
+                      sessionStorage.getItem('rmk_admin_token') ||
+                      localStorage.getItem('rmk_admin_token') ||
+                      sessionStorage.getItem('rmk_inst_admin_token') ||
+                      localStorage.getItem('rmk_institute_admin_token') ||
+                      juryAdminToken ||
+                      sessionStorage.getItem('rmk_jury_admin_token') ||
+                      localStorage.getItem('rmk_jury_admin_token') ||
+                      judgeToken ||
+                      localStorage.getItem('rmk_judge_token') || null;
 
   try {
     const fetchHeaders = {};
@@ -5892,8 +5948,15 @@ let evalSearchDebounceTimer = null;
 let availableEvalThemes = [];
 
 function getEffectiveAdminToken() {
-  return adminToken || localStorage.getItem('rmk_admin_token') ||
-         juryAdminToken || localStorage.getItem('rmk_jury_admin_token') || null;
+  return adminToken ||
+         (IS_INSTITUTE_ADMIN_PAGE ? (sessionStorage.getItem('rmk_inst_admin_token') || localStorage.getItem('rmk_institute_admin_token')) : null) ||
+         sessionStorage.getItem('rmk_admin_token') ||
+         localStorage.getItem('rmk_admin_token') ||
+         sessionStorage.getItem('rmk_inst_admin_token') ||
+         localStorage.getItem('rmk_institute_admin_token') ||
+         juryAdminToken ||
+         sessionStorage.getItem('rmk_jury_admin_token') ||
+         localStorage.getItem('rmk_jury_admin_token') || null;
 }
 
 function initEvaluationReportsView() {
