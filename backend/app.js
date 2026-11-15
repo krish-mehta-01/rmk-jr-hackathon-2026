@@ -1,4 +1,4 @@
-// Build: v20261115_nav_v2 - Admin tab persistence on refresh across all roles and features
+// Build: v20261115_cleanpaths_v3 - Clean slash-based subpaths (/venue, /allocations, etc.) without hash
 const dns = require('dns');
 if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 // Express app: API routes plus the static frontend. (Build: v20261111_r10_clean_url_no_https)

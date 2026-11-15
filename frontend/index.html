@@ -18,15 +18,41 @@
         return;
       }
 
-      // Clean, predictable route detection
-      if (p === '/rmkjrhackathon2026-instituteadmin' || p === '/rmkjrhackathon2026-institute-admin' || p === '/instituteadmin' || p === '/institute-admin') {
+      function pathMatches(path, prefix) {
+        return path === prefix || path.startsWith(prefix + '/');
+      }
+
+      const directAdminRoutes = ['/venue', '/venues', '/allocations', '/rankings', '/evaluations', '/qr', '/teams'];
+
+      // Clean, predictable route detection supporting clean subpaths (/venue, /allocations, etc.)
+      if (
+        pathMatches(p, '/rmkjrhackathon2026-instituteadmin') ||
+        pathMatches(p, '/rmkjrhackathon2026-institute-admin') ||
+        pathMatches(p, '/instituteadmin') ||
+        pathMatches(p, '/institute-admin')
+      ) {
         document.documentElement.classList.add('institute-admin-page');
         document.documentElement.classList.add('admin-page');
-      } else if (p === '/rmkjrhackathon2026-adminlogin' || p === '/adminlogin' || p === '/admin') {
+      } else if (
+        pathMatches(p, '/rmkjrhackathon2026-adminlogin') ||
+        pathMatches(p, '/adminlogin') ||
+        pathMatches(p, '/admin') ||
+        directAdminRoutes.some(r => pathMatches(p, r))
+      ) {
         document.documentElement.classList.add('admin-page');
-      } else if (p === '/rmkjrhackathon2026-superadmindhaneshkrish' || p === '/rmkjrhackathon2026-jury-admin' || p === '/rmkjrhackathon2026-juryadmin' || p === '/jury-admin' || p === '/superadmin') {
+      } else if (
+        pathMatches(p, '/rmkjrhackathon2026-superadmindhaneshkrish') ||
+        pathMatches(p, '/rmkjrhackathon2026-jury-admin') ||
+        pathMatches(p, '/rmkjrhackathon2026-juryadmin') ||
+        pathMatches(p, '/jury-admin') ||
+        pathMatches(p, '/superadmin')
+      ) {
         document.documentElement.classList.add('jury-admin-page');
-      } else if (p === '/rmkjrhackathon2026-jurylogin' || p === '/jurylogin' || p === '/jury') {
+      } else if (
+        pathMatches(p, '/rmkjrhackathon2026-jurylogin') ||
+        pathMatches(p, '/jurylogin') ||
+        pathMatches(p, '/jury')
+      ) {
         document.documentElement.classList.add('jury-page');
       }
       // Normal team root '/' and all other paths default to team pass
@@ -2257,6 +2283,6 @@
 
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261115_nav_v2"></script>
+  <script src="/app.js?v=20261115_cleanpaths_v3"></script>
 </body>
 </html>

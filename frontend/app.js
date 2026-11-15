@@ -98,21 +98,24 @@ function setupEventListeners() {
   const formJudgePwd = document.getElementById('form-judge-change-password');
   if (formJudgePwd) formJudgePwd.addEventListener('submit', handleJudgeChangePassword);
 
-  window.addEventListener('hashchange', () => {
+  const handleNavChange = () => {
     if (window.location.hash === '#on-spot') {
       showView('view-onspot');
     } else if (!window.location.hash || window.location.hash === '#login') {
       if (!teamToken && !adminToken && !judgeToken && !juryAdminToken) {
         showView('view-auth');
       }
-    } else if (adminToken && (IS_ADMIN_PAGE || IS_INSTITUTE_ADMIN_PAGE)) {
-      const sec = getAdminSectionFromHash();
+    }
+    if (adminToken && (IS_ADMIN_PAGE || IS_INSTITUTE_ADMIN_PAGE)) {
+      const sec = getAdminSectionFromUrl();
       if (sec) switchAdminSection(sec, false);
     } else if (juryAdminToken && IS_JURY_ADMIN_PAGE) {
-      const sec = getTargetJuryAdminSection();
+      const sec = getJuryAdminSectionFromUrl();
       if (sec) switchJuryAdminSection(sec, false);
     }
-  });
+  };
+  window.addEventListener('popstate', handleNavChange);
+  window.addEventListener('hashchange', handleNavChange);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -525,7 +528,8 @@ function logout(message) {
   }
 
   try {
-    history.replaceState(null, '', location.pathname);
+    const base = IS_INSTITUTE_ADMIN_PAGE ? '/rmkjrhackathon2026-instituteadmin' : (IS_ADMIN_PAGE ? '/rmkjrhackathon2026-adminlogin' : '/');
+    history.replaceState(null, '', base);
   } catch (_) {}
 
   showView('view-auth');
@@ -984,9 +988,46 @@ async function submitAttendance(qrCodeValue) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// ADMIN DASHBOARD
+// ADMIN DASHBOARD & PATH-BASED ROUTING
 // ─────────────────────────────────────────────────────────────
-function getAdminSectionHash(secName) {
+function getAdminBasePath() {
+  const p = (location.pathname || '').replace(/\/+$/, '').toLowerCase();
+  const instPrefixes = [
+    '/rmkjrhackathon2026-instituteadmin',
+    '/rmkjrhackathon2026-institute-admin',
+    '/instituteadmin',
+    '/institute-admin'
+  ];
+  for (const pref of instPrefixes) {
+    if (p === pref || p.startsWith(pref + '/')) return pref;
+  }
+  const adminPrefixes = [
+    '/rmkjrhackathon2026-adminlogin',
+    '/adminlogin',
+    '/admin'
+  ];
+  for (const pref of adminPrefixes) {
+    if (p === pref || p.startsWith(pref + '/')) return pref;
+  }
+  return IS_INSTITUTE_ADMIN_PAGE ? '/rmkjrhackathon2026-instituteadmin' : '/rmkjrhackathon2026-adminlogin';
+}
+
+function getJuryAdminBasePath() {
+  const p = (location.pathname || '').replace(/\/+$/, '').toLowerCase();
+  const prefixes = [
+    '/rmkjrhackathon2026-superadmindhaneshkrish',
+    '/rmkjrhackathon2026-jury-admin',
+    '/rmkjrhackathon2026-juryadmin',
+    '/jury-admin',
+    '/superadmin'
+  ];
+  for (const pref of prefixes) {
+    if (p === pref || p.startsWith(pref + '/')) return pref;
+  }
+  return '/rmkjrhackathon2026-superadmindhaneshkrish';
+}
+
+function getAdminSectionSlug(secName) {
   const map = {
     'table': 'teams',
     'themes': 'venue',
@@ -997,8 +1038,10 @@ function getAdminSectionHash(secName) {
   return map[secName] || secName;
 }
 
-function getAdminSectionFromHash(hash) {
-  const clean = String(hash || window.location.hash || '').replace(/^#/, '').toLowerCase().trim();
+function getAdminSectionFromUrl() {
+  const p = (location.pathname || '').replace(/\/+$/, '').toLowerCase();
+  const basePath = getAdminBasePath();
+
   const map = {
     'table': 'table',
     'teams': 'table',
@@ -1021,13 +1064,22 @@ function getAdminSectionFromHash(hash) {
     'standee': 'qr',
     'hackathon-day-qr': 'qr'
   };
-  return map[clean] || null;
-}
 
-function getTargetAdminSection() {
-  const fromHash = getAdminSectionFromHash();
-  if (fromHash) return fromHash;
+  // 1. Check path suffix after base path, e.g. /rmkjrhackathon2026-adminlogin/venue
+  if (p.startsWith(basePath + '/')) {
+    const sub = p.slice((basePath + '/').length).split('/')[0].trim();
+    if (sub && map[sub]) return map[sub];
+  } else if (!p.startsWith(basePath) && p !== '/') {
+    // 2. Direct paths, e.g. /venue, /allocations, /rankings
+    const direct = p.replace(/^\/+/, '').split('/')[0].trim();
+    if (direct && map[direct]) return map[direct];
+  }
 
+  // 3. Fallback to hash if user visited #venue
+  const hash = String(location.hash || '').replace(/^#/, '').toLowerCase().trim();
+  if (hash && map[hash]) return map[hash];
+
+  // 4. Fallback to session storage
   const storageKey = IS_INSTITUTE_ADMIN_PAGE ? 'rmk_active_inst_admin_sec' : 'rmk_active_admin_sec';
   const saved = sessionStorage.getItem(storageKey);
   if (saved && ['table', 'themes', 'allocations', 'eval-reports', 'qr'].includes(saved)) {
@@ -1035,6 +1087,10 @@ function getTargetAdminSection() {
   }
 
   return 'table';
+}
+
+function getTargetAdminSection() {
+  return getAdminSectionFromUrl();
 }
 
 function initAdminDashboard() {
@@ -1071,7 +1127,7 @@ function updateAdminSidebarRoleBadge() {
   }
 }
 
-function switchAdminSection(secName, updateHash = true) {
+function switchAdminSection(secName, updateUrl = true) {
   // If attempting to switch to Evaluation & Rankings and NOT Institute Admin:
   if (secName === 'eval-reports' && !isInstituteAdmin()) {
     if (!currentEvalAuthKey) {
@@ -1092,10 +1148,14 @@ function switchAdminSection(secName, updateHash = true) {
   const storageKey = IS_INSTITUTE_ADMIN_PAGE ? 'rmk_active_inst_admin_sec' : 'rmk_active_admin_sec';
   sessionStorage.setItem(storageKey, secName);
 
-  if (updateHash) {
-    const targetHash = '#' + getAdminSectionHash(secName);
-    if (window.location.hash !== targetHash) {
-      history.replaceState(null, '', targetHash);
+  if (updateUrl) {
+    const slug = getAdminSectionSlug(secName);
+    const basePath = getAdminBasePath();
+    const targetPath = `${basePath}/${slug}`;
+    if (location.pathname !== targetPath || location.hash) {
+      try {
+        history.replaceState(null, '', targetPath);
+      } catch (_) {}
     }
   }
 
@@ -3544,21 +3604,39 @@ function logoutJuryAdmin() {
   localStorage.removeItem('rmk_jury_admin_token');
   sessionStorage.removeItem('rmk_active_jury_admin_sec');
   try {
-    history.replaceState(null, '', location.pathname);
+    const base = IS_INSTITUTE_ADMIN_PAGE ? '/rmkjrhackathon2026-instituteadmin' : (IS_ADMIN_PAGE ? '/rmkjrhackathon2026-adminlogin' : '/');
+    history.replaceState(null, '', base);
   } catch (_) {}
   showView('view-jury-admin-login');
   showToast('Logged out of Jury Admin portal', 'info');
 }
 
-function getTargetJuryAdminSection() {
-  const clean = String(window.location.hash || '').replace(/^#/, '').toLowerCase().trim();
-  if (clean === 'evals' || clean === 'evaluations') return 'evals';
-  if (clean === 'panels' || clean === 'jury') return 'panels';
+function getJuryAdminSectionFromUrl() {
+  const p = (location.pathname || '').replace(/\/+$/, '').toLowerCase();
+  const basePath = getJuryAdminBasePath();
+
+  if (p.startsWith(basePath + '/')) {
+    const sub = p.slice((basePath + '/').length).split('/')[0].trim();
+    if (sub === 'evals' || sub === 'evaluations') return 'evals';
+    if (sub === 'panels' || sub === 'jury') return 'panels';
+  } else if (!p.startsWith(basePath) && p !== '/') {
+    const direct = p.replace(/^\/+/, '').split('/')[0].trim();
+    if (direct === 'evals' || direct === 'evaluations') return 'evals';
+    if (direct === 'panels' || direct === 'jury') return 'panels';
+  }
+
+  const hash = String(location.hash || '').replace(/^#/, '').toLowerCase().trim();
+  if (hash === 'evals' || hash === 'evaluations') return 'evals';
+  if (hash === 'panels' || hash === 'jury') return 'panels';
 
   const saved = sessionStorage.getItem('rmk_active_jury_admin_sec');
   if (saved && ['panels', 'evals'].includes(saved)) return saved;
 
   return 'panels';
+}
+
+function getTargetJuryAdminSection() {
+  return getJuryAdminSectionFromUrl();
 }
 
 function initJuryAdminDashboard() {
@@ -3567,12 +3645,15 @@ function initJuryAdminDashboard() {
   switchJuryAdminSection(targetSec, true);
 }
 
-function switchJuryAdminSection(secName, updateHash = true) {
+function switchJuryAdminSection(secName, updateUrl = true) {
   sessionStorage.setItem('rmk_active_jury_admin_sec', secName);
-  if (updateHash) {
-    const targetHash = '#' + secName;
-    if (window.location.hash !== targetHash) {
-      history.replaceState(null, '', targetHash);
+  if (updateUrl) {
+    const basePath = getJuryAdminBasePath();
+    const targetPath = `${basePath}/${secName}`;
+    if (location.pathname !== targetPath || location.hash) {
+      try {
+        history.replaceState(null, '', targetPath);
+      } catch (_) {}
     }
   }
 
