@@ -105,6 +105,12 @@ function setupEventListeners() {
       if (!teamToken && !adminToken && !judgeToken && !juryAdminToken) {
         showView('view-auth');
       }
+    } else if (adminToken && (IS_ADMIN_PAGE || IS_INSTITUTE_ADMIN_PAGE)) {
+      const sec = getAdminSectionFromHash();
+      if (sec) switchAdminSection(sec, false);
+    } else if (juryAdminToken && IS_JURY_ADMIN_PAGE) {
+      const sec = getTargetJuryAdminSection();
+      if (sec) switchJuryAdminSection(sec, false);
     }
   });
 }
@@ -136,8 +142,8 @@ function restoreSession() {
   if (IS_JURY_ADMIN_PAGE) {
     document.title = 'RMK Jr. Hackathon 2026 — Super Admin';
     if (juryAdminToken) {
-      initJuryAdminDashboard();
       showView('view-jury-admin');
+      initJuryAdminDashboard();
     } else {
       showView('view-jury-admin-login');
     }
@@ -164,8 +170,8 @@ function restoreSession() {
     if (adminBtnText) adminBtnText.textContent = 'Sign in to Institute Admin';
 
     if (adminToken) {
-      initAdminDashboard();
       showView('view-admin');
+      initAdminDashboard();
     } else {
       showView('view-auth');
     }
@@ -175,8 +181,8 @@ function restoreSession() {
   if (IS_ADMIN_PAGE) {
     document.title = 'RMK Jr. Hackathon 2026 — Admin';
     if (adminToken) {
-      initAdminDashboard();
       showView('view-admin');
+      initAdminDashboard();
     } else {
       showView('view-auth');
     }
@@ -468,8 +474,8 @@ async function handleAdminLogin(e) {
       if (data.name) localStorage.setItem('rmk_admin_name', data.name);
     }
 
-    initAdminDashboard();
     showView('view-admin');
+    initAdminDashboard();
 
   } catch {
     errorEl.textContent = 'Connection error. Please try again.';
@@ -488,6 +494,8 @@ function logout(message) {
   if (IS_INSTITUTE_ADMIN_PAGE) {
     adminToken = null;
     currentEvalAuthKey = null;
+    sessionStorage.removeItem('rmk_active_inst_admin_sec');
+    sessionStorage.removeItem('rmk_eval_auth_key');
     sessionStorage.removeItem('rmk_inst_admin_token');
     sessionStorage.removeItem('rmk_inst_admin_role');
     sessionStorage.removeItem('rmk_inst_admin_username');
@@ -498,6 +506,8 @@ function logout(message) {
   } else if (IS_ADMIN_PAGE) {
     adminToken = null;
     currentEvalAuthKey = null;
+    sessionStorage.removeItem('rmk_active_admin_sec');
+    sessionStorage.removeItem('rmk_eval_auth_key');
     sessionStorage.removeItem('rmk_admin_token');
     sessionStorage.removeItem('rmk_admin_role');
     sessionStorage.removeItem('rmk_admin_username');
@@ -513,6 +523,10 @@ function logout(message) {
     localStorage.removeItem('rmk_team_token');
     localStorage.removeItem('rmk_team_data');
   }
+
+  try {
+    history.replaceState(null, '', location.pathname);
+  } catch (_) {}
 
   showView('view-auth');
   if (typeof message === 'string') showToast(message, 'info');
@@ -972,11 +986,64 @@ async function submitAttendance(qrCodeValue) {
 // ─────────────────────────────────────────────────────────────
 // ADMIN DASHBOARD
 // ─────────────────────────────────────────────────────────────
+function getAdminSectionHash(secName) {
+  const map = {
+    'table': 'teams',
+    'themes': 'venue',
+    'allocations': 'allocations',
+    'eval-reports': 'rankings',
+    'qr': 'qr'
+  };
+  return map[secName] || secName;
+}
+
+function getAdminSectionFromHash(hash) {
+  const clean = String(hash || window.location.hash || '').replace(/^#/, '').toLowerCase().trim();
+  const map = {
+    'table': 'table',
+    'teams': 'table',
+    'teams-status': 'table',
+    'status': 'table',
+    'themes': 'themes',
+    'theme': 'themes',
+    'venue': 'themes',
+    'venues': 'themes',
+    'allocations': 'allocations',
+    'allocation': 'allocations',
+    'panel-allocation': 'allocations',
+    'panels': 'allocations',
+    'eval-reports': 'eval-reports',
+    'eval': 'eval-reports',
+    'evaluations': 'eval-reports',
+    'rankings': 'eval-reports',
+    'reports': 'eval-reports',
+    'qr': 'qr',
+    'standee': 'qr',
+    'hackathon-day-qr': 'qr'
+  };
+  return map[clean] || null;
+}
+
+function getTargetAdminSection() {
+  const fromHash = getAdminSectionFromHash();
+  if (fromHash) return fromHash;
+
+  const storageKey = IS_INSTITUTE_ADMIN_PAGE ? 'rmk_active_inst_admin_sec' : 'rmk_active_admin_sec';
+  const saved = sessionStorage.getItem(storageKey);
+  if (saved && ['table', 'themes', 'allocations', 'eval-reports', 'qr'].includes(saved)) {
+    return saved;
+  }
+
+  return 'table';
+}
+
 function initAdminDashboard() {
   updateAdminSidebarRoleBadge();
   loadAdminStats();
-  loadTeamsTable();
   loadPermanentVenueQR();
+
+  const targetSec = getTargetAdminSection();
+  switchAdminSection(targetSec, true);
 }
 
 function updateAdminSidebarRoleBadge() {
@@ -1004,9 +1071,12 @@ function updateAdminSidebarRoleBadge() {
   }
 }
 
-function switchAdminSection(secName) {
+function switchAdminSection(secName, updateHash = true) {
   // If attempting to switch to Evaluation & Rankings and NOT Institute Admin:
   if (secName === 'eval-reports' && !isInstituteAdmin()) {
+    if (!currentEvalAuthKey) {
+      currentEvalAuthKey = sessionStorage.getItem('rmk_eval_auth_key') || null;
+    }
     if (!currentEvalAuthKey) {
       openEvalAuthModal();
       return; // Do NOT switch sections until password is verified
@@ -1016,6 +1086,17 @@ function switchAdminSection(secName) {
   // If navigating away from eval-reports, clear volatile unlock key
   if (secName !== 'eval-reports') {
     currentEvalAuthKey = null;
+    sessionStorage.removeItem('rmk_eval_auth_key');
+  }
+
+  const storageKey = IS_INSTITUTE_ADMIN_PAGE ? 'rmk_active_inst_admin_sec' : 'rmk_active_admin_sec';
+  sessionStorage.setItem(storageKey, secName);
+
+  if (updateHash) {
+    const targetHash = '#' + getAdminSectionHash(secName);
+    if (window.location.hash !== targetHash) {
+      history.replaceState(null, '', targetHash);
+    }
   }
 
   const alinkTable = document.getElementById('alink-table');
@@ -1165,46 +1246,23 @@ async function handleEvalAuthSubmit(e) {
     }
 
     currentEvalAuthKey = pwd;
+    sessionStorage.setItem('rmk_eval_auth_key', pwd);
     closeEvalAuthModal();
     showToast('Evaluation & Rankings unlocked', 'success');
-    proceedToEvalReportsSection();
+    switchAdminSection('eval-reports');
   } catch (err) {
     console.error('[ERROR] handleEvalAuthSubmit:', err);
     currentEvalAuthKey = pwd;
+    sessionStorage.setItem('rmk_eval_auth_key', pwd);
     closeEvalAuthModal();
-    proceedToEvalReportsSection();
+    switchAdminSection('eval-reports');
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
 }
 
 function proceedToEvalReportsSection() {
-  const alinkTable = document.getElementById('alink-table');
-  const alinkThemes = document.getElementById('alink-themes');
-  const alinkQR = document.getElementById('alink-qr');
-  const alinkAllocations = document.getElementById('alink-allocations');
-  const alinkEvalReports = document.getElementById('alink-eval-reports');
-
-  const secTable = document.getElementById('admin-sec-table');
-  const secThemes = document.getElementById('admin-sec-themes');
-  const secQR = document.getElementById('admin-sec-qr');
-  const secAllocations = document.getElementById('admin-sec-allocations');
-  const secEvalReports = document.getElementById('admin-sec-eval-reports');
-
-  [alinkTable, alinkThemes, alinkQR, alinkAllocations].forEach(btn => btn && btn.classList.remove('active'));
-  [secTable, secThemes, secQR, secAllocations].forEach(pane => {
-    if (pane) {
-      pane.classList.add('hidden');
-      pane.classList.remove('active');
-    }
-  });
-
-  if (alinkEvalReports) alinkEvalReports.classList.add('active');
-  if (secEvalReports) {
-    secEvalReports.classList.remove('hidden');
-    secEvalReports.classList.add('active');
-  }
-  initEvaluationReportsView();
+  switchAdminSection('eval-reports');
 }
 
 async function loadAdminStats() {
@@ -1672,6 +1730,7 @@ function updateThemewiseFilterBadge() {
 
 function setVenueDisplayMode(mode) {
   venueDisplayMode = mode;
+  sessionStorage.setItem('rmk_venue_display_mode', mode);
   const btnVenue = document.getElementById('btn-mode-venue');
   const btnTheme = document.getElementById('btn-mode-theme');
   if (btnVenue) btnVenue.classList.toggle('active', mode === 'venue');
@@ -1715,6 +1774,14 @@ function updateThemeStats() {
 }
 
 async function loadThemes() {
+  const savedMode = sessionStorage.getItem('rmk_venue_display_mode');
+  if (savedMode === 'venue' || savedMode === 'theme') {
+    venueDisplayMode = savedMode;
+    const btnVenue = document.getElementById('btn-mode-venue');
+    const btnTheme = document.getElementById('btn-mode-theme');
+    if (btnVenue) btnVenue.classList.toggle('active', savedMode === 'venue');
+    if (btnTheme) btnTheme.classList.toggle('active', savedMode === 'theme');
+  }
   const list = document.getElementById('themes-grid');
   if (!list) return;
   list.innerHTML = '<div class="qr-loading">Loading venue allocations...</div>';
@@ -3457,8 +3524,8 @@ async function handleJuryAdminLogin(e) {
     juryAdminToken = data.token;
     sessionStorage.setItem('rmk_jury_admin_token', juryAdminToken);
     localStorage.setItem('rmk_jury_admin_token', juryAdminToken);
-    initJuryAdminDashboard();
     showView('view-jury-admin');
+    initJuryAdminDashboard();
     showToast(`Welcome, ${data.name || 'Jury Administrator'}`, 'info');
   } catch (err) {
     console.error('[ERROR] handleJuryAdminLogin:', err);
@@ -3475,38 +3542,69 @@ function logoutJuryAdmin() {
   juryAdminToken = null;
   sessionStorage.removeItem('rmk_jury_admin_token');
   localStorage.removeItem('rmk_jury_admin_token');
+  sessionStorage.removeItem('rmk_active_jury_admin_sec');
+  try {
+    history.replaceState(null, '', location.pathname);
+  } catch (_) {}
   showView('view-jury-admin-login');
   showToast('Logged out of Jury Admin portal', 'info');
 }
 
-function initJuryAdminDashboard() {
-  loadJuryAdminStats();
-  loadJuryAdminPanels();
-  loadJuryAdminEvaluations();
+function getTargetJuryAdminSection() {
+  const clean = String(window.location.hash || '').replace(/^#/, '').toLowerCase().trim();
+  if (clean === 'evals' || clean === 'evaluations') return 'evals';
+  if (clean === 'panels' || clean === 'jury') return 'panels';
+
+  const saved = sessionStorage.getItem('rmk_active_jury_admin_sec');
+  if (saved && ['panels', 'evals'].includes(saved)) return saved;
+
+  return 'panels';
 }
 
-function switchJuryAdminSection(secName) {
+function initJuryAdminDashboard() {
+  loadJuryAdminStats();
+  const targetSec = getTargetJuryAdminSection();
+  switchJuryAdminSection(targetSec, true);
+}
+
+function switchJuryAdminSection(secName, updateHash = true) {
+  sessionStorage.setItem('rmk_active_jury_admin_sec', secName);
+  if (updateHash) {
+    const targetHash = '#' + secName;
+    if (window.location.hash !== targetHash) {
+      history.replaceState(null, '', targetHash);
+    }
+  }
+
   const secPanels = document.getElementById('jury-admin-sec-panels');
   const secEvals = document.getElementById('jury-admin-sec-evals');
   const btnPanels = document.getElementById('jlink-panels');
   const btnEvals = document.getElementById('jlink-evals');
 
   if (secName === 'panels') {
-    secPanels.classList.remove('hidden');
-    secPanels.classList.add('active');
-    secEvals.classList.add('hidden');
-    secEvals.classList.remove('active');
-    btnPanels.classList.add('active');
-    btnEvals.classList.remove('active');
+    if (secPanels) {
+      secPanels.classList.remove('hidden');
+      secPanels.classList.add('active');
+    }
+    if (secEvals) {
+      secEvals.classList.add('hidden');
+      secEvals.classList.remove('active');
+    }
+    if (btnPanels) btnPanels.classList.add('active');
+    if (btnEvals) btnEvals.classList.remove('active');
     loadJuryAdminStats();
     loadJuryAdminPanels();
   } else if (secName === 'evals') {
-    secEvals.classList.remove('hidden');
-    secEvals.classList.add('active');
-    secPanels.classList.add('hidden');
-    secPanels.classList.remove('active');
-    btnEvals.classList.add('active');
-    btnPanels.classList.remove('active');
+    if (secEvals) {
+      secEvals.classList.remove('hidden');
+      secEvals.classList.add('active');
+    }
+    if (secPanels) {
+      secPanels.classList.add('hidden');
+      secPanels.classList.remove('active');
+    }
+    if (btnEvals) btnEvals.classList.add('active');
+    if (btnPanels) btnPanels.classList.remove('active');
     loadJuryAdminEvaluations();
   }
 }
