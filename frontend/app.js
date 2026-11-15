@@ -1258,8 +1258,9 @@ async function loadTeamsTable() {
   }
 }
 
-// Team names by row id, so the action button never embeds user-supplied text in markup
+// Team names and records by row id, so actions never embed unescaped user-supplied text
 const teamNamesById = new Map();
+const teamsById = new Map();
 // Rows the admin has expanded; kept open across table refreshes
 const expandedTeams = new Set();
 
@@ -1271,9 +1272,11 @@ function renderTeamsRows(teams) {
   }
 
   teamNamesById.clear();
+  teamsById.clear();
   tbody.innerHTML = teams.map(t => {
     const id = Number(t.id);
     teamNamesById.set(id, t.team_name);
+    teamsById.set(id, t);
     const isPresent = Boolean(t.is_present);
     const isOpen = expandedTeams.has(id);
     const scannedAt = t.check_in_time
@@ -1310,7 +1313,11 @@ function renderTeamsRows(teams) {
             <div><dt>Attendance Mode</dt><dd>${isPresent ? (t.marked_by || 'QR Scan') : '—'}</dd></div>
             <div><dt>Scanned Time</dt><dd>${scannedAt}</dd></div>
           </dl>
-          <button type="button" class="glass-btn-table-action ${isPresent ? 'btn-action-marked' : 'btn-action-unmarked'}" data-team-id="${id}">
+          <button type="button" class="glass-btn-table-action ${isPresent ? 'btn-action-marked' : 'btn-action-unmarked'}" 
+                  data-team-id="${id}"
+                  data-team-code="${escapeHtml(t.team_code || '')}"
+                  data-team-name="${escapeHtml(t.team_name || '')}"
+                  data-is-present="${isPresent}">
             ${isPresent ? 'Mark Not Scanned' : 'Mark Scanned'}
           </button>
           </div>
@@ -1332,17 +1339,125 @@ function toggleTeamDetails(id, btn) {
 
 document.addEventListener('click', e => {
   const actionBtn = e.target.closest('button[data-team-id]');
-  if (actionBtn) toggleAttendance(Number(actionBtn.dataset.teamId));
+  if (actionBtn) {
+    e.preventDefault();
+    requestAttendanceToggle(Number(actionBtn.dataset.teamId), actionBtn);
+    return;
+  }
 
   const detailsBtn = e.target.closest('button[data-details-id]');
   if (detailsBtn) toggleTeamDetails(Number(detailsBtn.dataset.detailsId), detailsBtn);
 });
 
-async function toggleAttendance(id) {
+// Confirmation & execution workflow for attendance overrides
+let pendingAttendanceToggle = null;
+
+function requestAttendanceToggle(id, sourceElOrOpts) {
+  let teamCode = '';
+  let teamName = '';
+  let isPresent = false;
+  let onSuccessCallback = null;
+
+  const cachedTeam = teamsById.get(id);
+  if (cachedTeam) {
+    teamCode = cachedTeam.team_code || '';
+    teamName = cachedTeam.team_name || '';
+    isPresent = Boolean(cachedTeam.is_present);
+  }
+
+  if (sourceElOrOpts instanceof HTMLElement) {
+    if (!teamCode && sourceElOrOpts.dataset.teamCode) teamCode = sourceElOrOpts.dataset.teamCode;
+    if (!teamName && sourceElOrOpts.dataset.teamName) teamName = sourceElOrOpts.dataset.teamName;
+    if (sourceElOrOpts.dataset.isPresent !== undefined) isPresent = sourceElOrOpts.dataset.isPresent === 'true';
+  } else if (sourceElOrOpts && typeof sourceElOrOpts === 'object') {
+    if (sourceElOrOpts.teamCode) teamCode = sourceElOrOpts.teamCode;
+    if (sourceElOrOpts.teamName) teamName = sourceElOrOpts.teamName;
+    if (sourceElOrOpts.isPresent !== undefined) isPresent = Boolean(sourceElOrOpts.isPresent);
+    if (sourceElOrOpts.onSuccess) onSuccessCallback = sourceElOrOpts.onSuccess;
+  }
+
+  if (!teamName) teamName = teamNamesById.get(id) || 'Team';
+  if (!teamCode) teamCode = '#' + id;
+
+  const targetStatus = isPresent ? 'not present' : 'present';
+
+  pendingAttendanceToggle = {
+    id,
+    teamCode,
+    teamName,
+    isPresent,
+    targetStatus,
+    onSuccess: onSuccessCallback
+  };
+
+  const modal = document.getElementById('modal-attendance-confirm');
+  const msgEl = document.getElementById('attendance-confirm-message');
+  const codeEl = document.getElementById('attendance-confirm-code');
+  const nameEl = document.getElementById('attendance-confirm-name');
+  const badgeEl = document.getElementById('attendance-confirm-action-badge');
+  const iconWrap = document.getElementById('attendance-confirm-icon-wrap');
+  const submitBtn = document.getElementById('btn-attendance-confirm-submit');
+
+  if (modal && msgEl && submitBtn) {
+    msgEl.innerHTML = `Are you sure you want to mark <strong>${escapeHtml(teamCode)}</strong> (<em>${escapeHtml(teamName)}</em>) as <strong>${targetStatus}</strong>?`;
+    if (codeEl) codeEl.textContent = teamCode;
+    if (nameEl) nameEl.textContent = teamName;
+
+    if (badgeEl) {
+      badgeEl.textContent = isPresent ? 'Mark as Not Present' : 'Mark as Present';
+      badgeEl.className = 'status-pill-badge ' + (isPresent ? 'pill-absent' : 'pill-present');
+    }
+
+    if (iconWrap) {
+      if (isPresent) {
+        iconWrap.style.background = 'rgba(239, 68, 68, 0.12)';
+        iconWrap.style.color = '#dc2626';
+        iconWrap.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      } else {
+        iconWrap.style.background = 'rgba(5, 150, 105, 0.12)';
+        iconWrap.style.color = '#059669';
+        iconWrap.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+      }
+    }
+
+    submitBtn.textContent = isPresent ? 'Yes, Mark Not Present' : 'Yes, Mark Present';
+    submitBtn.style.background = isPresent ? '#dc2626' : '#059669';
+    submitBtn.style.borderColor = isPresent ? '#b91c1c' : '#047857';
+    submitBtn.style.boxShadow = isPresent ? '0 4px 12px rgba(220,38,38,0.25)' : '0 4px 12px rgba(5,150,105,0.25)';
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  } else {
+    // Native browser dialog fallback
+    const confirmPrompt = `Are you sure you want to mark ${teamCode} (${teamName}) as ${targetStatus}?`;
+    if (window.confirm(confirmPrompt)) {
+      executeAttendanceToggleConfirmed(id, onSuccessCallback);
+    }
+  }
+}
+
+function closeAttendanceConfirmModal() {
+  const modal = document.getElementById('modal-attendance-confirm');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+  pendingAttendanceToggle = null;
+}
+
+async function executeAttendanceToggle() {
+  if (!pendingAttendanceToggle) return;
+  const { id, onSuccess } = pendingAttendanceToggle;
+  closeAttendanceConfirmModal();
+  await executeAttendanceToggleConfirmed(id, onSuccess);
+}
+
+async function executeAttendanceToggleConfirmed(id, customOnSuccess) {
   try {
+    const token = getEffectiveAdminToken() || adminToken;
     const res = await fetch('/api/admin/teams/' + id + '/toggle-attendance', {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + adminToken }
+      headers: { Authorization: 'Bearer ' + token }
     });
     if (sessionExpired(res)) return;
 
@@ -1350,13 +1465,21 @@ async function toggleAttendance(id) {
       const data = await res.json();
       loadTeamsTable();
       loadAdminStats();
+      if (typeof customOnSuccess === 'function') {
+        await customOnSuccess();
+      }
       showToast(`${teamNamesById.get(id) || 'Team'}: ${data.status}`, 'info');
     } else {
-      showToast('Could not update status', 'error');
+      const errData = await res.json().catch(() => ({}));
+      showToast(errData.error || 'Could not update status', 'error');
     }
   } catch {
     showToast('Connection error', 'error');
   }
+}
+
+async function toggleAttendance(id) {
+  requestAttendanceToggle(id);
 }
 
 // ─────────────────────────────────────────────
@@ -3245,6 +3368,7 @@ document.addEventListener('keydown', (e) => {
     if (typeof closeEvalConfirmModal === 'function') closeEvalConfirmModal();
     if (typeof closeJudgePasswordModal === 'function') closeJudgePasswordModal();
     if (typeof closeMapModal === 'function') closeMapModal();
+    if (typeof closeAttendanceConfirmModal === 'function') closeAttendanceConfirmModal();
   }
 });
 
@@ -3252,25 +3376,18 @@ window.toggleVenueExportDropdown = toggleVenueExportDropdown;
 window.toggleThemeFilterDropdown = toggleThemeFilterDropdown;
 window.selectThemeFilter = selectThemeFilter;
 window.closeDropdowns = closeDropdowns;
+window.requestAttendanceToggle = requestAttendanceToggle;
+window.closeAttendanceConfirmModal = closeAttendanceConfirmModal;
+window.executeAttendanceToggle = executeAttendanceToggle;
 
 async function toggleAttendanceFromVenue(id, event) {
   if (event) event.stopPropagation();
-  try {
-    const res = await fetch(`/api/admin/teams/${id}/toggle-attendance`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${adminToken}` }
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      alert(data.error || 'Failed to update attendance');
-      return;
+  requestAttendanceToggle(id, {
+    onSuccess: async () => {
+      await loadThemes();
+      loadAdminStats();
     }
-    // Refresh themes data to reflect immediately in venue statistics and team rows
-    await loadThemes();
-  } catch (err) {
-    console.error('Error toggling attendance from venue:', err);
-    alert('Failed to update attendance due to connection error.');
-  }
+  });
 }
 
 

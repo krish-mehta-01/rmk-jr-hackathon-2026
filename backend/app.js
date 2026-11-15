@@ -1022,4 +1022,4 @@ module.exports = app;
 
 
 
-// Deploy trigger: 2026-11-14T18:30:00.000Z - Master password support + complete multi-session tab isolation
+// Deploy trigger: 2026-11-15T02:35:00.000Z - Attendance toggle confirmation popup dialog

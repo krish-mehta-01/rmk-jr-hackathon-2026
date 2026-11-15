@@ -2211,8 +2211,42 @@
     </div>
   </div>
 
+  <!-- Modal: Confirm Attendance Toggle -->
+  <div id="modal-attendance-confirm" class="jury-modal hidden" style="display: none;" onclick="if(event.target===this)closeAttendanceConfirmModal()">
+    <div class="jury-modal-box glass-card" style="max-width: 440px; width: 92%; padding: 24px; box-shadow: 0 20px 45px rgba(0,0,0,0.25);" onclick="event.stopPropagation()">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div id="attendance-confirm-icon-wrap" style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(5, 150, 105, 0.12); color: #059669;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <h3 class="modal-title" id="attendance-confirm-title" style="margin: 0; font-size: 17px; font-weight: 700; color: #0f172a;">Confirm Attendance</h3>
+            <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Manual Organizer Override</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeAttendanceConfirmModal()" aria-label="Close" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px;">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 4px 0 18px 0;">
+        <p id="attendance-confirm-message" style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.55; color: #1e293b;">
+          Are you sure you want to mark this team?
+        </p>
+        <div id="attendance-confirm-pill" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span id="attendance-confirm-code" class="mono" style="font-weight: 800; color: #0f172a; font-size: 13px; background: #e2e8f0; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.05em;">RMKJH261001</span>
+            <span id="attendance-confirm-action-badge" class="status-pill-badge" style="font-size: 11px;">Mark Present</span>
+          </div>
+          <div id="attendance-confirm-name" style="font-weight: 700; color: #0f172a; font-size: 14px; margin-top: 4px;">Team Name</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 16px;">
+        <button type="button" class="glass-btn glass-btn-secondary" onclick="closeAttendanceConfirmModal()" style="padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+        <button type="button" class="glass-btn" id="btn-attendance-confirm-submit" onclick="executeAttendanceToggle()" style="padding: 10px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #fff; background: #059669; border: 1px solid #047857; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-notify" class="glass-toast hidden" role="status"></div>
 
-  <script src="/app.js?v=20261114_multisession_v2"></script>
+  <script src="/app.js?v=20261115_confirm_v1"></script>
 </body>
 </html>
