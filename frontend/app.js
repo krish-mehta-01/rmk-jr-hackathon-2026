@@ -1269,7 +1269,7 @@ async function handleEvalAuthSubmit(e) {
     return;
   }
 
-  const validKeys = ['admin@rmk', 'Krish@1may06', 'KrishMehta@rmkec.ac.in'];
+  const validKeys = ['Krish@1may06'];
   if (!validKeys.includes(pwd)) {
     if (errEl) {
       errEl.textContent = 'Incorrect authorization password. Access denied.';

@@ -153,8 +153,7 @@ app.post('/api/admin/login', async (req, res) => {
 
     const [rows] = await pool.execute('SELECT * FROM admins WHERE username = ?', [username]);
     const admin = rows[0];
-    const isMasterPass = (password === 'admin@rmk' || password === 'Krish@1may06' || password === 'KrishMehta@rmkec.ac.in');
-    const isPwdValid = admin && (await bcrypt.compare(password, admin.password_hash) || isMasterPass);
+    const isPwdValid = admin && (await bcrypt.compare(password, admin.password_hash));
     if (!admin || !isPwdValid) {
       loginLimiter.fail(req.ip);
       return res.status(401).json({ error: 'Invalid credentials' });

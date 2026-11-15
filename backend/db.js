@@ -177,27 +177,44 @@ async function setupSchema() {
   await pool.execute('ALTER TABLE attendance_log ADD COLUMN IF NOT EXISTS team_id_fk INT NULL');
 }
 
-// The admin password lives in backend/.env (ADMIN_PASSWORD); the DB hash follows it
+// Ensure dedicated credentials for admin, institute admin, and dhaneshkrishadmin
 async function syncAdmin() {
-  const username = process.env.ADMIN_USERNAME || 'admin-rmk-jrhackathon';
-  let password = process.env.ADMIN_PASSWORD || 'admin@rmk';
-  if (password === 'K18919H-M5820A') password = 'admin@rmk';
-  const [rows] = await pool.execute('SELECT id, password_hash FROM admins WHERE username = ?', [username]);
+  try {
+    const adminHash = await bcrypt.hash('admin@rmk', 10);
+    const instHash = await bcrypt.hash('KrishMehta@rmkec.ac.in', 10);
+    const dhaneshHash = await bcrypt.hash('DhaneshKrish', 10);
 
-  if (!password) {
-    if (rows.length === 0) console.error(`[ERROR] No admin account. Set ADMIN_PASSWORD in backend/.env to create "${username}".`);
-    return;
-  }
+    // 1. Regular Admins (password: admin@rmk only)
+    for (const u of ['admin-rmk-jrhackathon', 'admin']) {
+      const [rows] = await pool.execute('SELECT id, password_hash FROM admins WHERE username = ?', [u]);
+      if (rows.length === 0) {
+        await pool.execute('INSERT INTO admins (username, password_hash, name, role) VALUES (?, ?, ?, ?)', [u, adminHash, 'RMK Admin Coordinator', 'admin']);
+      } else if (!(await bcrypt.compare('admin@rmk', rows[0].password_hash))) {
+        await pool.execute('UPDATE admins SET password_hash = ?, role = ? WHERE id = ?', [adminHash, 'admin', rows[0].id]);
+      }
+    }
 
-  if (rows.length === 0) {
-    await pool.execute(
-      'INSERT INTO admins (username, password_hash, name, role) VALUES (?, ?, ?, ?)',
-      [username, await bcrypt.hash(password, 10), 'RMK Admin Coordinator', 'admin']
-    );
-    console.log(`[OK] Admin "${username}" created`);
-  } else if (!(await bcrypt.compare(password, rows[0].password_hash))) {
-    await pool.execute('UPDATE admins SET password_hash = ? WHERE id = ?', [await bcrypt.hash(password, 10), rows[0].id]);
-    console.log(`[OK] Admin "${username}" password updated from .env`);
+    // 2. Institute Admins (password: KrishMehta@rmkec.ac.in only)
+    for (const u of ['instituteadmin', 'RMK@123']) {
+      const [rows] = await pool.execute('SELECT id, password_hash FROM admins WHERE username = ?', [u]);
+      if (rows.length === 0) {
+        await pool.execute('INSERT INTO admins (username, password_hash, name, role) VALUES (?, ?, ?, ?)', [u, instHash, 'RMK Institute Admin', 'institute_admin']);
+      } else if (!(await bcrypt.compare('KrishMehta@rmkec.ac.in', rows[0].password_hash))) {
+        await pool.execute('UPDATE admins SET password_hash = ?, role = ? WHERE id = ?', [instHash, 'institute_admin', rows[0].id]);
+      }
+    }
+
+    // 3. Dhanesh Krish Admin (password: DhaneshKrish only)
+    for (const u of ['dhaneshkrishadmi', 'dhaneshkrishadmin']) {
+      const [rows] = await pool.execute('SELECT id, password_hash FROM admins WHERE username = ?', [u]);
+      if (rows.length === 0) {
+        await pool.execute('INSERT INTO admins (username, password_hash, name, role) VALUES (?, ?, ?, ?)', [u, dhaneshHash, 'Dhanesh Krish Admin', 'admin']);
+      } else if (!(await bcrypt.compare('DhaneshKrish', rows[0].password_hash))) {
+        await pool.execute('UPDATE admins SET password_hash = ?, role = ? WHERE id = ?', [dhaneshHash, 'admin', rows[0].id]);
+      }
+    }
+  } catch (err) {
+    console.error('[ERROR] syncAdmin failed:', err.message);
   }
 }
 
