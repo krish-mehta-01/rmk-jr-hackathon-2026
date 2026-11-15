@@ -241,14 +241,14 @@ app.post('/api/public/on-spot-register', async (req, res) => {
       return res.status(400).json({ error: 'Hackathon Theme is required.' });
     }
 
-    // 1. Duplicate check (phone and team name + school)
+    // 1. Duplicate check: prevent duplicate submissions for the same team or same leader/theme
     const [existing] = await pool.query(
-      'SELECT id, team_code, team_name, leader_name FROM teams WHERE mobile_no = ? OR (team_name = ? AND college_name = ?)',
-      [cleanPhone, team_name.trim(), college_name.trim()]
+      'SELECT id, team_code, team_name, leader_name FROM teams WHERE (team_name = ? AND college_name = ?) OR (mobile_no = ? AND (leader_name = ? OR category = ?))',
+      [team_name.trim(), college_name.trim(), cleanPhone, leader_name.trim(), category.trim()]
     );
     if (existing.length > 0) {
       return res.status(409).json({
-        error: `A team with this mobile number or name is already registered (Team ID: ${existing[0].team_code}, Team: ${existing[0].team_name}). Please log in instead.`
+        error: `A team matching these details is already registered (Team ID: ${existing[0].team_code}, Team: ${existing[0].team_name}). Please log in with that Team ID instead.`
       });
     }
 

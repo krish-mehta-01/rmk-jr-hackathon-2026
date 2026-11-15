@@ -411,7 +411,7 @@ async function handleOnSpotSubmit(e) {
     renderVenueMap(teamData);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    showToast(`Registration Successful! Welcome, Team ${teamData.team_name}!`, 'success');
+    showToast(`Registration Successful! Assigned Team ID: ${teamData.team_code || ''}. Welcome, Team ${teamData.team_name}!`, 'success', 6000);
   } catch (err) {
     showOnSpotError('Connection error connecting to the registration server. Please try again.');
   } finally {
@@ -581,6 +581,16 @@ function closeMapModal() {
 
 function renderTeamDetails(team) {
   if (!team) return;
+
+  const code = team.team_code || '';
+  const codeEl = document.getElementById('pass-team-code');
+  if (codeEl) {
+    codeEl.textContent = code || '—';
+  }
+  const detailCodeEl = document.getElementById('pass-detail-team-code');
+  if (detailCodeEl) {
+    detailCodeEl.textContent = code || '—';
+  }
 
   document.getElementById('pass-team-name').textContent = team.team_name || 'Team';
   document.getElementById('pass-project-title').textContent = team.project_title || team.team_name || '—';
@@ -3282,7 +3292,7 @@ function printOnSpotQRCode() {
 // TOAST NOTIFICATIONS & HELPERS
 // ─────────────────────────────────────────────────────────────
 let toastTimer = null;
-function showToast(msg, type = 'info') {
+function showToast(msg, type = 'info', duration = 3500) {
   const toast = document.getElementById('toast-notify');
   if (!toast) return;
 
@@ -3293,7 +3303,7 @@ function showToast(msg, type = 'info') {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toast.classList.add('hidden');
-  }, 3000);
+  }, duration);
 }
 
 function setButtonLoading(btn, isLoading) {

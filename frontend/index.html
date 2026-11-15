@@ -367,7 +367,13 @@
         <div class="attendance-pass-card glass-card">
 
           <div class="pass-header-strip">
-            <h1 class="pass-team-name" id="pass-team-name">Team Name</h1>
+            <div class="pass-header-meta">
+              <div class="pass-team-id-badge" id="pass-team-id-badge">
+                <span class="pass-id-label">TEAM ID</span>
+                <span class="pass-id-code mono" id="pass-team-code">—</span>
+              </div>
+              <h1 class="pass-team-name" id="pass-team-name">Team Name</h1>
+            </div>
             <div id="pass-status-pill" class="status-pill-badge pill-absent">Not Scanned</div>
           </div>
 
@@ -447,6 +453,10 @@
 
           <!-- Team details (after scanning) -->
           <dl id="pass-team-details" class="pass-details-list hidden">
+            <div class="pass-detail-row">
+              <dt>Team ID</dt>
+              <dd id="pass-detail-team-code" class="mono font-bold" style="font-weight: 800; color: #047857;">—</dd>
+            </div>
             <div class="pass-detail-row full-row">
               <dt>Idea Title</dt>
               <dd id="pass-project-title">—</dd>
