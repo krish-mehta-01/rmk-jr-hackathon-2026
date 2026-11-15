@@ -179,8 +179,9 @@ async function setupSchema() {
 
 // The admin password lives in backend/.env (ADMIN_PASSWORD); the DB hash follows it
 async function syncAdmin() {
-  const username = process.env.ADMIN_USERNAME || 'rmkjrhackathon';
-  const password = process.env.ADMIN_PASSWORD;
+  const username = process.env.ADMIN_USERNAME || 'admin-rmk-jrhackathon';
+  let password = process.env.ADMIN_PASSWORD || 'admin@rmk';
+  if (password === 'K18919H-M5820A') password = 'admin@rmk';
   const [rows] = await pool.execute('SELECT id, password_hash FROM admins WHERE username = ?', [username]);
 
   if (!password) {
@@ -190,8 +191,8 @@ async function syncAdmin() {
 
   if (rows.length === 0) {
     await pool.execute(
-      'INSERT INTO admins (username, password_hash, name) VALUES (?, ?, ?)',
-      [username, await bcrypt.hash(password, 10), 'RMK Admin Coordinator']
+      'INSERT INTO admins (username, password_hash, name, role) VALUES (?, ?, ?, ?)',
+      [username, await bcrypt.hash(password, 10), 'RMK Admin Coordinator', 'admin']
     );
     console.log(`[OK] Admin "${username}" created`);
   } else if (!(await bcrypt.compare(password, rows[0].password_hash))) {

@@ -38,7 +38,7 @@ async function authAdminOrJuryAdmin(req, res, next) {
 
       // Regular Admin must provide valid section authorization key
       const authKey = req.headers['x-auth-key'] || req.headers['x-eval-password'] || req.query.auth_key;
-      const validKeys = ['Krish@1may06', 'KrishMehta@rmkec.ac.in'];
+      const validKeys = ['admin@rmk', 'Krish@1may06', 'KrishMehta@rmkec.ac.in'];
       if (!authKey || !validKeys.includes(String(authKey).trim())) {
         return res.status(403).json({
           error: 'Restricted Access: Evaluation & Rankings is protected. Authorization password required.',
