@@ -13,4 +13,7 @@ public/exports/
 public/export/
 *.xlsx
 *.docx
+.agents/
+skills-lock.json
+
 
