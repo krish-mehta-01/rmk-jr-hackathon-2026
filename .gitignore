@@ -9,3 +9,8 @@ __pycache__/
 backend/evaluations_backup.json
 backend/backups/
 *.pdf
+public/exports/
+public/export/
+*.xlsx
+*.docx
+
